@@ -48,6 +48,8 @@ Get [more themes](https://github.com/3nly/StyleChan/wiki/Custom-Themes#custom-th
 
 ## Troubleshooting
 
+This port was done nearly entirely by Claude Fable 5, so there are bound to be many issues — please report everything you find.
+
 - If you have problems, try first resetting your StyleTower settings (**CTRL + F1 → Reset**) and restarting your browser.
   
 - Check if it's a holotower issue - StyleTower primarily deals with stylesheets.
