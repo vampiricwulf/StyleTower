@@ -14,9 +14,13 @@ select#image_size {
 .theme-catalog div.threads {
   padding: 10px 0 !important;
 }
-/* Catalog Comment */
+/* Catalog Comment. vichan keeps counters/subject/teaser in one .replies block
+   split by forced breaks; text-align-last also applies to lines before a <br>,
+   so short label lines center instead of being stretched across the cell. */
 :root.catalog-justify .theme-catalog .replies {
   text-align: justify !important;
+  text-align-last: center;
+  hyphens: auto;
 }
 /* Background */
 :root.catalog-background .theme-catalog #Grid div.thread {

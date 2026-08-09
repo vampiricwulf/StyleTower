@@ -1,3 +1,9 @@
+### v1.0.1
+*2026-08-09*
+
+- Justified Text (catalog): counters and short label lines are no longer stretched across the cell — lines before forced breaks now center, and long teasers hyphenate to avoid huge word gaps
+- README refresh: release-based install links, scope statement, feature highlights and current Holotower TS integration details
+
 # v1.0.0 (StyleTower)
 *2026-08-09*
 

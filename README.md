@@ -6,15 +6,25 @@ Works with **native holotower** and alongside **Holotower TS**.
 
 This is a port of [StyleChan](https://github.com/3nly/StyleChan) (itself a fork of [OneeChan](https://github.com/seaweedchan/OneeChan) by seaweedchan) from 4chan to holotower.org.
 
-## [Click here to Install](https://github.com/vampiricwulf/StyleTower/raw/refs/heads/main/builds/StyleTower.user.js)
+StyleTower is a *styler*: it themes the page and the features the site and Holotower TS provide, and deliberately avoids duplicating their behavior.
+
+## [Click here to Install](https://github.com/vampiricwulf/StyleTower/releases/latest/download/StyleTower.user.js)
 
  
- **Minified Version** → [StyleTower.min.user.js](https://github.com/vampiricwulf/StyleTower/raw/refs/heads/main/builds/StyleTower.min.user.js) 
+ **Minified Version** → [StyleTower.min.user.js](https://github.com/vampiricwulf/StyleTower/releases/latest/download/StyleTower.min.user.js) 
 
 - Firefox: requires [Violentmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/)
 - Chrome/Edge: requires [Violentmonkey](https://chromewebstore.google.com/detail/violentmonkey/jinjaccalgkegednnccohejagnlnfdag/)
 
-Open the settings with the **[StyleTower]** link in the board list, or **CTRL + F1**.
+Open the settings with the **[StyleTower]** link next to the site's **[Options]** in the board list, or **CTRL + F1**.
+
+## Highlights
+
+- All StyleChan/OneeChan themes, plus a full in-browser theme editor with live preview, import/export, and per-SFW/NSFW or light/dark (system) theme selection
+- Holotower-native styling: fixed header clearance, post menu, posting form, "Posting mode" banner, file-selector dropzone, catalog, thread watcher, scroll arrows and more
+- Layout options: reply fit width, margins, borders, rounded corners, post decoration and highlight styles, sidebar (with mini and Style-Script-like variants), quick reply autohide styles
+- Quick reply refinements: submit button on its own bottom row, themed posting controls, optional comment draft memory, auto image conversion, auto-watch on reply
+- Extras: Animated GIF Thumbnails, mascots, custom Quick Reply button image, relative post dates, themed SVG icons, styled scrollbars, toast notifications
 
 ## Built-in integrations
 
@@ -25,11 +35,16 @@ The following standalone Holotower userscripts are folded into StyleTower and ca
 - [Holotower X/BSKY Sauce](https://greasyfork.org/en/scripts/554505-holotower-x-bsky-sauce)
 - [Holotower Catalog Highlights and Pin](https://greasyfork.org/en/scripts/543156-holotower-catalog-highlights-and-pin)
 
-Inline quoting, custom fixes and soundposts are not folded in — [Holotower TS](https://greasyfork.org/en/scripts/560097-holotower-ts) provides them. TS is detected automatically: its notifications can be styled like StyleTower's toasts, and its (You)/quoting-you marks are themed.
+[Holotower TS](https://greasyfork.org/en/scripts/560097-holotower-ts) is detected and themed automatically:
+
+- Its fixed/auto-hide header state is mirrored so the page clears the bar correctly
+- Its notifications, inline quotes, archive posts and hover colors follow the active theme through TS's own CSS hooks
+- Its (You)/quoting-you highlight marks are colored by the theme (respecting TS's border-style setting)
+- Its posting controls are restored into the quick reply when another script pre-builds it
 
 ## Theming
 
-Get [more themes](https://github.com/3nly/StyleChan/wiki/Custom-Themes#custom-themes).
+Get [more themes](https://github.com/3nly/StyleChan/wiki/Custom-Themes#custom-themes) — StyleChan/OneeChan themes are compatible.
 
 ## Troubleshooting
 

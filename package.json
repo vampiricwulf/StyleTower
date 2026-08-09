@@ -1,6 +1,6 @@
 {
   "name": "StyleTower",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Customizable themes for holotower.org.",
   "scripts": {
     "lint": "eslint src/",
