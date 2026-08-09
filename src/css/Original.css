@@ -1,17 +1,4 @@
 /* Some original Yotsuba CSS */
-.party-hat {
-  left: 0;
-  margin-left: -11px;
-  padding-left: " + $SS.conf["Margin Left"] + "px;
-  margin-top: -75px;
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-}
-:root.force-indent .party-hat {
-  margin-left: -23px;
-}
-/* End */
 .sjis {
   font-size: 16px;
   line-height: 17px;
@@ -36,32 +23,29 @@
 .mu-b {
   color: #1d8dc4;
 }
-div.post div.file .fileThumb {
+.files .file > a {
   float: left;
   margin-left: 13px;
   margin-right: 20px;
   margin-bottom: 10px;
 }
-div.op.post div.file .fileThumb {
+.thread > .files .file > a {
   margin-bottom: 0;
 }
-.fileText {
+p.fileinfo {
   margin-left: 13px !important;
   margin-bottom: 2px !important;
 }
 /* Padding according to header position */
-body:has(#globalMessage).hasDropDownNav {
-  margin-top: 35px !important;
-}
-.fixed.bottom-header body.is_thread {
+.fixed.bottom-header body.active-thread {
   padding-bottom: 0em;
   padding-top: .5em;
 }
-.fixed.bottom-header body.is_index {
+.fixed.bottom-header body.active-index {
   padding-bottom: 4.5em;
   padding-top: .5em;
 }
-.fixed.bottom-header body.is_catalog,
+.fixed.bottom-header body.active-catalog,
 .fixed.bottom-header.catalog-mode body {
   padding-bottom: 3em;
   padding-top: .5em;
@@ -69,18 +53,18 @@ body:has(#globalMessage).hasDropDownNav {
 .fixed.bottom-header body {
   padding-top: .5em;
 }
-:root.bottom-header:not(.autohide) body.is_index {
+:root.bottom-header:not(.autohide) body.active-index {
   padding-bottom: 5em !important;
 }
-.fixed.top-header body.is_index {
+.fixed.top-header body.active-index {
   padding-bottom: 2.5em;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
 }
-.fixed.top-header body.is_thread {
+.fixed.top-header body.active-thread {
   padding-bottom: 0;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
 }
-.fixed.top-header body.is_catalog,
+.fixed.top-header body.active-catalog,
 .fixed.top-header.catalog-mode body {
   padding-bottom: .5em;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
@@ -91,20 +75,20 @@ body:has(#globalMessage).hasDropDownNav {
 .fixed.top-header body {
   padding-top: 2.4em !important;
 }
-#boardNavDesktopFoot {
+.boardlist.bottom {
   margin-bottom: 15px;
 }
-#boardNavDesktop:not(.desktop.persistentNav) {
+:root:not(.fixed) .boardlist:not(.bottom) {
   margin-top: 15px;
 }
 div.post {
   margin: 4px 0;
   overflow: hidden;
 }
-:root:not(.reply-fit-width) #delform div.reply:not([hidden]) {
+:root:not(.reply-fit-width) form[name=postcontrols] div.post.reply:not([hidden]) {
   display: table !important;
 }
-:root:not(.reply-fit-width) #delform .stub~div.reply:not([hidden]) {
+:root:not(.reply-fit-width) form[name=postcontrols] .stub~div.post.reply:not([hidden]) {
   display: none !important;
 }
 div.thread {
@@ -112,57 +96,20 @@ div.thread {
   clear: both;
   padding-bottom: 10px;
 }
-table.flashListing {
-  border-spacing: 1px;
-  margin-left: auto;
-  margin-right: auto;
-}
-table.flashListing .postblock {
-  padding: 5px;
-}
-div.pagelist div.pages {
+div.pages {
   padding: 4px;
 }
-div.pagelist,
-div.pagelist>div {
+div.pages {
   float: left;
 }
-div.pagelist>div span {
-  padding: 4px;
-  display: inline-block;
-}
-.page-num {
-  margin-right: auto !important;
-}
-s {
-  text-decoration: none !important;
-}
 span.spoiler,
-s,
-s:not(:hover)>a,
-s:not(:hover)>.linkify {
+span.spoiler:not(:hover)>a {
   color: #000;
   background: none repeat scroll 0 0 #000;
 }
 span.spoiler:hover,
-s:hover,
-span.spoiler:focus,
-s:focus {
+span.spoiler:focus {
   color: #fff;
-}
-#globalMessage,
-.boardBanner {
-  text-align: center;
-}
-#globalMessage {
-  margin-top: 5px;
-}
-div.sideArrows {
-  float: left;
-  margin-right: 2px;
-  margin-top: 0;
-  margin-left: 2px;
-  opacity: .3;
 }
 hr {
   clear: both;
@@ -172,31 +119,16 @@ table {
   margin-left: auto;
   margin-right: auto;
 }
-.center,
-.danbo-slot,
-.adl {
-  text-align: center !important;
-}
-.adl {
-  font-size: .76em;
-}
-#qf-box {
-  width: 120px;
-}
-span.hide-announcement {
-  margin-left: 3px;
-  vertical-align: sub;
-}
 /* Bottom Controls */
-.bottomCtrl.desktop {
+#post-moderation-fields {
   float: right;
 }
-.fixed.bottom-header body.is_index .bottomCtrl.desktop,
-.fixed.bottom-header body.is_thread .bottomCtrl.desktop {
+.fixed.bottom-header body.active-index #post-moderation-fields,
+.fixed.bottom-header body.active-thread #post-moderation-fields {
   margin-bottom: 35px;
 }
-.fixed.top-header body.is_thread .bottomCtrl.desktop,
-.fixed.top-header body.is_index .bottomCtrl.desktop {
+.fixed.top-header body.active-thread #post-moderation-fields,
+.fixed.top-header body.active-index #post-moderation-fields {
   margin-bottom: 8px;
 }
 /* Index Navigation */
@@ -205,11 +137,8 @@ input[value='Previous'] {
   padding: 4px 13px;
 }
 /* Other */
-.identityIcon {
+div.post img.icon {
   margin-bottom: -3px;
-}
-:root.isLight img[src*='//boards.4chan.org/js/jsMath/fonts/'] {
-  filter: invert(100%);
 }
 :root.reply-fit-width .inline {
   display: flow-root !important;
@@ -218,123 +147,50 @@ select {
   padding: 0 0 2px 2px;
   margin-right: 1px;
 }
-/* Accommodate StyleChan icon in header */
-:root.centered-links #shortcuts {
-  width: 30vw !important;
-}
-:root.centered-links #custom-board-list {
-  left: 12vw !important;
-}
-div.meta {
+.theme-catalog .replies > strong {
   margin-bottom: 5px;
 }
-/* Blotter */
-#blotter {
-  margin: auto;
-  font-size: 11px;
-}
-:root:not(.fourchan-x) #blotter tfoot {
-  text-align: center !important;
-}
-/* 4chan Pass Link */
-.brackets-wrap.pass-link-container.pass-login {
-  float: right;
-}
 /* Quick Reply */
-#quickReply #qrFile,
-input#postFile {
+form[name=post] input[type=file] {
   height: 23px;
 }
-#quickReply #qrFile {
+#quick-reply input[type=file] {
   margin-right: 0 !important;
 }
-:root.right-sidebar #quickReply,
-:root.left-sidebar #quickReply {
+:root.right-sidebar #quick-reply,
+:root.left-sidebar #quick-reply {
   max-width: 300px !important;
 }
-:root.right-sidebar #quickReply input[type=text], 
-:root.right-sidebar #quickReply textarea, 
-:root.left-sidebar #quickReply input[type=text], 
-:root.left-sidebar #quickReply textarea {
+/* No min-width on inputs: the QR submit shares a row with the subject input,
+   and forcing 294px would push it past the 300px box (off-screen in sidebar mode) */
+:root.right-sidebar #quick-reply input[type=text],
+:root.right-sidebar #quick-reply textarea,
+:root.left-sidebar #quick-reply input[type=text],
+:root.left-sidebar #quick-reply textarea {
   max-width: 294px !important;
+}
+:root.right-sidebar #quick-reply textarea,
+:root.left-sidebar #quick-reply textarea {
   min-width: 294px !important;
 }
-div#qrError {
-    width: 290px;
-}
-#quickReply #qrFile,
-input#postFile {
-  cursor: pointer;
-  flex: 1;
-  min-width: 0;
-  padding: 0 !important;
-}
-#qrForm > div:last-child {
-  display: flex;
-  gap: 4px;
-}
-#quickReply #qrSpoiler,
-#quickReply input[type=submit],
-#postForm input[type=submit] {
-  flex-shrink: 0;
-}
-:root:not(.fourchan-x) #postForm,
-:root:not(.fourchan-x) #togglePostFormLink {
+form[name=post]:not(#quick-reply) {
   margin-top: 1em;
 }
-:root.fourchan-x div#togglePostFormLink.desktop {
-  text-align: center;
-}
-/* Spoiler checkbox */
-#qrSpoiler label,
-#pf-spoiler {
-  font-size: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 23px;
-  cursor: pointer;
-  border: 1px solid var(--sc-inputbColor);
-  background: var(--sc-mainColor);
-  position: relative;
-}
-#qrSpoiler label::before,
-#pf-spoiler::before {
-  content: 'S';
-  font-weight: bold;
-  font-size: 13px;
-  color: var(--sc-textColor);
-}
-#qrSpoiler label:has(:checked)::before,
-#pf-spoiler:has(:checked)::before {
-  content: '✓';
-  color: var(--sc-quoteColor);
-}
-#qrSpoiler input[type=checkbox],
-#pf-spoiler input[type=checkbox] {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  cursor: pointer;
-}
 /* Normal autohide (collapse to header) */
-:root.normal-qr #quickReply:not(:hover):not(.focus) {
+:root.normal-qr #quick-reply:not(:hover):not(.focus) {
   width: 303px !important;
 }
-:root.normal-qr #quickReply:not(:hover):not(.focus) > :not(#qrHeader) {
+:root.normal-qr #quick-reply:not(:hover):not(.focus) table tr:not(:first-child) {
   display: none !important;
 }
-:root.normal-qr .qr-transition #quickReply > :not(#qrHeader) {
+:root.normal-qr .qr-transition #quick-reply table tr:not(:first-child) {
   transition: opacity .2s ease-in-out .1s;
 }
 /* QR file button */
-#quickReply #qrFile::file-selector-button,
-#quickReply #qrFile::-webkit-file-upload-button,
-.postForm #postFile::file-selector-button,
-.postForm #postFile::-webkit-file-upload-button {
+#quick-reply input[type=file]::file-selector-button,
+#quick-reply input[type=file]::-webkit-file-upload-button,
+form[name=post] input[type=file]::file-selector-button,
+form[name=post] input[type=file]::-webkit-file-upload-button {
   appearance: none;
   cursor: pointer;
   height: 23px;
@@ -349,41 +205,14 @@ input#postFile {
   font-family: " + $SS.formatFont($SS.conf["Font Family"]) + ";
   font-size: " + $SS.conf["UI Font Size"] + "px !important;
 }
-#quickReply #qrFile:hover::file-selector-button,
-#quickReply #qrFile:hover::-webkit-file-upload-button,
-.postForm #postFile:hover::file-selector-button,
-.postForm #postFile:hover::-webkit-file-upload-button {
+#quick-reply input[type=file]:hover::file-selector-button,
+#quick-reply input[type=file]:hover::-webkit-file-upload-button,
+form[name=post] input[type=file]:hover::file-selector-button,
+form[name=post] input[type=file]:hover::-webkit-file-upload-button {
   background: rgb(var(--sc-mainColor-shift10)) !important;
 }
-/* Board banner */
-:root:not(.fourchan-x):not(.right-sidebar):not(.left-sidebar) :root:not(#bannerCnt) div.boardBanner > div.boardTitle {
-  margin-top: -15px;
-  margin-bottom: 10px;
-}
-:root.right-sidebar :root:not(#bannerCnt) div.boardBanner > div.boardTitle,
-:root.left-sidebar :root:not(#bannerCnt) div.boardBanner > div.boardTitle {
-  margin-top: 50px;
-}
-/* Highlights */
-:root.highlight-you:not(.fourchan-x) .postContainer.hasQuoteYou > .post {
-  border-left: " + $SS.conf["Width Decoration"] + "px solid rgba(var(--sc-quotesYouHLColor-rgb),1.0) !important;
-}
-:root.highlight-you:not(.fourchan-x) .postContainer.hasQuoteYou > .sideArrows {
-  color: rgba(var(--sc-quotesYouHLColor-rgb),1.0) !important;
-}
-:root.highlight-own:not(.fourchan-x) .yourPost > .post.op,
-:root.highlight-own:not(.fourchan-x) .yourPost > .reply {
-  border-left: " + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb),1.0) !important;
-}
-:root.highlight-own:not(.fourchan-x) .yourPost > .sideArrows {
-  color: rgba(var(--sc-ownPostHLColor-rgb),1.0) !important;
-}
-/* Search */
-input#search-box {
-  height: inherit;
-}
 /* Page List */
-.pagelist.desktop {
+div.pages {
   margin-bottom: 10px;
 }
 /* Follow Cursor option */

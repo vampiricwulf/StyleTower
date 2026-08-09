@@ -2,6 +2,10 @@ OneeChan Copyright Copyright https://github.com/seaweedchan/OneeChan
 4chan Style Script Copyright ahodesuka http://github.com/ahodesuka/4chan-Style-Script
 Appchan X Copyright Zixaphir http://github.com/zixaphir/appchan-x
 4chan SS Icons from http://raphaeljs.com/icons/ Copyright © 2008 Dmitry Baranovskiy
+Holotower Auto Scroll (MIT) https://greasyfork.org/en/scripts/540450-holotower-auto-scroll
+Holotower ImgOps Links Copyright slopffian (MIT) https://greasyfork.org/en/scripts/552932-holotower-imgops-links
+Holotower X/BSKY Sauce Copyright KanashiiWolf (MIT) https://greasyfork.org/en/scripts/554505-holotower-x-bsky-sauce
+Holotower Catalog Highlights and Pin (CC0) https://greasyfork.org/en/scripts/543156-holotower-catalog-highlights-and-pin
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -24,6 +28,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 StyleChan: Copyright © 2011-2026 nebukazar aka 3nly <https://github.com/3nly/>
+StyleTower: Copyright © 2026 VampiricWulf/KanashiiWolf <https://github.com/vampiricwulf/>
 
 Contributors:
 * seaweedchan
@@ -38,6 +43,8 @@ Contributors:
 * tracerneo
 * saxamaphone69
 * SystemPatch
+* VampiricWulf/KanashiiWolf
+* Claude Code's Stolen Data
 
 All the people who've taken the time to write bug reports and create themes.
 * Thank you.

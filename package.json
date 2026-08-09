@@ -1,37 +1,30 @@
 {
-  "name": "StyleChan",
-  "version": "1.9.0",
-  "description": "Customizable themes for 4chan X.",
+  "name": "StyleTower",
+  "version": "1.0.0",
+  "description": "Customizable themes for holotower.org.",
   "scripts": {
     "lint": "eslint src/",
     "build": "grunt build"
   },
   "meta": {
-    "name": "StyleChan",
-    "repo": "https://github.com/3nly/StyleChan/",
-    "page": "https://github.com/3nly/StyleChan/",
-    "downloads": "https://github.com/3nly/StyleChan/releases/latest/download/",
+    "name": "StyleTower",
+    "repo": "https://github.com/vampiricwulf/StyleTower/",
+    "page": "https://github.com/vampiricwulf/StyleTower/",
+    "downloads": "https://github.com/vampiricwulf/StyleTower/releases/latest/download/",
     "appid": "peblejlenbfconioafjbmipeogjdhcff",
     "buildsPath": "builds/",
     "mainBranch": "main",
     "matches": [
-      "*://boards.4chan.org/*",
-      "*://sys.4chan.org/*"
+      "*://holotower.org/*"
     ],
     "exclude_matches": [
-      "*://www.4chan.org/",
-      "*://www.4chan.org/*",
-      "*://www.4chan.org/advertise*",
-      "*://www.4chan.org/donate*",
-      "*://www.4chan.org/pass*",
-      "*://sys.4chan.org/signin*",
-      "*://sys.4chan.org/auth*"
+      "*://holotower.org/mod.php*"
     ],
     "files": {
-      "metajs": "StyleChan.meta.js",
-      "userjs": "StyleChan.user.js",
-      "minmetajs": "StyleChan.min.meta.js",
-      "minuserjs": "StyleChan.min.user.js"
+      "metajs": "StyleTower.meta.js",
+      "userjs": "StyleTower.user.js",
+      "minmetajs": "StyleTower.min.meta.js",
+      "minuserjs": "StyleTower.min.user.js"
     },
     "min": {
       "chrome": "32",
@@ -55,11 +48,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/3nly/StyleChan.git"
+    "url": "https://github.com/vampiricwulf/StyleTower.git"
   },
   "author": "seaweedchan",
   "contributors": [
-    "3nly<3nly.github.com>"
+    "3nly<3nly.github.com>",
+    "VampiricWulf/KanashiiWolf<github.com/vampiricwulf>",
+    "Claude Code's Stolen Data"
   ],
   "namespace": "seaweedchan.github.com",
   "license": "GPL-3.0",

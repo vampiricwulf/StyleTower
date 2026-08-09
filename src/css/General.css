@@ -5,19 +5,15 @@ body {
   margin-top: 0;
   margin-bottom: 0;
 }
-/* Fix margin top when fixed top header */
-:root.show-ads .ad-cnt {
-  margin-top: auto !important;
-}
 /* Replies */
-:not(.fourchan-x) div.op {
+div.post.op {
   display: block;
 }
-.postInfo {
+p.intro {
   padding: 5px 13px;
   display: block !important;
 }
-.summary {
+span.omitted {
   margin-left: 2px;
 }
 .expanded-image {
@@ -34,11 +30,13 @@ body {
   content: '';
   display: block;
 }
-.thread>.replyContainer:not(.thread>.postContainer:last-of-type),
-.threadContainer>.replyContainer,
-:root.op-background .thread>.opContainer:not(.thread>.postContainer:last-of-type) {
+.thread>.post.reply:not(.thread>.post:last-of-type),
+.threadContainer>.post.reply,
+:root.op-background .thread>.post.op:not(.thread>.post:last-of-type) {
   margin-bottom: " + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : '0') + "px !important;
 }
+/* vichan separates posts with bare br elements; hide them so the margin option actually controls spacing */
+" + ($SS.conf["Margin Between Replies"] !== '' ? ".thread > br:not(.clear), .threadContainer > br:not(.clear) { display: none !important; }" : "") + "
 .container~.inline {
   margin: 2px 0 2px 13px !important;
 }
@@ -54,10 +52,7 @@ body {
 :root.backlink-icon .post.op a.hashlink {
   vertical-align: middle;
 }
-#qp .op>.postInfo {
-  min-width: 600px;
-}
-.postMessage {
+div.body {
   margin: " + $SS.conf["Margin Post Message"] + " !important;
 }
 :root.bottom-backlinks .container {
@@ -77,12 +72,12 @@ body {
 :root.reply-fit-width .stub ~ .reply.post {
   display: none !important;
 }
-.hasInline .inline>.replyContainer:not(.expanded-image):not(.hasInline) .reply.post,
+.hasInline .inline>.post.reply:not(.expanded-image):not(.hasInline),
 :root.reply-fit-width .post.reply {
   overflow: hidden !important;
 }
-:root.reply-fit-width .expanded-image>.post::after,
-:root.reply-fit-width .hasInline>.reply.post::after {
+:root.reply-fit-width .post.expanded-image::after,
+:root.reply-fit-width .post.reply.hasInline::after {
   clear: both !important;
   content: '' !important;
   display: block !important;
@@ -96,8 +91,8 @@ body {
 .stub > a.show-thread-button {
   margin-right: 4px;
 }
-:root.reply-hide .thread>.expanded-image>.reply,
-:root.reply-hide .thread>.hasInline>.reply {
+:root.reply-hide .thread>.post.reply.expanded-image,
+:root.reply-hide .thread>.post.reply.hasInline {
    margin-left: 12px !important;
 }
 /* Quote Threading */
@@ -109,48 +104,37 @@ body {
    margin-left: 13px !important;
 }
 /* Style Post Info option */
-:root.post-info .reply>.postInfo {
+:root.post-info .post.reply>p.intro {
   box-shadow: inset rgba(0,0,0,.05) 0 -1px 2px;
   padding-top: 2px !important;
 }
-:root.post-info .inline .reply,
-:root.post-info #hoverUI .reply {
+:root.post-info .inline .post.reply,
+:root.post-info .post.reply.post-hover {
   padding: 0 0 1px !important;
 }
 /* Menu button */
-.reply .menu-button i {
-  position: relative;
-  bottom: 1px;
-}
-:root.reply-fit-width .reply .container {
+:root.reply-fit-width .post.reply .container {
   padding-right: 5px;
 }
-:root.reply-fit-width.fit-postmenu .postInfo > .menu-button,
-:root.reply-fit-width.fit-postmenu .postInfo > .postMenuBtn {
+:root.reply-fit-width.fit-postmenu p.intro > a.post-btn {
   float: right !important;
 }
-:root.reply-fit-width.fit-postmenu .postInfo > .postMenuBtn {
+:root.reply-fit-width.fit-postmenu p.intro > a.post-btn {
   margin: 2px 20px 0 0;
 }
-:root.reply-fit-width .post .menu-button {
+:root.reply-fit-width .post a.post-btn {
   position: relative;
   opacity: 0;
 }
-:root.reply-fit-width .post .postMenuBtn {
-  position: relative;
-  opacity: 0;
-}
-:root.reply-fit-width .post:not(:hover) .menu-button,
-:root.reply-fit-width .post:not(:hover) .postMenuBtn {
+:root.reply-fit-width .post:not(:hover) a.post-btn {
   transition: opacity .3s ease-out 0s !important;
 }
-:root.reply-fit-width .post:hover .menu-button,
-:root.reply-fit-width .post:hover .postMenuBtn {
+:root.reply-fit-width .post:hover a.post-btn {
   opacity: 1;
   transition: opacity .3s ease-in .1s !important;
 }
 /* Code Tags */
-.prettyprint {
+pre {
   padding: 5px !important;
   display: block;
   max-height: 400px;
@@ -186,17 +170,12 @@ input[type=checkbox]:checked::before {
   text-align: center;
   color: var(--sc-textColor);
 }
-/* Override the cleanup but only for the post menu */
-div#menu.dialog label.toggle-you.entry input {
-  display: inline-block;
-  top: 0;
-}
 /* Header */
-#header-bar {
+.boardlist:not(.bottom) {
   padding: 4px 4px 5px !important;
 }
 /* Reposition things based on Header position */
-:root:not(.fixed) #header-bar {
+:root:not(.fixed) .boardlist:not(.bottom) {
   top: 0;
   right: 0;
   left: 0;
@@ -207,44 +186,28 @@ div#menu.dialog label.toggle-you.entry input {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
-:root:not(.fixed).right-sidebar #header-bar {
+:root:not(.fixed).right-sidebar .boardlist:not(.bottom) {
   right: 300px;
 }
-:root:not(.fixed).left-sidebar #header-bar {
+:root:not(.fixed).left-sidebar .boardlist:not(.bottom) {
   left: 300px;
 }
-:root:not(.fixed).fourchan-x .boardBanner {
-  top: 1px;
-}
-.center,
-.danbo-slot {
-  margin: 5px !important;
-}
-#full-board-list>a,
-.navSmall>a {
+.boardlist a {
   margin-left: 2px;
 }
-:root.fixed:not(.autohide):not(.bottom) #globalMessage:not([hidden]) {
-  margin: 10px 0 20px !important;
-}
-.globalMessage, h2, h3 {
+h2, h3 {
   margin: auto;
 }
-#custom-board-list,
-#full-board-list,
 .shortcut {
   vertical-align: baseline !important;
 }
-/* Thread Watcher */
-:root.fixed-watcher #thread-watcher,
-:root.fixed-watcher #threadWatcher {
-  position: fixed !important;
+/* Floating QR button (visibility is handled by the site/TS) */
+a.quick-reply-btn img {
+  display: block;
 }
-/* QR link */
-a.qr-link {
-  border-radius: 0;
-  vertical-align: middle;
-  padding: 7px 12px 6px;
+/* Post menu (site post-menu.js dropdown) */
+.post-menu {
+  z-index: 80;
 }
 /* HRs */
 hr {
@@ -265,176 +228,73 @@ hr {
   pointer-events: none !important;
 }
 /* Board Title */
-.boardBanner .boardTitle {
+header h1 {
   cursor: default;
   letter-spacing: -2px;
   padding-top: .1em;
 }
 /* Banner */
-#bannerCnt {
+img.board_image {
   border: 0 !important;
   margin: 0 auto;
-  width: 300px;
   max-height: 100px !important;
   max-width: 100%;
 }
-.boardBanner {
-  width: 302px;
-  margin: auto;
-}
-.boardBanner>img {
-  border: none !important;
-}
-:root.banner-opacity #bannerCnt {
+:root.banner-opacity img.board_image {
   opacity: .5;
   transition: opacity .3s ease-out 0s;
 }
-:root.banner-opacity #bannerCnt:hover {
+:root.banner-opacity img.board_image:hover {
   opacity: 1;
 }
 /* Pages */
-.pages.cataloglink {
+div.pages a[href$='catalog.html'] {
   margin-left: 12px;
 }
-.pages.cataloglink a,
+div.pages a[href$='catalog.html'],
 input[value='Next'],
 input[value='Previous'] {
   font-weight: bold;
   transition: opacity .3s ease-in 0s;
 }
-.pages strong>a:hover,
-.pages.cataloglink a:hover,
+div.pages a.selected:hover,
+div.pages a[href$='catalog.html']:hover,
 input[value='Next']:hover,
 input[value='Previous']:hover {
   opacity: .7;
 }
-.pagelist {
+div.pages {
   margin-left: 18px;
   margin-bottom: 15px;
 }
-:root.reply-fit-width .pagelist {
+:root.reply-fit-width div.pages {
   margin-left: 0;
 }
 .pages a {
   padding: 5px 10px;
   margin-left: -1px;
 }
-.pages strong>a {
+div.pages a.selected {
   padding-top: 3px;
   transition: opacity .3s ease-in 0s;
 }
-.next,
-.prev {
-  border: none !important;
-  position: relative;
-}
-:root.fourchan-x .next a,
-:root.fourchan-x .prev a {
-  position: relative;
-  right: 5px;
-}
-:root.fourchan-x .prev a::after {
-  content: '<';
-  position: inherit;
-  top: 4px;
-  left: 1px;
-}
-:root.fourchan-x .next a::after {
-  content: '>';
-  position: inherit;
-  top: 4px;
-  right: 2px;
-}
-.pagelist button,
-.pagelist button:hover {
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  height: 20px;
-  width: 20px;
-}
-.pagelist span {
-  opacity: .2;
-}
-/* /f/ */
-#swf-embed {
-  z-index: 21;
-}
-table.flashListing {
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-table.flashListing .highlightPost {
-  background: var(--sc-mainColor-shiftM25) !important;
-}
-.flashListing td {
-  padding-left: 4px !important;
-  padding-right: 4px !important;
-  text-align: center !important;
-}
-body.board_f #delform .file-info {
-  padding-left: 5px;
-}
-body.board_f #delform .fileText {
-  margin-left: 0 !important;
-}
-/* Ads */
-:root.ad-opacity .center img,
-:root.ad-opacity .danbo-slot {
-  opacity: .5;
-  transition: opacity .3s ease-out 0s;
-}
-:root.ad-opacity .center img:hover,
-:root.ad-opacity .danbo-slot:hover {
-  opacity: 1;
-}
 /* Navlinks */
-#ctrl-top,
-body.is_index div.navLinks {
-  padding-top: 5px;
-  margin-bottom: 5px;
-}
-body.is_thread div.navLinks:not(.navLinksBot) {
+body.active-thread div.banner {
   padding-top: .4%;
   margin-bottom: .4%;
 }
-.navLinks.navLinksBot.desktop {
+#thread-interactions {
   margin-bottom: 5px;
 }
-#hoverUI {
+.post-hover {
   z-index: 75 !important;
 }
-:root:not(.fourchan-x) div#boardNavMobile {
-  padding: 2px 4px;
-  overflow: hidden;
-  border-bottom: 2px solid;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  font-size: 12px;
-  z-index: 9001;
-}
-:root:not(.fourchan-x) div.pageJump {
-  float: right;
-  padding-right: 5px;
-  padding-top: 3px;
-}
-#search-box,
-#index-search {
-  width: 9%;
-  transition: color .25s, border-color .25s, width .25s;
-}
-#search-box:focus,
-#index-search:focus {
-  width: 12%;
-}
 /* Thumb Opacity */
-:root.thumb-opacity .fileThumb img:not(.full-image) {
+:root.thumb-opacity .file > a img:not(.full-image) {
   opacity: .5;
   transition: opacity .3s ease-out 0s;
 }
-:root.thumb-opacity .fileThumb img:not(.full-image):hover {
+:root.thumb-opacity .file > a img:not(.full-image):hover {
   opacity: 1;
 }
 /* Selection Lists */
@@ -442,17 +302,13 @@ select {
   appearance: none;
 }
 /* See issue #90 */
-#delform {
+form[name=postcontrols] {
   overflow-wrap: break-word;
   word-break: break-word;
   margin-bottom: 15px; /* unrelated to issue #90 */
 }
-/* Report form */
-#reportTypes {
-  margin-top: 5px;
-}
 /* Mascots */
-#stylechan-mascots {
+#styletower-mascots {
   position: fixed;
   bottom: 0;
   z-index: -1;
@@ -462,13 +318,13 @@ select {
   gap: 8px;
   pointer-events: none;
 }
-#stylechan-mascots.mascots-right {
+#styletower-mascots.mascots-right {
   right: 10px;
 }
-#stylechan-mascots.mascots-left {
+#styletower-mascots.mascots-left {
   left: 10px;
 }
-#stylechan-mascots img {
+#styletower-mascots img {
   max-width: 300px;
   display: block;
 }

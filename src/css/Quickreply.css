@@ -1,197 +1,66 @@
 /* Quick Reply */
-#qr,
-#quickReply {
+#quick-reply {
   box-shadow: none !important;
   border-radius: 0 !important;
 }
-#qr > form {
-  overflow-y: hidden !important;
-  max-height: none !important;
-}
-:root:not(.vertical-qr) #qr .move {
-  min-width: 302px;
-}
-#qr .close {
+#quick-reply .close-btn {
   padding: 2px 3px 2px 4px !important;
 }
-#qr input[type=checkbox] {
+#quick-reply input[type=checkbox] {
   margin: 0 4px 1px;
   vertical-align: baseline;
   position: relative;
   top: 3px;
 }
-:root.fourchan-xt #qr .move input[type=checkbox] {
-  margin: 0 4px 2px;
-  top: 2px;
-}
-#qr-filename-container input[type=checkbox] {
-  margin: 0 0 1px;
-}
-#qr-file-button,
-#qr input[type=submit],
-#quickReply input[type=submit] {
+#quick-reply input[type=submit] {
   height: 25px !important;
   margin: 0 !important;
 }
-#postForm input[type=submit] {
+form[name=post]:not(#quick-reply) input[type=submit] {
   height: 22px !important;
-  width: 46px;
 }
-#qr-file-button,
-:root:not(.fourchan-xt) #qr-filename-container {
-  margin-right: 1px !important;
-}
-#qr-spoiler-label + input[type=submit] {
-  /* ccd0 prior to v1.10.3 */
-  margin-top: 1px !important;
-}
-#qr > form > select {
+#quick-reply select {
   margin: 1px 0 !important;
 }
-#qr select[data-name=thread] {
-  margin: 1px 0 1px 0;
-  max-width: 133px;
-  min-width: 80px;
+/* Let the subject column shrink so the submit cell fits on the same row */
+#quick-reply input[type=text] {
+  min-width: 0 !important;
 }
-#qr > form > div.persona > input:nth-child(4),
-#qr > form > div.persona > input:nth-child(5),
-#qr > form > div.persona > input:nth-child(6) {
-  margin-left: 1px;
+/* Submit relocated to its own bottom row (restructureQRSubmit) */
+#quick-reply .st-submit-row input[type=submit] {
+  width: 100% !important;
+  margin-top: 1px !important;
 }
-:root.expand-inputs .persona {
-  display: flex;
+/* Emote menu button/panel (emote userscript): left unstyled on purpose --
+   its inline styles and layout don't tolerate outside changes. */
+:root.expand-inputs form[name=post] input[type=text] {
+  width: 100%;
+  box-sizing: border-box;
 }
-:root.expand-inputs .persona .field {
-  flex: 1;
-  width: 0;
-}
-:root.expand-inputs .persona .field:focus {
-  flex: 3;
-}
-#qr textarea {
+#quick-reply textarea {
   min-height: 25px !important;
-  min-width: 302px;
 }
-input#file-upload-button {
-  width: 15px !important;
-}
-#quickReply textarea {
-  min-height: 25px !important;
-  min-width: 296px;
-}
-:root.fourchan-x:not(.fourchan-xt).ua-blink #qr textarea.field,
-:root.fourchan-x:not(.fourchan-xt).ua-gecko #qr textarea.field {
-  max-height: 65vh;
-}
-:root.fourchan-xt.ua-blink #qr textarea.field,
-:root.fourchan-xt.ua-gecko #qr textarea.field {
-  max-height: 64vh;
-}
-:root.right-sidebar #qr textarea.field,
-:root.left-sidebar #qr textarea.field {
+:root.right-sidebar #quick-reply textarea,
+:root.left-sidebar #quick-reply textarea {
   max-width: 302px !important;
 }
-:root.qr-background #qr,
-:root.qr-background #quickReply {
+:root.qr-background #quick-reply,
+:root.qr-background #quick-reply table {
   background: transparent !important;
   border: none;
 }
-:root.qr-opacity #qr,
-:root.qr-opacity #quickReply {
+:root.qr-opacity #quick-reply {
   opacity: 0.9;
 }
-:root.ua-gecko #t-help,
-:root.ua-blink #t-help {
-  margin: 0 0 0 2px !important;
-}
-.textarea {
-  margin-top: 1px;
-  margin-bottom: 1px;
-  max-height: 64vh;
-}
-:root.ua-gecko .textarea {
-  margin-bottom: 1px;
-  margin-top: 1px;
-}
-.captcha-img {
-  min-height: 58px !important;
-  margin-bottom: 1px;
-}
-.captcha-root div {
-  border-radius: 0 !important;
-}
-#t-load,
-#t-next {
-  height: inherit !important;
-  min-height: 17px;
-}
 /* Vertical QR */
-:root.vertical-qr #qr > div > label > div,
-:root.vertical-qr #qr .move #autohide,
-:root.vertical-qr #qr > div > select,
-:root.vertical-qr #qr>.move .close,
-:root.vertical-qr #qrClose {
+:root.vertical-qr #quick-reply .close-btn {
   display: none;
 }
-:root.vertical-qr #qr textarea {
+:root.vertical-qr #quick-reply textarea {
   resize: vertical !important;
   z-index: 1;
 }
-:root.vertical-qr #qr {
-  top: auto !important;
-  position: fixed;
-  right: 0 !important;  
-  left: auto !important;  
-  transform: translateX(100%);
-}
-:root.vertical-qr #qr .move {
-  display: block;
-  position: absolute;
-  width: max-content;
-  min-width: 105px;
-  cursor: default;
-  padding: 2px 0 2px 2px;
-  text-align: center;
-  bottom: 88px;
-}
-/* Remove flex from qr label in XT */
-:root.vertical-qr #qr .move label {
-  display: inline;
-}
-:root.vertical-qr #qr:hover .move {
-  transition: opacity .42s linear;
-}
-:root.vertical-qr #qr:hover .move,
-:root.vertical-qr #qr.focus .move {
-  opacity: 0 !important;
-}
-:root.vertical-qr.bottom-header #qr {
-  bottom: 28px !important;
-}
-:root.vertical-qr.top-header #qr {
-  bottom: 0 !important;
-}
-:root.vertical-qr .captcha-img,
-:root.vertical-qr .captcha-img img {
-  max-width: 247px;
-}
-:root.vertical-qr #qr form {
-  display: block !important;
-}
-:root.vertical-qr #qr:hover,
-:root.vertical-qr #qr.focus {
-  transform: translateX(0%) !important;
-}
-:root.qr-transition.vertical-qr #qr,
-:root.qr-transition.vertical-qr #quickReply {
-  transition: transform .3s ease-in-out .1s !important;
-}
-:root.vertical-qr #qr .move {
-  transform: rotate(-90deg);
-  right: 86%;
-}
-/* Native QR Vertical Tabbed */
-:root.vertical-qr #quickReply {
+:root.vertical-qr #quick-reply {
   top: auto !important;
   position: fixed;
   right: 0 !important;
@@ -200,11 +69,15 @@ input#file-upload-button {
   transform: translateX(100%);
   max-width: 300px !important;
 }
-:root.vertical-qr #quickReply:hover,
-:root.vertical-qr #quickReply.focus {
+:root.vertical-qr #quick-reply:hover,
+:root.vertical-qr #quick-reply.focus {
   transform: translateX(0%) !important;
 }
-:root.vertical-qr #qrHeader {
+:root.qr-transition.vertical-qr #quick-reply {
+  transition: transform .3s ease-in-out .1s !important;
+}
+/* Vertical QR tab (rotated QR header) */
+:root.vertical-qr #quick-reply th {
   display: block;
   position: absolute;
   bottom: 25vh;
@@ -218,250 +91,55 @@ input#file-upload-button {
   transform-origin: bottom right;
   white-space: nowrap;
 }
-:root.vertical-qr #quickReply:hover #qrHeader {
+/* Remove float from the qr handle */
+:root.vertical-qr #quick-reply th .handle {
+  float: none;
+  display: inline;
+  width: auto;
+}
+:root.vertical-qr #quick-reply:hover th,
+:root.vertical-qr #quick-reply.focus th {
   opacity: 0 !important;
   transition: opacity .42s linear;
 }
 /* Fade QR */
-:root.fade-qr #qr form,
-:root.fade-qr #quickReply form {
-  display: block !important;
-}
-:root.fade-qr #qr.autohide:not(.focus):not(:hover),
-:root.fade-qr #quickReply:not(.focus):not(:hover) {
+:root.fade-qr #quick-reply:not(.focus):not(:hover) {
   opacity: 0.2 !important;
   transition: opacity .2s ease-in-out 1s !important;
 }
-/* Oekaki */
-input[type="number"] {
-  appearance: textfield;
-}
-::-webkit-inner-spin-button,
-::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-}
 /* Captcha */
-#t-resp {
-  width: 178px !important;
-}
-/* 4chan XT */
-#file-n-submit .row.space {
-  margin-top: 1px;
-}
-/* Single view captcha */
-:root.single-captcha #t-slider {
-  display: none !important;
-}
-:root.single-captcha iframe#t-frame {
-  margin-top: 0 !important;
-}
-:root.single-captcha #quickReply #qrCaptchaContainer,
-:root.single-captcha #qr > form > div.captcha-root > div  {
-  min-height: 145px !important;
-}
-:root.single-captcha #t-next.tcaptcha-stepper.is-ready {
-  display: inline-flex;
-  align-items: center;
-}
-:root.single-captcha #t-task {
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  overflow-y: auto;
-  padding: 2px 0 !important;
-  height: auto !important;
-  white-space: normal !important;
-  align-items: center !important;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  position: relative;
-  scrollbar-width: none;
-}
-:root.single-captcha #t-task::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-:root.single-captcha #t-task.tcaptcha-compact {
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start !important;
-}
-:root.single-captcha #t-desc {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  white-space: pre-line;
-  text-align: center;
-  font-size: 11px;
-  line-height: 1.15;
-  user-select: none;
-  width: 100%;
-  padding: 2px 0 3px;
-  margin-bottom: 1px;
-  background: inherit;
-  pointer-events: none;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 0 2px rgba(255, 255, 255, 0.18);
-}
-:root.single-captcha #t-desc a {
-  pointer-events: auto;
-}
-:root.single-captcha #t-task.tcaptcha-compact #t-desc {
-  position: static;
-  flex: 0 0 100%;
-}
-:root.single-captcha #t-desc img {
-  margin: 2px !important;
-  max-width: 40px;
-  max-height: 40px;
-  width: auto;
-  height: auto;
-}
-:root.single-captcha .tcaptcha-image {
-  padding: 0;
-  margin: 1px;
-  border: none;
-  background: none;
-  cursor: pointer !important;
-  width: calc(100% - 4px);
-  height: auto;
-  flex: none;
-  display: block;
-}
-:root.single-captcha #t-task.tcaptcha-compact .tcaptcha-image {
-  width: auto;
-  max-width: none;
-}
-:root.single-captcha .tcaptcha-image img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 6em;
-}
-:root.single-captcha #t-task.tcaptcha-compact .tcaptcha-image img {
-  width: auto;
-  max-width: 80px;
-  max-height: 80px;
-}
-:root.single-captcha .tcaptcha-image.active {
-  outline: 2px solid var(--sc-linkColor);
-  outline-offset: 1px;
-}
-:root.single-captcha #t-load {
-  cursor: pointer !important;
-}
-:root.single-captcha #t-next {
-  align-items: center;
-  gap: 2px;
-  margin-left: auto;
-  padding: 2px;
-  font-size: 11px;
-}
-:root.single-captcha .tcaptcha-progress {
-  min-width: 38px;
-  text-align: center;
-  display: inline-block;
-}
-:root.single-captcha .tcaptcha-nav {
-  width: 16px;
-  height: 16px;
-  font-size: small !important;
-  line-height: 1;
-  cursor: pointer !important;
-}
-:root.single-captcha .tcaptcha-nav.is-disabled,
-:root.single-captcha .tcaptcha-nav[aria-disabled="true"] {
-  opacity: 0.35;
-  cursor: default !important;
-}
-:root.single-captcha.big-tasks .tcaptcha-image {
-  max-width: 172px;
-}
-:root.single-captcha.big-tasks #t-task {
-  max-height: 38vh;
-  gap: 2px;
-}
-:root.single-captcha.big-tasks #qr > form,
-:root.single-captcha.big-tasks #quickReply form {
-  overflow-y: visible !important;
+form[name=post] .cf-turnstile {
+  margin: 1px auto;
 }
 /* QR Header text */
-#qrHeader {
-  font-size: 0;
+#quick-reply th .handle {
+  text-transform: uppercase;
 }
-#qrHeader::before {
-  content: 'QUICK REPLY';
+/* Site file selector (dropzone) -- the site hardcodes black text on it */
+.dropzone {
+  color: var(--sc-textColor) !important;
+  background: var(--sc-inputColor) !important;
+  border: 1px dashed var(--sc-inputbColor) !important;
 }
-/* Custom file input (native 4chan) */
-:root:not(.fourchan-x) #qr-filename-container {
-  display: flex;
-  align-items: center;
-  padding: 0 6px;
-  min-height: 23px;
-  cursor: pointer;
-  flex: 1;
-  min-width: 0;
-  user-select: none;
+.dropzone .file-hint {
+  color: rgba(var(--sc-textColor-rgb),.5) !important;
 }
-:root:not(.fourchan-x) #qr-filename-container #qr-no-file {
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
+.dropzone:hover .file-hint,
+.dropzone.dragover .file-hint {
+  color: var(--sc-textColor) !important;
 }
-:root:not(.fourchan-x) #qr-filename-container #qr-no-file.has-file {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-:root:not(.fourchan-x) #qr-filename-container.drag-over {
-  border-color: var(--sc-linkColor) !important;
+.dropzone.dragover {
   background: rgb(var(--sc-inputColor-hover)) !important;
-  outline: 1px var(--sc-linkColor);
-  outline-offset: -2px;
+  border-color: var(--sc-linkColor) !important;
 }
-:root:not(.fourchan-x) #qr-filename-container .sc-rename-input {
-  width: 100%;
+:root.rounded-corners .dropzone {
+  border-radius: 3px !important;
+}
+/* TS posting controls (URL upload button, filename row) */
+.upload-filename-wrapper {
+  gap: 2px;
+  align-items: center;
+}
+#upload_filename input[name=filename] {
   box-sizing: border-box;
-  height: 100%;
-  padding: 0;
-  margin: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: text;
-  user-select: text;
-}
-:root:not(.fourchan-x) #qr-filename-container .sc-url-input {
-  width: 100%;
-  box-sizing: border-box;
-  height: 100%;
-  padding: 0;
-  margin: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-}
-:root:not(.fourchan-x) #sc-url-link {
-  color: var(--sc-linkColor);
-  cursor: pointer;
-  float: right;
-}
-:root:not(.fourchan-x) #sc-url-link:hover {
-  color: var(--sc-linkHColor);
-}
-:root:not(.fourchan-x) #sc-clear-btn {
-  color: var(--sc-linkColor);
-  cursor: pointer;
-  user-select: none;
-}
-:root:not(.fourchan-x) #sc-clear-btn:hover {
-  color: var(--sc-quoteColor);
-}
-/* NeXT-specific rules */
-:root.fourchan-next #qr textarea {
-  min-width: 306px !important;
 }

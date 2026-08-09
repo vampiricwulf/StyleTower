@@ -1,4 +1,4 @@
-#stylechan-notifications {
+#styletower-notifications {
   position: fixed;
   top: 38px;
   right: 10px;
@@ -9,12 +9,11 @@
   gap: 6px;
   pointer-events: none;
 }
-:root.bottom-header #stylechan-notifications,
-:root.bottom-header #notifications {
+:root.bottom-header #styletower-notifications {
   top: auto;
   bottom: 10px;
 }
-.stylechan-notification {
+.styletower-notification {
   pointer-events: auto;
   cursor: pointer;
   padding: 7px 10px;
@@ -30,98 +29,79 @@
   line-height: 1.35;
   min-height: 10px;
 }
-.stylechan-notification.visible {
+.styletower-notification.visible {
   opacity: 1;
   transform: translateY(0);
 }
-.stylechan-notification.closing {
+.styletower-notification.closing {
   opacity: 0;
   transform: translateY(-4px);
 }
-.stylechan-notification-text {
+.styletower-notification-text {
   pointer-events: none;
 }
-.stylechan-notification-text a {
+.styletower-notification-text a {
   pointer-events: auto;
 }
-/* 4chanX specific */
-.chX-notifs #header-bar {
-  z-index: 60 !important;
-}
-.chX-notifs #notifications {
-  position: fixed !important;
-  top: 38px !important;
-  right: 10px !important;
-  left: auto !important;
-  z-index: 10005 !important;
-  width: min(320px, calc(100vw - 20px)) !important;
-  height: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 6px !important;
-  pointer-events: none !important;
-  text-align: left !important;
-}
-.chX-notifs #notifications .notification {
-  pointer-events: auto !important;
-  padding: 7px 10px !important;
-  border: 1px solid !important;
-  border-left-width: 3px !important;
-  border-radius: 3px !important;
-  box-shadow: rgba(0,0,0,.25) 0 2px 8px !important;
-  overflow-wrap: anywhere !important;
-  font-size: 12px !important;
-  line-height: 1.35 !important;
-  display: block !important;
-  text-align: left !important;
-  margin: 0 !important;
-  width: auto !important;
-  font-weight: lighter;
-  text-shadow: none !important;
-}
-.chX-notifs #notifications .notification {
-  cursor: pointer !important;
-}
-.chX-notifs #notifications .notification a.close {
-  display: none !important;
-}
 /* Colors */
-#header-bar #notifications a {
-  color: #ffffff !important;
-}
-#header-bar #notifications a:hover,
-.chX-notifs #header-bar #notifications a:hover {
-  color: var(--sc-linkHColor) !important;
-}
-.chX-notifs #header-bar #notifications a {
-  color: var(--sc-linkColor) !important;
-}
-#stylechan-notifications .stylechan-notification,
-.chX-notifs #notifications .notification {
+#styletower-notifications .styletower-notification {
   color: var(--sc-textColor) !important;
   background: rgb(var(--sc-mainColor-rgb)) !important;
   border-color: rgb(var(--sc-brderColor-rgb)) !important;
   border-left-color: var(--sc-linkColor) !important;
 }
-.chX-notifs #notifications .notification.info,
-#stylechan-notifications .stylechan-notification-info {
+#styletower-notifications .styletower-notification-info {
   border-left-color: #6f8fb3 !important;
 }
-.chX-notifs #notifications .notification.warning,
-#stylechan-notifications .stylechan-notification-warning {
+#styletower-notifications .styletower-notification-warning {
   border-left-color: #c7a85a !important;
 }
-.chX-notifs #notifications .notification.error,
-#stylechan-notifications .stylechan-notification-error {
+#styletower-notifications .styletower-notification-error {
   border-left-color: #c06b6b !important;
 }
-.chX-notifs #notifications .notification.success,
-#stylechan-notifications .stylechan-notification-success {
+#styletower-notifications .styletower-notification-success {
   border-left-color: var(--sc-quoteColor) !important;
 }
-.chX-notifs #notifications .notification a {
+/* Holotower TS notifications, styled like StyleTower toasts */
+:root.ts-notifs #notification_container {
+  position: fixed;
+  top: 38px;
+  right: 10px;
+  left: auto;
+  z-index: 65;
+  width: min(320px, calc(100vw - 20px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+:root.ts-notifs #notification_container .message_notification {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  width: auto !important;
+}
+:root.ts-notifs #notification_container .notification_div {
+  cursor: pointer;
+  padding: 7px 10px !important;
+  border: 1px solid rgb(var(--sc-brderColor-rgb)) !important;
+  border-left: 3px solid var(--sc-linkColor) !important;
+  border-radius: 3px;
+  box-shadow: rgba(0,0,0,.25) 0 2px 8px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.35;
+  min-height: 10px;
+  color: var(--sc-textColor) !important;
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+}
+:root.ts-notifs #notification_container .notification_div a.notification_close {
+  float: right;
+  margin-left: 6px;
   color: var(--sc-linkColor) !important;
 }
-.chX-notifs #notifications .notification a:hover {
-  color: var(--sc-linkHColor) !important;
+:root.ts-notifs #notification_container .notification_div .alert_message {
+  display: inline;
+  margin: 0 !important;
+  padding: 0 !important;
 }

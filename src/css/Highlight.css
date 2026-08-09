@@ -1,93 +1,36 @@
 /* Highlight all posts */
 :root.hl-border .post.reply,
-:root.op-background.hl-border .postContainer.opContainer {
+:root.op-background.hl-border .post.op {
   border-left: " + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 :root.hl-border-down .post.reply,
-:root.op-background.hl-border-down .postContainer.opContainer {
+:root.op-background.hl-border-down .post.op {
   border-bottom: " + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 :root.hl-outline .post.reply,
-:root.op-background.hl-outline .postContainer.opContainer {
+:root.op-background.hl-outline .post.op {
   outline: " + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ");
 }
-/* Filter Highlighting */
-.filter-highlight .catalog-thumb {
-  box-shadow: 0 0 3px 3px rgba(var(--sc-postHLColor-rgb),0.5) !important;
-}
-.filter-highlight.opContainer,
-.filter-highlight > .reply {
-  box-shadow: 5px 0 rgba(var(--sc-postHLColor-rgb),0.5) inset !important;
-}
-.filter-highlight > div.sideArrows {
-  color: rgba(var(--sc-postHLColor-rgb),0.5) !important;
-}
 /* Outlines */
-.qphl {
+.post-hover {
   outline: 2px solid rgba(var(--sc-linkColor-rgb),0.5) !important;
 }
-/* Posts Quoting You */
-:root.highlight-you .quotesYou.post.op,
-:root.highlight-you.fourchan-x .quotesYou.opContainer,
-:root.highlight-you .quotesYou > .reply {
-  border-left: " + $SS.conf["Width Decoration"] + "px solid rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
-}
-:root.highlight-you .quotesYou > .sideArrows {
-  color: rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
+/* Posts Quoting You (marked by the site/TS; .oneechan boosts specificity over TS's hardcoded colors) */
+:root.oneechan.highlight-you .hasQuoteYou.post.op,
+:root.oneechan.highlight-you .hasQuoteYou.post.reply,
+:root.oneechan.highlight-you .quoting-you.post.op,
+:root.oneechan.highlight-you .quoting-you.post.reply {
+  border-left: " + $SS.conf["Width Decoration"] + "px var(--you-border-style, solid) rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 /* Your Posts */
-:root.highlight-own .yourPost.post.op,
-:root.highlight-own.fourchan-x .yourPost.opContainer,
-:root.highlight-own .yourPost > .reply {
-  border-left: " + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
-}
-:root.highlight-own .yourPost > .sideArrows {
-  color: rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
+:root.oneechan.highlight-own .yourPost.post.op,
+:root.oneechan.highlight-own .yourPost.post.reply,
+:root.oneechan.highlight-own .post.op.you,
+:root.oneechan.highlight-own .post.reply.you {
+  border-left: " + $SS.conf["Width Decoration"] + "px var(--you-border-style, dashed) rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 /* Highlighted Reply BG */
+.reply.highlighted,
 .reply:target {
   background: rgba(var(--sc-replybgHLColor-rgb),0.8) !important;
-}
-/* Reply Selection (default keybind J/K) */
-.highlight {
-  outline: 2px solid rgba(var(--sc-replyslctColor-rgb),1.0) !important;
-}
-/* Highlighted Threads */
-.catalog-thread.watched .catalog-thumb,
-.catalog-thread.watched .werkTyme-filename,
-.thumb.pinned {
-  border: 2px solid rgba(var(--sc-postHLColor-rgb),1.0) !important;
-}
-/* Thread Watcher */
-.replies-quoting-you > .watcher-link {
-  color: rgba(var(--sc-quotesYouHLColor-rgb),1.0) !important;
-}
-.replies-quoting-you > .watcher-link:hover {
-  color: var(--sc-linkHColor) !important;
-}
-#watched-threads > .replies-quoting-you > a {
-  color: rgba(var(--sc-quotesYouHLColor-rgb),1.0) !important;
-}
-#shortcuts > .shortcut > #watcher-link.disabled.replies-quoting-you {
-  color: rgba(var(--sc-quotesYouHLColor-rgb),.45) !important;
-}
-#watched-threads > .replies-quoting-you > a:hover,
-#shortcuts > .shortcut > #watcher-link.disabled.replies-quoting-you:hover {
-  color: var(--sc-linkHColor) !important;
-}
-/* Highlight (OP) and (You) */
-:root.highlight-opQuotes .qmark-op {
-  color: rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ");
-  font-weight: bold;
-}
-:root.highlight-youQuotes .qmark-you {
-  color: rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ");
-  font-weight: bold;
-}
-/* Scroll Markers (XT) */
-.post-scroll-marker {
-  color: rgba(var(--sc-ownPostHLColor-rgb),.8);
-}
-:root.ss-sidebar.right-sidebar .post-scroll-marker.you-scroll-marker {
-  opacity: 60%;
 }

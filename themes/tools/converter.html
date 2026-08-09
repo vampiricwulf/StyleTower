@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>StyleChan Theme Converter</title>
+<title>StyleTower Theme Converter</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; background: #1a1a1a; color: #bbb; padding: 1em; }
@@ -30,8 +30,8 @@ input[type=file] { display: none; }
 </head>
 <body>
 <div class="card">
-  <h1><a href="index.html" style="color:#888;text-decoration:none" title="Back to tools">&#8592;</a> StyleChan Theme Converter</h1>
-  <p class="sub">Convert AppchanX, Old StyleChan, or 4chan Style Script themes to StyleChan format.<br>Drop a <code>.json</code> file anywhere or click to browse.</p>
+  <h1><a href="index.html" style="color:#888;text-decoration:none" title="Back to tools">&#8592;</a> StyleTower Theme Converter</h1>
+  <p class="sub">Convert AppchanX, Old StyleTower, or 4chan Style Script themes to StyleTower format.<br>Drop a <code>.json</code> file anywhere or click to browse.</p>
   <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
     <div class="dropzone-icon">&equiv;</div>
     <p>Drop <code>.json</code> theme file here<br>or <span class="browse-text">click to browse</span></p>
@@ -48,7 +48,7 @@ input[type=file] { display: none; }
     </div>
     <textarea id="output" readonly></textarea>
   </div>
-  <div class="footer">Output .JSON imports directly into StyleChan via the Themes tab.</div>
+  <div class="footer">Output .JSON imports directly into StyleTower via the Themes tab.</div>
 </div>
 <textarea id="input" hidden></textarea>
 <script>
@@ -173,7 +173,7 @@ function convert(fileName) {
 function download() {
   var a = document.createElement('a'),
     name = (document.getElementById('outputArea').dataset.name || 'theme').replace(/[^a-z0-9_-]/gi, '_');
-  a.download = name + '.stylechan.json';
+  a.download = name + '.styletower.json';
   a.href = 'data:application/json,' + encodeURIComponent(document.getElementById('output').value);
   a.click();
 }

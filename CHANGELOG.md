@@ -1,3 +1,21 @@
+# v1.0.0 (StyleTower)
+*2026-08-09*
+
+- Initial release of **StyleTower**: StyleChan ported from 4chan to https://holotower.org (vichan) — selectors, page detection, quick reply, catalog, watcher, post menu (Toggle You, Delete) and relative dates now target holotower markup
+- Scope: StyleTower styles the page and the features Holotower TS provides, without duplicating TS/site behavior. Accordingly removed: the custom file input, URL upload and filename randomizer (the site file selector plus TS Filename Changer / URL Upload cover these), and own-post/(You) marking (the site and TS Highlight Posts mark them; StyleTower themes the marks and respects TS's border-style setting)
+- Integrates with Holotower TS: mirrors its fixed/auto-hide header state onto the root element for correct page clearance, and themes its notifications, post marks, inline quotes, archive posts and hover colors through TS's own CSS hooks
+- Themed vichan/holotower elements the 4chan-era CSS never covered: form header cells, the "Posting mode" banner, the post menu (the site paints it with colors sampled at page load), the file-selector dropzone, TS's URL/filename posting controls, and the floating Quick Reply button (optional replacement image via the QR Button Image option; sidebar-aware placement)
+- Quick reply: submit button moved to a full-width bottom row, TS posting controls are restored when another script pre-builds the QR before TS finishes, and sidebar layouts no longer push the submit button off-screen
+- Dark themes no longer tint blue: the site stylesheet loaded for flashbang mitigation (e.g. Tomorrow) is disabled once StyleTower's CSS is active
+- "Margin Between Replies" now works on vichan's `<br>`-separated posts, "Recolor Even Replies" parity is immune to TS's injected hover helpers, and OP backgrounds wrap the OP file
+- The StyleTower menu link sits next to the site's [Options] link; themed SVG icons for both and for the scroll arrows (Use StyleTower Icons)
+- New option: Animated GIF Thumbnails
+- Folded in the standalone companion userscripts (each toggleable under Options → Misc → Integrations; disable the option before running a standalone copy): Auto Scroll, ImgOps Links, X/BSKY Sauce, Catalog Highlights and Pin. Inline quoting, custom fixes and soundposts are left to Holotower TS, which provides them
+- Removed 4chan-only features: pass, ads, blotter, TCaptcha single-view captcha (holotower uses Cloudflare Turnstile), 4chan X support
+- Storage uses the site's native formats (`own_posts`, `watch_js`) so marks are shared with the site's own scripts
+
+---
+
 ## v1.9.0
 *2026-07-31*
 

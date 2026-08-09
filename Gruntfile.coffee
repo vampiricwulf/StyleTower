@@ -56,7 +56,7 @@ module.exports = (grunt) ->
     compress:
       crx:
         options:
-          archive: 'builds/StyleChan-Chrome.zip'
+          archive: 'builds/StyleTower-Chrome.zip'
           level: 9
           pretty: true
         expand: true

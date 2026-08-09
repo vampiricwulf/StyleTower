@@ -1,119 +1,73 @@
 /* Text Colors */
 /* General */
 body,
-div.boardBanner,
-#menu,
+header,
+.post-menu,
 input,
 textarea,
-a.summary,
-.pages.cataloglink a,
-.pages strong>a,
-#qr-filename-container,
-#post-preview,
-.post-last,
+span.omitted,
+#thread-catalog,
+div.pages a.selected,
 .pln,
 select,
-.captcha-root,
-#t-root,
-#t-task,
-#t-load,
-#t-next,
-.tegaki-label,
-.dd-menu ul,
-.boxbar,
-.postblock,
-.globalMessage,
-table.postForm tr td {
+form table th,
+div.banner,
+form[name=post] table td {
   color: var(--sc-textColor) !important;
 }
 /* Names */
-.nameBlock:not(.capcodeMod)>.name,
-.com,
-.post-author {
+p.intro span.name,
+.com {
   color: var(--sc-nameColor) !important;
 }
-.nameBlock.capcodeMod,
-:root:not(.fourchan-x) span.capcodeMod span.name,
-:root:not(.fourchan-x) span.capcodeMod strong.capcode {
+p.intro span.capcode,
+p.intro a.capcode {
   color: #800080 !important;
 }
-.id_admin,
-.nameBlock.capcodeAdmin span.name {
-  color: #F00 !important;
-}
 /* Tripcodes */
-.nameBlock>.postertrip,
-.post-tripcode,
+p.intro span.trip,
 .tag {
   color: var(--sc-tripColor) !important;
 }
 /* Links */
-a:not(s>a),
-a.replylink:not(:hover),
+a:not(span.spoiler>a),
 a:visited,
-s:hover>a:not(:hover),
+span.spoiler:hover>a:not(:hover),
 :root .typ,
 :root .atn,
-body.is_catalog .button,
-:root.catalog-mode .button,
-:root .options-button,
-:root .tegaki-tb-btn,
-#arc-list .quotelink {
+:root .options-button {
   color: var(--sc-linkColor) !important;
 }
 :root a:hover,
-:root div.post div.postInfo span.postNum a:hover,
-body.is_catalog .button:hover,
-:root.catalog-mode .button:hover,
+:root div.post p.intro a.post_no:hover,
 .lit,
-.tegaki-tb-btn:hover,
-#import-link>.options-button:hover,
-#arc-list .quotelink:hover {
+#import-link>.options-button:hover {
   color: var(--sc-linkHColor) !important;
 }
 /* Header */
-#header-bar,
-a.current,
-:root:not(.fourchan-x) .boardSelect .customBoardList,
-:root:not(.fourchan-x) .boardSelect,
-:root:not(.fourchan-x) .persistentNav {
+.boardlist {
   color: var(--sc-headerColor) !important;
 }
-#header-bar a:not(.current),
-:root:not(.fourchan-x) div#boardNavMobile,
-:root:not(.fourchan-x) .boardSelect .customBoardList a,
-:root:not(.fourchan-x) div.pageJump a {
+.boardlist a {
   color: var(--sc-headerLColor) !important;
 }
-#header-bar a:hover,
-:root:not(.fourchan-x) div#boardNavMobile a:hover {
+.boardlist a:hover {
   color: var(--sc-headerLHColor) !important;
 }
-#custom-board-list .current {
-  border-bottom: 1px solid rgba(var(--sc-linkColor-rgb),1) !important;
-}
-#custom-board-list .current:hover {
-  border-bottom: 1px solid rgba(var(--sc-linkHColor-rgb),1) !important;
-}
-:root:not(.fourchan-x) div#boardNavMobile,
-:root:not(.fourchan-x) .persistentNav {
+.boardlist {
   background-color: var(--sc-headerBGColor);
   border-bottom-color: var(--sc-brderColor);
 }
 /* Greentext */
-.postMessage>.quote,
-s:hover .quote,
+div.body span.quote,
+span.spoiler:hover .quote,
 .str,
 .atv,
-.new,
-.catalog-thread > .comment > .quote {
+.theme-catalog .replies .quote {
   color: var(--sc-quoteColor) !important;
 }
 /* Subject and Option labels */
-.subject,
-.replytitle,
-.teaser b,
-.post-subject,
+span.subject,
 .option.header .option-title,
 .kwd,
 .tab-label {
@@ -123,42 +77,30 @@ s:hover .quote,
   font-size: 140%;
 }
 /* Board Title */
-.boardTitle {
+header h1 {
   color: var(--sc-boardColor) !important;
   text-shadow: none !important;
 }
 /* Backlinks */
-:root .backlink, 
-:root .backlink.deadlink,
-:root .hashlink,
-a.postMenuBtn {
+:root p.intro .mentioned a,
+a.post-btn {
   color: var(--sc-blinkColor) !important;
 }
-:root .hashlink {
-  opacity: .8;
-}
-:root .hashlink:hover {
-  opacity: 1;
-}
-:root.backlink-shadow .backlink {
+:root.backlink-shadow p.intro .mentioned a {
   text-shadow: 1px 1px 5px;
 }
-:root .quotelink,
-:root .deadlink {
+:root div.body a[onclick*='highlightReply'],
+:root div.body a[onclick*='citeReply'],
+:root div.body a.quotelink {
   color: var(--sc-qlColor) !important;
 }
 /* Code Tags */
-.prettyprint,
-.catalog-code {
+pre {
   background: none repeat scroll 0 0 rgba(var(--sc-codeBackground)) !important;
   border: 1px solid rgba(var(--sc-codeBorder)) !important;
 }
 .pun,
-#qr-no-file,
-::placeholder,
-#t-load:disabled,
-:root.single-captcha #t-next:not(.is-ready),
-:root:not(.single-captcha) #t-next:disabled {
+::placeholder {
   color: rgba(var(--sc-textColor-rgb),.4) !important;
 }
 /* Backgrounds */
@@ -166,85 +108,75 @@ body {
   background: var(--sc-bgImg) var(--sc-bgColor) !important;
 }
 .reply,
-body.is_catalog .panel,
-:root.catalog-mode .panel,
-.dialog,
-#post-preview,
-#tegaki,
-.boxbar,
-:root.op-background .op:not(.inline .op),
-.flashListing tr:nth-of-type(2n+1):not(.highlightPost),
-.dd-menu ul,
-:root.catalog-hover-expand .catalog-container:hover > .post,
-#threadWatcher,
-#qrHeader,
-#qrCaptchaContainer,
-table.postForm tr td {
+#options_div,
+#alert_div,
+#pin-settings,
+#header-bar.dialog,
+:root.op-background .post.op,
+.watch-menu,
+#quick-reply .handle,
+form table th,
+div.banner,
+form[name=post] table td {
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp))!important;
 }
+/* Post menu: the site paints .post-menu ul with colors sampled at load plus a hardcoded text color, so override with !important */
+.post-menu ul {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border: 1px solid var(--sc-brderColor) !important;
+}
+.post-menu,
+.post-menu li {
+  color: var(--sc-textColor) !important;
+}
+.post-menu li:hover {
+  background: rgb(var(--sc-mainColor-shift15)) !important;
+}
 .tab-label,
-#fourchanx-settings,
 #oneechan-options {
   background: rgb(var(--sc-mainColor-rgb)) !important;
 }
-:root.recolor-even .thread>.replyContainer:nth-of-type(even):not(.hidden) .post:not(.reply:target, .inline>.postContainer>.post),
-.flashListing tr:nth-of-type(2n):not(.highlightPost),
-:root:not(.fourchan-x) .reply.highlight {
-  background: rgb(var(--sc-mainColor-shiftM10), var(--sc-replyOp)) !important;
-}
-:root:not(.header-gradient) #header-bar {
+/* Recolor Even Replies lives in setThemeVariables: its :nth-child(even of ...) selector
+   (needed so TS's injected hover .post.dummy can't flip the parity) is mangled by cssmin. */
+:root:not(.header-gradient) .boardlist {
   background: rgba(var(--sc-headerBGColor-rgb), var(--sc-navOp)) !important;
 }
-:root.header-gradient #header-bar {
+:root.header-gradient .boardlist {
   background: linear-gradient(rgb(var(--sc-headerBGColor-shift15)),rgba(var(--sc-headerBGColor-rgb), var(--sc-navOp))) !important;
 }
-:root.header-shadow #header-bar,
-.captcha-root div,
-#t-root,
-#qrCaptchaContainer {
+:root.header-shadow .boardlist {
   box-shadow: none !important;
 }
-:root:not(.fixed) #header-bar {
-  background: none !important;
-}
 .options-button,
-.qr-link,
-#qrSpoiler label,
-.pages.cataloglink,
-.pages strong>a,
+#link-quick-reply,
+label[for='q-spoiler-image'],
+#thread-catalog,
+div.pages a.selected,
 input[value='Next'],
 input[value='Previous'],
-#quickReply input[type=submit],
-#postForm input[type=submit] {
+button.outline,
+#quick-reply input[type=submit],
+form[name=post] input[type=submit] {
   background: linear-gradient(rgb(var(--sc-mainColor-shift15)), rgb(var(--sc-mainColor-rgb))) !important;
 }
 .options-button:hover,
 .import-input:hover + .options-button,
-.pages strong>a:hover,
-.dd-menu li:hover,
+div.pages a.selected:hover,
 input[value='Next']:hover,
 input[value='Previous']:hover,
-#quickReply input[type=submit]:hover,
-#postForm input[type=submit]:hover {
+button.outline:hover,
+#quick-reply input[type=submit]:hover,
+form[name=post] input[type=submit]:hover {
   background: rgb(var(--sc-mainColor-shift15));
 }
-.focused.entry {
-  background: rgb(var(--sc-mainColor-shift10)) !important;
-}
-.qr-link:hover,
-:root.vertical-qr #qr .move {
+#link-quick-reply:hover,
+:root.vertical-qr #quick-reply .handle {
   background: rgb(var(--sc-mainColor-rgb));
 }
 input[type=text],
-input.field,
-#qr input,
+#quick-reply input,
 textarea,
-#qr-filename-container,
-select,
-.captcha-root > div,
-#t-root,
-#t-load,
-#t-next {
+select {
   background: var(--sc-inputColor) !important;
   transition: background .2s, color .2s, border-color .2s !important;
 }
@@ -252,283 +184,142 @@ input[type=checkbox] {
   background: rgb(var(--sc-inputColor-shift25)) !important;
 }
 input[type=text]:hover,
-input.field:hover,
-#qr input:hover,
+#quick-reply input:hover,
 input[type=checkbox]:hover,
-#qr-filename-container:hover,
 textarea:hover,
-select:hover,
-#t-load:hover,
-#t-next:hover {
+select:hover {
   background: rgb(var(--sc-inputColor-hover)) !important;
 }
 hr {
   background-image: linear-gradient(to left, rgba(var(--sc-brderColor-rgb),0), rgb(var(--sc-brderColor-rgb)), rgba(var(--sc-brderColor-rgb),0));
 }
-/* Unread line */
-#unread-line {
-  background-image: linear-gradient(to left, rgba(var(--sc-unreadColor-rgb),0), rgb(var(--sc-unreadColor-rgb)), rgba(var(--sc-unreadColor-rgb),0));
-}
-
-.newPostsMarker,
-.newPostsMarker:not(#quote-preview) {
-  box-shadow: 0 3px rgb(var(--sc-unreadColor-rgb)) !important;
-}
-.inline {
+.post-hover {
   background: rgba(var(--sc-mainColor-shiftM16),.8)!important;
 }
-:root.post-info .reply>.postInfo {
+:root.post-info .reply>p.intro {
   background: rgba(var(--sc-mainColor-shiftM16),.2);
   border-bottom: 1px solid rgb(var(--sc-mainColor-shift4));
 }
 /* Borders */
 .reply,
-:root.op-background .op:not(#qp .op, .inline .op),
-.dd-menu ul {
+:root.op-background .post.op {
   border-width: 0 1px 1px 0;
   border-style: solid;
 }
 :root.borders-all .reply,
-:root.borders-all.op-background .op {
+:root.borders-all.op-background .post.op {
   border-width: 1px !important;
 }
 :root.borders-none .reply,
-:root.borders-none.op-background .op {
+:root.borders-none.op-background .post.op {
   border: 0 !important;
 }
-#menu,
-.catalog-thumb {
+.post-menu ul,
+img.thread-image {
   border-radius: 0 !important;
 }
-:root.rounded-corners #menu,
+:root.rounded-corners .post-menu ul,
+:root.rounded-corners button.outline,
 :root.rounded-corners input,
-:root.rounded-corners .thumb,
 :root.rounded-corners .reply,
-:root.rounded-corners .panel,
 :root.rounded-corners select,
-:root.rounded-corners #t-load,
-:root.rounded-corners #t-next,
-:root.rounded-corners .inline,
+:root.rounded-corners .post-hover,
 :root.rounded-corners textarea,
-:root.rounded-corners #updater,
-:root.rounded-corners a.qr-link,
-:root.rounded-corners #qrHeader,
+:root.rounded-corners #link-quick-reply,
+:root.rounded-corners #quick-reply .handle,
 :root.rounded-corners #add-theme,
-:root.rounded-corners .dd-menu ul,
-:root.rounded-corners #thread-stats,
-:root.rounded-corners #bannerCnt img,
-:root.rounded-corners .catalog-thumb,
-:root.rounded-corners #threadWatcher,
-:root.rounded-corners .watcher-thumb,
+:root.rounded-corners #thread_stats,
+:root.rounded-corners img.board_image,
+:root.rounded-corners img.thread-image,
+:root.rounded-corners .watch-menu,
 :root.rounded-corners .preview-border,
 :root.rounded-corners .options-button,
 :root.rounded-corners label.tab-label,
-:root.rounded-corners .pages strong>a,
-:root.rounded-corners #qrSpoiler label,
+:root.rounded-corners div.pages a.selected,
+:root.rounded-corners label[for='q-spoiler-image'],
 :root.rounded-corners #oneechan-options,
 :root.rounded-corners .color-picker-btn,
-:root.rounded-corners.op-background .op,
-:root.rounded-corners .captcha-root div,
-:root.rounded-corners #qr .captcha-root,
-:root.rounded-corners .pages.cataloglink,
+:root.rounded-corners.op-background .post.op,
+:root.rounded-corners #thread-catalog,
 :root.rounded-corners input[value='Next'],
-:root.rounded-corners #qr-filename-container,
 :root.rounded-corners input[value='Previous'],
-:root.rounded-corners .dialog:not(#header-bar),
-:root.rounded-corners #quickReply input[type=submit],
-:root.rounded-corners .fileThumb img:not(.full-image),
-:root.rounded-corners.werkTyme .catalog-thread:not(:hover),
-:root.rounded-corners.werkTyme:not(.catalog-hover-expand) .catalog-thread,
-:root.rounded-corners.catalog-hover-expand .catalog-container:hover > .post,
-:root.rounded-corners.catalog-hover-expand .catalog-container:hover .catalog-reply  {
+:root.rounded-corners #options_div,
+:root.rounded-corners #alert_div,
+:root.rounded-corners #pin-settings,
+:root.rounded-corners #quick-reply input[type=submit],
+:root.rounded-corners img.post-image {
   border-radius: 3px !important;
 }
-:root.post-info.rounded-corners .reply>.postInfo,
-:root.rounded-corners #qr,
-:root.rounded-corners #quickReply,
-:root.rounded-corners:root.vertical-qr #qr > .move {
+:root.post-info.rounded-corners .reply>p.intro,
+:root.rounded-corners #quick-reply,
+:root.rounded-corners:root.vertical-qr #quick-reply .handle {
   border-radius: 3px 3px 0 0 !important;
 }
-:root:not(.rounded-corners) #post-preview,
-:root:not(.rounded-corners) #file-n-submit > input {
-  border-radius: 0 !important;
-}
 .reply,
-:root.op-background .op,
-.dialog,
-.entry,
-.inline,
+:root.op-background .post.op,
+#options_div,
+#alert_div,
+#pin-settings,
+#header-bar.dialog,
+.post-hover,
 fieldset,
-#post-preview,
-.flashListing td:not(:last-of-type):not(.postblock),
-:root.vertical-qr #qr .move,
-#qr select,
+:root.vertical-qr #quick-reply .handle,
+#quick-reply select,
 select,
-#quickReply {
+#quick-reply {
   border-color: var(--sc-brderColor) !important;
-}
-.dd-menu li {
-  border-bottom: var(--sc-brderColor) !important;
 }
 input,
 textarea,
-#qr-filename-container,
-.captcha-img,
-:root.vertical-qr #qr .move,
-#qr select,
-#qrSpoiler label,
+:root.vertical-qr #quick-reply .handle,
+#quick-reply select,
+label[for='q-spoiler-image'],
 select,
-.postblock,
-#post-preview,
-.captcha-root,
-#quickReply,
-#threadWatcher,
-table.postForm tr td,
-#t-root,
-#t-load,
-#t-next,
-.dd-menu ul,
-:root.werkTyme .catalog-thread:not(:hover),
-:root.werkTyme:not(.catalog-hover-expand) .catalog-thread,
-:root.catalog-hover-expand .catalog-container:hover > .post,
-:root.catalog-hover-expand .catalog-container:hover .catalog-reply {
+form table th,
+#quick-reply,
+.watch-menu,
+form[name=post] table td {
   border: 1px solid var(--sc-inputbColor) !important;
 }
 .options-button,
-.qr-link,
-.pages.cataloglink,
-.pages strong>a,
+#link-quick-reply,
+#thread-catalog,
+div.pages a.selected,
 input[value='Next'],
-input[value='Previous'] {
+input[value='Previous'],
+button.outline {
   border-style: solid;
   border-width: 1px;
   border-color: rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM30)) !important;
 }
-a.quotelink.forwardlink, a.backlink.forwardlink {
-  border-bottom: 1px dashed;
+button.outline {
+  color: var(--sc-textColor) !important;
+  cursor: pointer;
 }
 input[type=text]:focus,
-input.field:focus,
-#qr input:focus,
+#quick-reply input:focus,
 textarea:focus,
-#qr-filename-container:focus,
-#qr-filename-container.focus,
-select:focus,
-#t-load:focus,
-#t-next:focus {
+select:focus {
   border: 1px solid var(--sc-linkColor) !important;
 }
-#search-box:hover,
-#index-search:hover,
-.captcha-img:hover {
-  border-color: var(--sc-linkColor) !important;
-}
-#header-bar {
+.boardlist {
   border: none !important;
 }
-.flashListing td:not(:last-of-type):not(.postblock) {
-  border-width: 1px;
-  border-style: solid;
-}
-:root.header-highlight #custom-board-list .current:hover,
-:root.header-highlight #custom-board-list .current {
-  border-bottom: none !important;
-}
-/* 4chan X Menu */
-.suboption-list > div:last-of-type {
-  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp))!important;
-}
-.suboption-list > div::before,
-.suboption-list::before {
-  border-color: var(--sc-brderColor) !important;
-  left: 0.5em !important;
-}
 /* Shadows */
-#navlinks a {
-  text-shadow:var(--sc-mainColor) -1px -1px,
-  var(--sc-mainColor) 1px -1px,
-  var(--sc-mainColor) -1px 1px,
-  var(--sc-mainColor) 1px 1px,
-  var(--sc-mainColor) -1px 0,
-  var(--sc-mainColor) 1px 0,
-  var(--sc-mainColor) 0 -1px,
-  var(--sc-mainColor) 0 1px,
-  rgba(0,0,0,.6) 0 2px 4px,
-  rgba(0,0,0,.6) 0 0 2px;
-}
-.thumb {
+img.thread-image {
   box-shadow: 0 0 5px rgba(0,0,0,.25);
 }
-#qr,
-#thread-watcher,
-#threadWatcher {
+#quick-reply,
+.watch-menu {
   box-shadow: 1px 1px 3px rgba(0,0,0,.1) !important;
 }
-/* Closed Threads */
-.closed {
-  margin-top: 10px;
-  color: red;
-}
-/* /f/ */
-#swf-embed-header.postblock {
-  border: 1px solid var(--sc-brderColor) !important;
-  background-color: rgba(var(--sc-headerBGColor-rgb), var(--sc-navOp)) !important;
-  color: var(--sc-linkColor) !important;
-}
-#swf-embed-close {
-  right: 1px !important;
-}
-/* 4chan XT: fxtwitter embed card */
-.fxt-card {
-  color: var(--sc-textColor) !important;
-  background-color: rgba(var(--sc-bgColor-rgb), var(--sc-replyOp)) !important;
-  border: 1px solid var(--sc-brderColor) !important;
-}
 /* Alternative Spoiler Color */
-:root.alt-spoiler .span.spoiler,
-:root.alt-spoiler s,
-:root.alt-spoiler s:not(:hover)>a,
-:root.alt-spoiler s:not(:hover)>.linkify {
+:root.alt-spoiler span.spoiler,
+:root.alt-spoiler span.spoiler:not(:hover)>a {
   color: #fff;
   background: none repeat scroll 0 0 #fff;
 }
 :root.alt-spoiler span.spoiler:hover,
-:root.alt-spoiler s:hover,
-:root.alt-spoiler span.spoiler:focus,
-:root.alt-spoiler s:focus {
+:root.alt-spoiler span.spoiler:focus {
   color: #000;
-}
-/* Mobile */
-@media only screen and (max-width: 480px) {
-  .backlink.mobile,
-  div.post div.postInfoM {
-    background: rgba(var(--sc-mainColor-shiftM16),.2);
-    border-bottom: 1px solid rgb(var(--sc-mainColor-shift4));
-    border-top: none !important;
-  }
-  div.opContainer,
-  div.replyContainer {
-    background-color: unset !important;
-  }
-  div.post div.postInfoM span.dateTime {
-    color: var(--sc-textColor) !important;
-  }
-  div.post div.postInfoM span.postNum a, 
-  div.postInfo span.postNum a,
-  a.quoteLink {
-    color: var(--sc-linkColor) !important;
-  }
-  div.post div.postInfoM span.postNum a:hover, 
-  div.postInfo span.postNum a:hover,
-  a.quoteLink:hover {
-    color: var(--sc-linkHColor) !important;
-  }
-  .button {
-    border-color: rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM30)) !important;
-    background: linear-gradient(rgb(var(--sc-mainColor-shift15)),rgb(var(--sc-mainColor-rgb))) !important;
-    color: var(--sc-linkColor) !important;
-  }
-  .button:hover {
-    color: var(--sc-linkHColor) !important;
-  }
 }

@@ -3,24 +3,12 @@ input,
 select,
 textarea,
 button,
-::placeholder, 
+::placeholder,
 form,
 span,
-a.qr-link,
-.entry,
-#qrCaptchaContainer,
-#captchaFormPart,
-tr#captchaFormPart td div#t-root,
-div.captcha-root div,
-input#search-box,
-table.flashListing td,
-.persistentNav, div#boardNavMobile,
-#togglePostFormLink,
-div#topnav.boardnav,
-div#boardNavMobile option,
-div.boardBanner div.boardTitle,
-:root.fourchan-x div.boardBanner div.boardTitle,
-#post-preview {
+#link-quick-reply,
+.boardlist,
+header h1 {
   font-family: inherit !important;
   font-size: inherit !important;
 }
@@ -29,48 +17,36 @@ body {
   font-family: " + ($SS.conf["Custom Font"] ? "'" + $SS.conf["Custom Font"] + "'" : $SS.formatFont($SS.conf["Font Family"])) + " !important;
   font-size: " + $SS.conf["Font Size"] + "px !important;
 }
-:root.anonymize .name::before,
-:root.shortcut-icons #shortcuts .fa::before,
-.entry,
-.dd-menu {
+.post-menu {
   font-size: " + $SS.conf["Font Size"] + "px !important;
 }
 /* Slightly smaller */
-.fileText,
-.meta,
-.summary,
-.catalog-stats {
+p.fileinfo,
+span.omitted,
+.theme-catalog .replies>strong {
   font-size: 82% !important;
 }
 /* Board title -> larger */
-div.boardBanner div.boardTitle,
-:root.fourchan-x div.boardBanner div.boardTitle {
+header h1 {
   font-weight: normal !important;
   font-size: " + (($SS.conf["Font Size"] < 13) ? 22 : 26) + "px !important;
 }
 /* Code blocks */
-.prettyprint span {
+pre span {
   font-family: monospace !important;
   font-size: medium !important;
 }
 /* Header bar & board list -> slightly smaller */
-#full-board-list,
-body>#header-bar,
-#full-board-list .fourchanx-link {
+body>.boardlist {
   font-size: " + ($SS.conf["Font Size"] - 1) + "px !important;
 }
 @media (min-width: 1280px) and (max-width: 1920px) {
-  #board-list {
+  .boardlist {
     word-spacing: " + (($SS.conf["Font Size"] < 14) ? -1 : -2) + "px;
   }
 }
-/* 4chanX anonymize override */
-:root.anonymize .name,
-:root.sw-yotsuba.anonymize .post-author:not([class*=capcode]) {
-  font-size: 0 !important;
-}
 /* Backlinks */
-:root:not(.backlink-icon) .container :is(.backlink, .hashlink) {
+:root:not(.backlink-icon) p.intro .mentioned a {
   font-size: " + $SS.conf["Backlink Font Size"] + "px !important;
 }
 /* Options panels + others -> capped to not break */
@@ -78,38 +54,28 @@ body>#header-bar,
 .options-button,
 .theme-preview,
 #oneechan-options,
-#fourchanx-settings,
-.UIPanel,
-.panel,
+#options_div,
+#alert_div,
 a.options-button,
-.pagelist.desktop,
-div#twHeader,
-a.qr-link {
+div.pages,
+#link-quick-reply {
   font-size: " + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px !important;
 }
 /* UI font size */
-#qr-file-button,
-#qr input[type=submit],
-#qr label,
-#qr .move,
-#qr-no-file,
-select:not([id^=index-]):not([id$=-ctrl]):not(#boardSelectMobile, #oneechan-options select, #add-theme select, #fourchanx-settings select),
-:root #t-load,
-:root #t-next,
-:root #t-task,
-.hide-reply-button,
-.hide-thread-button,
-#qrHeader::before,
-span#qr-filename-container {
+#quick-reply input[type=submit],
+#quick-reply label,
+#quick-reply .handle,
+select:not(#oneechan-options select, #add-theme select),
+#quick-reply .handle::before,
+button.outline {
   font-size: " + $SS.conf["UI Font Size"] + "px !important;
 }
 /* QR extra */
-#qr-file-button,
-#qr input[type="submit"],
-#qr label {
+#quick-reply input[type=submit],
+#quick-reply label {
   text-transform: uppercase;
 }
-#qr label {
+#quick-reply label {
   overflow: hidden;
   padding-bottom: 2px;
 }
@@ -117,33 +83,23 @@ span#qr-filename-container {
 :root.underline-disabled a {
   text-decoration: none !important;
 }
-.navLinks.navLinksBot.desktop a {
+#thread-interactions a {
   text-decoration: underline;
 }
-:root.underline-disabled .filtered {
-  text-decoration: line-through !important;
-}
-.deadlink.quotelink {
-  text-decoration: none !important;
-}
-:root.underline-quotes .deadlink.quotelink,
-:root.underline-quotes .quotelink,
-:root.underline-quotes .deadlink.backlink,
-:root.underline-quotes .backlink {
+:root.underline-quotes div.body a[onclick*='highlightReply'],
+:root.underline-quotes div.body a[onclick*='citeReply'],
+:root.underline-quotes div.body a.quotelink,
+:root.underline-quotes p.intro .mentioned a {
   text-decoration: underline !important;
 }
 a.options-button,
 #oneechan-version a {
   text-decoration: none !important;
 }
-.closed {
-  text-align: center;
-}
 /* Font weight */
-.name,
-.subject,
+span.name,
+span.subject,
 .option.header .option-title,
-a.current,
 .tab-label.selected {
   font-weight: " + ($SS.conf["Bitmap Font"] ? "normal" : "bold") + " !important;
 }
@@ -151,11 +107,10 @@ a.current,
   font-weight: normal;
   opacity: 0.85;
 }
-/* /f/ */
-.postblock {
+form table th {
   font-weight: bold;
 }
 /* Font Style */
-.summary {
+span.omitted {
   font-style: " + ($SS.conf["Bitmap Font"] ? 'none' : 'italic') + ";
 }

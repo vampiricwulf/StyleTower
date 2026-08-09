@@ -1,62 +1,23 @@
 /* Hide things we don't want */
-:root.hide-board-name .boardTitle,
-:root.hide-board-name .boardSubtitle,
-:root.hide-banner #bannerCnt,
-:root.hide-banner .boardBanner>img,
-:root.hide-blotter #blotter,
-.mobile,
-#delform .mobile.center,
+:root.hide-board-name header h1,
+:root.hide-board-name header div.subtitle,
+:root.hide-banner img.board_image,
 .tab-select:not(:checked)+div,
 iframe[src='about:blank'],
-#absbot,
-.stylechanger,
-#styleSwitcher,
-:root:not(.show-ads) .center:not(#settingsMenu .center):not(#customMenu .center):not(#theme-btns .center),
-:root:not(.show-ads) .danbo-slot,
-:root.show-ads.hide-top-ad .topad.center,
-:root.show-ads.hide-top-ad #danbo-s-t.danbo-slot,
-:root.show-ads.hide-board-banners .middlead.center,
-:root.show-ads.hide-bottom-ad .bottomad.center,
-:root.show-ads.hide-bottom-ad #danbo-s-b.danbo-slot,
-#delPassword,
-:root.show-file-info .file-info,
-#delform .post input[type=checkbox],
-#qp .post input[type=checkbox],
-#quote-preview input[type=checkbox],
-.deleteform,
-:root.reply-fit-width .sideArrows,
-#qrTid,
-div.pageJump a[href='#bottom'],
-:root.qr-controls #quickReply #qrClose,
-:root.qr-controls #qr .close,
-:root.qr-controls #qr select[data-name=thread],
-:root.qr-controls.fade-qr #qr .move label,
-:root.qr-controls.vertical-qr #qr .move label input,
-:root.fourchan-x.show-form #togglePostFormLink,
-#postForm,
+footer,
+div.styles,
+#password,
+:root.show-file-info p.fileinfo .unimportant,
+form[name=postcontrols] .post input[type=checkbox],
+.post-hover input[type=checkbox],
+:root.qr-controls #quick-reply a.close-btn,
+:root.show-form form[name=post]:not(#quick-reply),
 hr:not(#unread-line),
-:root.hide-navlinkbot .navLinks.navLinksBot.desktop,
-:root.hide-navlinkbot .navLinks.navLinksBottom.mobilebtn,
-:root.hide-navlinktop #info,
-:root.hide-navlinktop .navLinks:not(.navLinksBottom):not(.navLinksBot),
-:root.hide-navlinks body>.desktop:not(.pagelist):not(.navLinksBottom),
-:root.hide-navlinks .navLinks.navLinksBot.desktop,
-:root.hide-navlinks .navLinks,
-.ad-plea,
-:root:not(.show-ads) .adl,
-:root.show-ads.hide-adl .adl,
-:root.show-ads.hide-top-ad #danbo-s-t+.adl,
-:root.show-ads.hide-bottom-ad #danbo-s-b+.adl,
-hr+.adl,
-.exif:not([style]),
-[hidden],
-/* 4chanX QR reply button */
-:root:not(.qr-button).fourchan-x .qr-link-container-bottom,
-:root:not(.qr-button).fourchan-x .qr-link-container,
-:root:not(.qr-button).fourchan-x a[data-cmd='new-thread'],
-/* Native reply form button */
-:root:not(.show-button):not(.fourchan-x) #togglePostFormLink,
-#toggleMsgBtn {
+:root.hide-navlinkbot #thread-links,
+:root.hide-navlinktop div.banner,
+:root.hide-navlinks div.banner,
+:root.hide-navlinks #thread-links,
+[hidden] {
   display: none;
 }
 
@@ -66,15 +27,4 @@ textarea:focus,
 select,
 a {
   outline: 0 !important;
-}
-/* Hide useless Christmas ornament */
-.boardBanner {
-  border-image-source: none !important;
-  border-style: none !important;
-}
-/* Hide desktop when mobile */
-@media only screen and (max-width: 480px) {
-  .postInfo.desktop {
-    display: none !important;
-  }
 }

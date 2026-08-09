@@ -19,7 +19,6 @@
   "update_url": "<%= meta.downloads %>updates.xml",
   "permissions": [
     "storage",
-    "*://boards.4chan.org/*",
-    "*://sys.4chan.org/*"
+    "*://holotower.org/*"
   ]
 }

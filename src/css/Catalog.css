@@ -1,55 +1,44 @@
 /* Catalog */
-.extended-small .teaser, .extended-large .teaser {
+.theme-catalog div.thread .replies {
   margin-left: 5px;
   margin-right: 5px;
 }
-#threads .thread {
+.theme-catalog #Grid div.thread {
   margin: 2px 1px 0 0;
 }
 /* Native Catalog */
-#ctrl {
-  padding-top: 4px;
+select#sort_by,
+select#image_size {
+  margin-top: 4px;
 }
-#threads {
+.theme-catalog div.threads {
   padding: 10px 0 !important;
 }
 /* Catalog Comment */
-:root.catalog-justify .teaser,
-:root.catalog-justify .catalog-post > .postMessage {
+:root.catalog-justify .theme-catalog .replies {
   text-align: justify !important;
 }
 /* Background */
-:root.catalog-background #threads div.thread,
-:root.catalog-background .catalog-thread {
+:root.catalog-background .theme-catalog #Grid div.thread {
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
 }
-:root.rounded-corners.catalog-background #threads div.thread,
-:root.rounded-corners.catalog-background .catalog-thread {
+:root.rounded-corners.catalog-background .theme-catalog #Grid div.thread {
   border-radius: 3px !important;
 }
-:root.catalog-background .teaser,
-:root.catalog-background .catalog-post > .postMessage {
+:root.catalog-background .theme-catalog .replies {
   margin: 0 5px 5px 5px;
 }
-:root.catalog-background .thumb,
-:root.catalog-background img.catalog-thumb  {
+:root.catalog-background .theme-catalog img.thread-image {
   margin-top: 8px;
 }
-:root.catalog-background .extended-large .thread {
-  min-height: 410px;
-}
-:root.catalog-background .extended-small .thread {
-  min-height: 320px;
-}
 /* Thumbnails */
-:root.catalog-thumbsize .thumb,
-:root.catalog-thumbsize img.catalog-thumb  {
+:root.catalog-thumbsize .theme-catalog img.thread-image {
   width: 150px !important;
   height: 150px !important;
+  max-width: none !important;
+  max-height: none !important;
 }
-:root.catalog-thumbsize #threads.large .thumb,
-:root.catalog-thumbsize #threads.extended-large .thumb,
-:root.catalog-thumbsize #delform>.catalog-large img.catalog-thumb  {
+:root.catalog-thumbsize .theme-catalog div.grid-size-large img.thread-image {
   width: 250px !important;
   height: 250px !important;
 }

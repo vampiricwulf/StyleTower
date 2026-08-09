@@ -1,36 +1,5 @@
-.closeIcon {
-  background-image: none !important;
-}
-.closeIcon::after {
-  content: 'x';
-}
-/* Show 4chan Pass users */
-:root.no-pu .n-pu {
-  vertical-align: middle;
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-top: -2px;
-  background: url(//s.4cdn.org/image/minileaf.gif);
-}
-/* Thread watcher favicon */
-.watch-thread-link {
-  margin-bottom: -7px;
-  margin-right: 2px;
-  top: auto !important;
-  bottom: 4px !important;
-}
-:root.use-sc-icons .watch-thread-link {
-  background-image: var(--sc-icon-star) !important;
-}
-:root.use-sc-icons .watch-thread-link > svg {
-  display: none;
-}
-:root:not(.use-sc-icons).oneechan .watch-thread-link > svg {
-  display: inherit !important;
-}
 /* Backlinks */
-:root.backlink-icon .backlink .quotelink {
+:root.backlink-icon p.intro .mentioned a {
   font-size: 0 !important;
   padding: " + (($SS.conf["Font Size"] < 12) ? 5 : 6) + "px !important;
   margin-right: 0 !important;
@@ -40,62 +9,12 @@
   left: 2px;
   background-image: var(--sc-icon-backlink) !important;
 }
-:root.backlink-icon .backlink .quotelink.linkfade {
-  font-size: 0 !important;
-  padding: 6px !important;
-  margin-right: 0 !important;
-  opacity: 0.6 !important;
-  position: relative;
-  bottom: 5px;
-  left: 3px;
-  background-image: var(--sc-icon-downArrow) !important;
-}
-:root.backlink-icon .backlink .quotelink:hover {
+:root.backlink-icon p.intro .mentioned a:hover {
   opacity: 1 !important;
 }
-:root.fourchan-x.backlink-icon .backlink,
-:root.fourchan-xt.backlink-icon .backlink {
-  font-size: 0 !important;
-  padding: " + (($SS.conf["Font Size"] < 12) ? 5 : 6) + "px !important;
-  margin-right: 0 !important;
-  opacity: 0.6 !important;
-  position: relative;
-  bottom: 5px;
-  left: 2px;
-  background-image: var(--sc-icon-backlink) !important;
-}
-:root.fourchan-x.backlink-icon .backlink.inlined,
-:root.fourchan-xt.backlink-icon .backlink.inlined {
-  font-size: 0 !important;
-  padding: 6px !important;
-  margin-right: 0 !important;
-  opacity: 0.6 !important;
-  position: relative;
-  bottom: 5px;
-  left: 3px;
-  background-image: var(--sc-icon-downArrow) !important;
-}
-:root.fourchan-x.backlink-icon .backlink .quotelink,
-:root.fourchan-xt.backlink-icon .backlink .quotelink {
-  position: absolute;
-  inset: 0;
-  font-size: 0 !important;
-}
-:root.fourchan-x.backlink-icon .backlink.inlined .quotelink,
-:root.fourchan-xt.backlink-icon .backlink.inlined .quotelink {
-  position: absolute;
-  left: 3px !important;
-  inset: 0;
-  font-size: 0 !important;
-}
-:root.fourchan-x.backlink-icon .reply .backlink,
-:root.fourchan-xt.backlink-icon .reply .backlink {
-  bottom: " + (($SS.conf["Font Size"] < 12) ? 4 : 6) + "px !important;
-}
 /* From 4chanSS */
-:root.use-sc-icons img[title=Closed],
-:root.use-sc-icons img[title=Sticky],
-:root.use-sc-icons img[title=Archived] {
+:root.use-sc-icons p.intro i.fa.fa-lock,
+:root.use-sc-icons p.intro i.fa.fa-thumb-tack {
   color: transparent !important;
   font-size: 0 !important;
   background-color: transparent !important;
@@ -109,14 +28,63 @@
   width: 16px !important;
 }
 /* Thread Closed */
-:root.use-sc-icons .closedIcon {
+:root.use-sc-icons p.intro i.fa.fa-lock {
   background-image: var(--sc-icon-threadClosed) !important;
 }
 /* Thread Pinned */
-:root.use-sc-icons .stickyIcon {
+:root.use-sc-icons p.intro i.fa.fa-thumb-tack {
   background-image: var(--sc-icon-threadPinned) !important;
 }
-/* Thread Archived */
-:root.use-sc-icons .archivedIcon {
-  background-image: var(--sc-icon-threadArchived) !important;
+/* Header: StyleTower settings next to the site/TS Options link */
+#StyleTowerLink {
+  float: right;
+  margin-left: 4px;
+}
+:root.use-sc-icons #StyleTowerLink {
+  font-size: 0 !important;
+}
+:root.use-sc-icons #StyleTowerLink a,
+:root.use-sc-icons .boardlist > a[title='Options'] {
+  font-size: 0 !important;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: text-bottom;
+  opacity: .8;
+}
+:root.use-sc-icons #StyleTowerLink a {
+  background-image: var(--sc-icon-menu);
+}
+:root.use-sc-icons .boardlist > a[title='Options'] {
+  background-image: var(--sc-icon-options);
+}
+:root.use-sc-icons #StyleTowerLink a:hover,
+:root.use-sc-icons .boardlist > a[title='Options']:hover {
+  opacity: 1;
+}
+/* Floating QR button: keeps the site's default icon; a custom image can be
+   set via the QR Button Image option (rule emitted in setThemeVariables). */
+/* Scroll arrows (site navbuttons.js): replace the PNGs with theme-colored SVGs */
+:root.use-sc-icons #scroll-buttons img {
+  display: none;
+}
+:root.use-sc-icons #scroll-buttons a::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-image: var(--sc-icon-downArrow);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: .7;
+}
+:root.use-sc-icons #scroll-buttons a:hover::before {
+  opacity: 1;
+}
+:root.use-sc-icons #scroll-buttons a#nav-to-top::before {
+  transform: rotate(180deg);
 }

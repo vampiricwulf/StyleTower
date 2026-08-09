@@ -1,9 +1,9 @@
 
 ## Reporting bugs and suggestions
 
-1. Make sure both your **browser** and **StyleChan** are up to date.
+1. Make sure both your **browser** and **StyleTower** are up to date.
 2. Disable your other extensions & scripts to identify conflicts.
-3. If your issue persists, open a [new issue](https://github.com/3nly/StyleChan/issues) with the following information:
+3. If your issue persists, open a [new issue](https://github.com/vampiricwulf/StyleTower/issues) with the following information:
   1. Precise steps to reproduce the problem, with the expected and actual results.
   2. Console errors, if any.
   3. Browser version.
@@ -18,9 +18,9 @@ Open your console with:
 
 - Install [node.js](http://nodejs.org/).
 - Install [Grunt's CLI](http://gruntjs.com/) with `npm install -g grunt-cli`.
-- Clone StyleChan.
+- Clone StyleTower.
 - `cd` into it.
-- Install/Update StyleChan dependencies with `npm install`.
+- Install/Update StyleTower dependencies with `npm install`.
 
 ### Build
 
@@ -28,7 +28,7 @@ Open your console with:
 
 ### Lint
 
-StyleChan uses [ESLint](https://eslint.org/) with the flat config format (`eslint.config.mjs`).
+StyleTower uses [ESLint](https://eslint.org/) with the flat config format (`eslint.config.mjs`).
 
 **Command line:**
 ```
@@ -63,7 +63,7 @@ npx eslint src/ --fix    # auto-fix formatting issues only
 - Update the version with `grunt patch`, `grunt minor` or `grunt major`.
 - Release with `grunt release`.
 
-Note: this is only used to release new StyleChan versions, and is **not** needed or wanted in pull requests.
+Note: this is only used to release new StyleTower versions, and is **not** needed or wanted in pull requests.
 
 ### Contribute
 

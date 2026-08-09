@@ -1,44 +1,46 @@
 /* Sidebar */
 /* CSS here is only added if Sidebar Position is not 3 (Disabled) */
-:root:not(.fixed) #header-bar {
-  z-index: 10;
-}
 :root.left-sidebar body {
   padding-left: 306px;
 }
 :root.right-sidebar body {
   padding-right: 306px;
 }
-:root.left-sidebar:not(.mini-sidebar) .boardBanner,
-:root.right-sidebar:not(.mini-sidebar) .boardBanner {
+:root.left-sidebar:not(.mini-sidebar) img.board_image,
+:root.left-sidebar:not(.mini-sidebar) header,
+:root.right-sidebar:not(.mini-sidebar) img.board_image,
+:root.right-sidebar:not(.mini-sidebar) header {
   position: fixed;
+  margin: 0;
 }
-:root.left-sidebar:not(.mini-sidebar) .boardBanner {
+:root.left-sidebar:not(.mini-sidebar) img.board_image,
+:root.left-sidebar:not(.mini-sidebar) header {
   left: 2px;
 }
-:root.right-sidebar:not(.mini-sidebar) .boardBanner {
+:root.right-sidebar:not(.mini-sidebar) img.board_image,
+:root.right-sidebar:not(.mini-sidebar) header {
   right: 2px;
 }
-:root.fixed:not(.autohide):not(.bottom) .boardBanner {
-  margin-top: -6px;
+:root.left-sidebar:not(.mini-sidebar) img.board_image,
+:root.right-sidebar:not(.mini-sidebar) img.board_image {
+  top: 24px;
 }
-:root:not(.left-sidebar,.right-sidebar,.mini-sidebar):not(.autohide):not(.bottom) .boardBanner {
-  margin-top: -3px;
+:root.left-sidebar:not(.mini-sidebar) header,
+:root.right-sidebar:not(.mini-sidebar) header {
+  top: 128px;
+  width: 302px;
 }
-:root.left-sidebar #qr,
-:root.left-sidebar #quickReply {
+/* Keep the floating QR button below the sidebar content (banner at 24-124, board title from 128) */
+:root.right-sidebar:not(.mini-sidebar) a.quick-reply-btn {
+  top: 230px !important;
+}
+:root.left-sidebar #quick-reply {
   left: 0 !important;
   right: auto !important;
 }
-:root.right-sidebar #qr,
-:root.right-sidebar #quickReply {
+:root.right-sidebar #quick-reply {
   right: 0 !important;
   left: auto !important;
-}
-.captcha-img,
-.captcha-img img {
-  min-width: 100% !important;
-  height: 56px !important;
 }
 /* SS-like Sidebar */
 :root.ss-sidebar body::before {
@@ -53,42 +55,19 @@
   right: 0;
   pointer-events:none;
 }
-:root.fixed.ss-sidebar #header-bar {
-  box-shadow: -5px 1px 10px rgba(0,0,0,.2), inset var(--sc-brderColor) -1px 0 0;
-}
-:root.fixed.header-shadow.ss-sidebar #header-bar {
-  box-shadow: inset var(--sc-brderColor) -1px 0 0 !important;
-}
 :root.ss-sidebar.left-sidebar body::before {
   border-right:2px solid rgba(var(--sc-mainColor-rgb),.9);
   border-left: none !important;
   left: 0;
   right: auto !important;
 }
-:root.fixed.ss-sidebar.left-sidebar #header-bar {
-  box-shadow: -5px 1px 10px rgba(0,0,0,.2), inset var(--sc-brderColor) 1px 0 0;
-}
-:root.fixed.header-shadow.ss-sidebar.left-sidebar #header-bar {
-  box-shadow: inset var(--sc-brderColor) 1px 0 0 !important;
-}
 /* Vertical QR */
-:root.vertical-qr:root.left-sidebar #qr {
+:root.vertical-qr:root.left-sidebar #quick-reply {
   transform: translateX(-100%);
   left: 0 !important;
   right: auto !important;
 }
-:root.vertical-qr:root.left-sidebar #qr .move {
-  transform: rotate(90deg);
-  transform-origin: bottom right;
-  left: 63.5%;
-  bottom: 46px;
-}
-:root.vertical-qr:root.left-sidebar #quickReply {
-  transform: translateX(-100%);
-  left: 0 !important;
-  right: auto !important;
-}
-:root.vertical-qr:root.left-sidebar #qrHeader {
+:root.vertical-qr:root.left-sidebar #quick-reply th {
   transform: rotate(90deg);
   transform-origin: bottom left;
   right: auto;
@@ -101,24 +80,25 @@
 :root.mini-sidebar:root.right-sidebar body {
   padding-right: 32px !important;
 }
-:root.mini-sidebar .boardSubtitle {
+:root.mini-sidebar header div.subtitle {
   display: none;
 }
 :root.mini-sidebar:root.ss-sidebar body::before {
   width: 31px !important;
 }
-:root.mini-sidebar .boardTitle {
+:root.mini-sidebar header h1 {
   top: 72px !important;
   letter-spacing: -1.4px;
   position: fixed;
+  margin: 0;
   padding-top: .05em;
 }
-:root.mini-sidebar:root.right-sidebar .boardTitle {
+:root.mini-sidebar:root.right-sidebar header h1 {
   right: 32px;
   transform-origin: top right;
   transform: rotate(-90deg);
 }
-:root.mini-sidebar:root.left-sidebar .boardTitle {
+:root.mini-sidebar:root.left-sidebar header h1 {
   left: 32px;
   transform-origin: top left;
   transform: rotate(90deg);
