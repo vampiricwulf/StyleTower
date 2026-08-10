@@ -96,22 +96,27 @@ module.exports = (grunt) ->
     'compress:crx'
   ]
 
+  # Version bumps rebuild in the same run: reloadPkg refreshes the config the
+  # concat templates read, so the outputs carry the new version immediately
   grunt.registerTask 'patch',   [
     'bump-only'
     'reloadPkg'
     'updcl:3'
+    'build'
   ]
 
   grunt.registerTask 'minor',   [
     'bump-only:minor'
     'reloadPkg'
     'updcl:2'
+    'build'
   ]
 
   grunt.registerTask 'major',   [
     'bump-only:major'
     'reloadPkg'
     'updcl:1'
+    'build'
   ]
 
   grunt.registerTask 'reloadPkg', 'Reload the package', ->

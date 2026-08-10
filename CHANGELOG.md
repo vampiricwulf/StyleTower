@@ -1,9 +1,6 @@
 ### v1.0.4
 *2026-08-10*
 
-### v1.0.4
-*2026-08-10*
-
 4chan-parity pass over the index, driven by side-by-side comparisons with StyleChan on 4chan:
 
 - Post alignment: OP blocks now share left/right edges with replies (the site gave OPs a lone 20px right margin), and the "N posts omitted. Click to expand." summary always renders between the OP block and the replies on the page background — it used to render inside the OP background for short OPs and escape it under tall ones
