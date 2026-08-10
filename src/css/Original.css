@@ -89,7 +89,7 @@ div.post {
   margin: 4px 0;
   overflow: hidden;
 }
-:root:not(.reply-fit-width) form[name=postcontrols] div.post.reply:not([hidden]) {
+:root:not(.reply-fit-width) form[name=postcontrols] div.post.reply:not([hidden]):not(.iq-hidden-post):not(.hidden-post):not(.hidden) {
   display: table !important;
 }
 :root:not(.reply-fit-width) form[name=postcontrols] .stub~div.post.reply:not([hidden]) {

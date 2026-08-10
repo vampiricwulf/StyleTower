@@ -1,3 +1,10 @@
+### v1.0.3
+*2026-08-09*
+
+- Posts inlined via quote/backlink expansion are no longer hidden: the original stays in place faded and desaturated (readable again on hover, restored on collapse), with its hide button kept usable. Previously StyleTower's Fit Width display rules half-broke TS's Hide Inlined Posts, leaving the post visible but the hide button missing
+- StyleTower's post display rules now respect TS/site hidden states (`.hidden-post`, `.hidden`) so hiding features can't be overridden by layout options
+- Hovering quotes in the last reply no longer nudges the page footer (the last-post margin exclusion now ignores TS's injected hover helpers)
+
 ### v1.0.2
 *2026-08-09*
 

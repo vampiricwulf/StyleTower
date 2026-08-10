@@ -41,11 +41,38 @@ span.omitted {
 /* Margin Between Replies: the separator brs are always hidden and the margin
    always forced so spacing is uniform whatever TS/lazy scripts do to the DOM;
    Normal maps to 4px, keeping the option ladder monotonic */
-.thread>.post.reply:not(.thread>.post:last-of-type),
+.thread>.post.reply,
 .threadContainer>.post.reply,
 .threadingContainer>.post.reply,
-:root.op-background .thread>.post.op:not(.thread>.post:last-of-type) {
+:root.op-background .thread>.post.op {
   margin-bottom: " + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : 4) + "px !important;
+}
+/* Posts inlined elsewhere (TS marks the original iq-hidden-post): instead of
+   TS's display:none, keep them visible but faded and muted */
+:root.oneechan.reply-fit-width .post.reply.iq-hidden-post,
+:root.oneechan.reply-fit-width .post.op.iq-hidden-post {
+  display: block !important;
+}
+:root.oneechan:not(.reply-fit-width) .post.reply.iq-hidden-post,
+:root.oneechan:not(.reply-fit-width) .post.op.iq-hidden-post {
+  display: table !important;
+}
+:root.oneechan .post.reply.iq-hidden-post,
+:root.oneechan .post.op.iq-hidden-post {
+  opacity: .45;
+  filter: grayscale(60%);
+  transition: opacity .2s ease, filter .2s ease;
+}
+:root.oneechan .post.reply.iq-hidden-post:hover,
+:root.oneechan .post.op.iq-hidden-post:hover {
+  opacity: .85;
+  filter: grayscale(20%);
+}
+/* Their hide buttons stay usable, faded to match */
+a.reply.hide-button.iq-hidden-post:has(+ .post.reply),
+a.reply.hide-button.iq-hidden-post:has(+ br + .post.reply) {
+  display: block !important;
+  opacity: .3;
 }
 .thread > br:not(.clear),
 .threadContainer > br:not(.clear),
@@ -82,8 +109,8 @@ div.body {
 :root.fit-eximg.fit-height .full-image {
   max-height: calc(100vh - 8rem) !important;
 }
-/* Fit Width option */
-:root.reply-fit-width .reply.post {
+/* Fit Width option (never force TS/site-hidden posts visible) */
+:root.reply-fit-width .reply.post:not(.iq-hidden-post):not(.hidden-post):not(.hidden) {
   display: block !important;
 }
 :root.reply-fit-width .stub ~ .reply.post {

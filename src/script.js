@@ -1088,6 +1088,11 @@
                 ":root.recolor-even .thread>.post.reply:nth-child(even of .post.reply:not(.post-hover):not(.hidden)):not(.highlighted,:target){" +
                 "background:rgb(var(--sc-mainColor-shiftM10),var(--sc-replyOp))!important" +
                 "}" +
+                // Last-post margin exclusion, counting only real posts so TS's
+                // injected hover .post.dummy can't shift the footer (the `of`
+                // selector syntax must stay out of the cssmin pipeline)
+                ".thread>.post.reply:nth-last-child(1 of .post.reply){margin-bottom:0!important}" +
+                ":root.op-background .thread>.post.op:nth-last-child(1 of .post){margin-bottom:0!important}" +
                 ($SS.conf && $SS.conf["QR Button Image"] ?
                     "a.quick-reply-btn img{display:none}" +
                     "a.quick-reply-btn::before{content:'';display:block;width:64px;height:64px;" +
