@@ -19,6 +19,8 @@ hr:not(#unread-line),
 :root.hide-navlinks #thread-links,
 #expand-all-images,
 #watch-thread,
+#watch-pin,
+#watch-board,
 label:has(> a.threading-toggle),
 .boardlist.bottom,
 [hidden] {

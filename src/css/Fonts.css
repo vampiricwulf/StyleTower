@@ -58,7 +58,6 @@ body>.boardlist {
 #options_div,
 #alert_div,
 a.options-button,
-div.pages,
 #link-quick-reply {
   font-size: " + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px !important;
 }

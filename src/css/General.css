@@ -24,6 +24,22 @@ p.intro {
 span.omitted {
   margin-left: 2px;
 }
+/* Hoisted by moveOmittedSpans: the summary sits between the OP block and the
+   replies on the page background, 4chan style (no display !important — the
+   site inline-hides it when expanding or hiding the thread) */
+.thread > span.omitted {
+  display: block;
+  clear: both;
+  margin: 2px 0 4px 4px !important;
+  font-style: italic;
+  opacity: .8;
+}
+/* The site gives OPs margin-right:20px and no left margin while replies get
+   4px sides; match them so OP and reply blocks share edges like 4chan */
+div.post.op {
+  margin-left: 4px;
+  margin-right: 4px;
+}
 .expanded-image {
   position: relative;
 }
@@ -377,6 +393,26 @@ a.reply.show-button:hover {
   opacity: 1;
   color: var(--sc-linkHColor) !important;
 }
+/* Index one-click hiding (initIndexPostHiding): our buttons proxy the site's
+   post-filter controls, so its own [–] link is redundant */
+a.hide-thread-link {
+  display: none !important;
+}
+a.st-index-hide {
+  float: left;
+  padding: 2px;
+}
+:root.st-menu-silent .post-menu {
+  display: none !important;
+}
+/* Hidden posts keep their intro as a stub; fade it like 4chan's */
+.post.st-index-hidden {
+  opacity: .6;
+}
+/* A hidden thread inline-hides its replies; drop their orphaned buttons */
+a.st-index-hide:has(+ .post.reply[style*='display: none']) {
+  display: none !important;
+}
 #update_thread {
   padding-left: 0 !important;
 }
@@ -391,6 +427,73 @@ header div.subtitle a::after {
 }
 #thread-interactions {
   margin-bottom: 5px;
+}
+/* Index control row (initIndexNav): bracketed nav links, loaded-age label,
+   and the client-side OP search */
+#st-index-nav {
+  margin: 12px 0 6px;
+  clear: both;
+}
+#st-index-nav > a {
+  margin-right: 5px;
+  text-decoration: none;
+}
+#st-index-nav > a::before {
+  content: '[';
+}
+#st-index-nav > a::after {
+  content: ']';
+}
+#st-index-age {
+  opacity: .7;
+  margin: 0 8px 0 2px;
+  font-size: " + (($SS.conf["Font Size"] <= 10) ? 9 : $SS.conf["Font Size"] - 2) + "px;
+}
+#st-index-search {
+  width: 180px !important;
+  min-width: 0 !important;
+}
+.st-search-hidden {
+  display: none !important;
+}
+/* Index pagination: theme the site's white strip; the bracket/pipe text nodes
+   are hidden via font-size and the Next/Previous submits render as links */
+div.pages {
+  font-size: 0 !important;
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border: 1px solid var(--sc-brderColor) !important;
+  color: var(--sc-textColor) !important;
+  padding: 5px 8px !important;
+  margin: 0 0 10px !important;
+}
+:root.rounded-corners div.pages {
+  border-radius: 3px;
+}
+div.pages a,
+div.pages input[type=submit] {
+  font-size: " + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px !important;
+  padding: 2px 6px !important;
+}
+div.pages form {
+  display: inline !important;
+}
+div.pages input[type=submit] {
+  background: none !important;
+  border: none !important;
+  color: var(--sc-linkColor) !important;
+  cursor: pointer;
+  text-transform: none !important;
+}
+div.pages input[type=submit]:hover {
+  color: var(--sc-linkHColor) !important;
+}
+div.pages a.selected {
+  background: rgba(var(--sc-mainColor-shiftM16), .8) !important;
+  color: var(--sc-textColor) !important;
+  text-decoration: none !important;
+}
+:root.rounded-corners div.pages a.selected {
+  border-radius: 2px;
 }
 .post-hover {
   z-index: 75 !important;

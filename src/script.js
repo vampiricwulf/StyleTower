@@ -376,7 +376,7 @@
             name: "replyslctColor",
             property: "outline"
         }],
-        $lib, $SS,
+        $, $lib, $SS,
         $docBody = null,
         $docHead = null;
 
@@ -395,7 +395,9 @@
     }
     /* STYLE SCRIPT LIBRARY */
     /* More or less based off jQuery */
-    $lib = window.$ = function (selector, root) {
+    /* Kept closure-local: overwriting window.$ clobbers the site's jQuery in
+       any environment that doesn't sandbox userscripts */
+    $ = $lib = function (selector, root) {
         return this instanceof $lib ?
             this.init(selector, root) : new $lib(selector, root);
     };
@@ -769,6 +771,8 @@
                                 if ($SS._initDone) {
                                     $SS.moveOPFiles(node);
                                     $SS.tidyFileInfo(node);
+                                    $SS.moveOmittedSpans(node);
+                                    if ($SS.addIndexHideButtons) $SS.addIndexHideButtons(node);
                                     $SS.animateGifThumbs(node);
                                     $SS.relativeDates(node);
                                     $SS.replacePostMenuBtn(node);
@@ -820,6 +824,12 @@
                 // Normalize OP structure (move .files inside .post.op)
                 $SS.moveOPFiles();
                 $SS.tidyFileInfo();
+                $SS.moveOmittedSpans();
+                // One-click post hiding + control row on index pages
+                if (!$SS.location.reply && !$SS.location.catalog && $SS.location.board) {
+                    $SS.initIndexPostHiding();
+                    $SS.initIndexNav();
+                }
                 // Compact single-line thread footer: pull the updater and thread
                 // stats up next to the [Return]/[Go to top]/[Catalog] links.
                 if ($SS.location.reply) {
@@ -1129,6 +1139,196 @@
                 if (n && n.nodeType === 1 && n.tagName === "SPAN") n = n.firstChild;
                 if (n && n.nodeType === 3 && /^\s*File:\s*$/.test(n.nodeValue)) n.remove();
             });
+        },
+        moveOmittedSpans: function (root) {
+            // 4chan renders the "N posts omitted" summary between the OP block
+            // and the replies on the page background; vichan nests it inside
+            // .post.op, where the OP background swallows it (or float layout
+            // spits it out under tall OPs). Hoist it to the thread level for a
+            // consistent 4chan-style line. expand.js's listeners survive the
+            // move, and its own thread-scoped selectors still find the span.
+            var scope = root && root.querySelectorAll ? root : document;
+            scope.querySelectorAll(".post.op > span.omitted:not(.hide-expanded)").forEach(function (span) {
+                var op = span.parentNode,
+                    thread = op.parentNode;
+                if (thread && thread.classList && thread.classList.contains("thread"))
+                    thread.insertBefore(span, op.nextSibling);
+            });
+        },
+        initIndexPostHiding: function () {
+            // The site's post-filter.js only exposes per-post hiding through
+            // the post menu (▶ → Hide post) and gives OPs a bare [–] link,
+            // while TS's one-click hide buttons are thread-page only. Recreate
+            // those buttons on the index by proxying the site controls, so all
+            // hide state stays in the site's own filter storage.
+            var doc = document,
+                minusIcon = '<span class="hide-icon"><svg xmlns="http://www.w3.org/2000/svg" class="minus" viewBox="0 0 448 512"><path d="M64 80c-8.8 0-16 7.2-16 16V416c0 8.8 7.2 16 16 16H384c8.8 0 16-7.2 16-16V96c0-8.8-7.2-16-16-16H64zM0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM152 232H296c13.3 0 24 10.7 24 24s-10.7 24-24 24H152c-13.3 0-24-10.7-24-24s10.7-24 24-24z" fill="currentColor"/></svg></span>',
+                plusIcon = '<span class="show-icon"><svg xmlns="http://www.w3.org/2000/svg" class="plus" viewBox="0 0 448 512"><path d="M64 80c-8.8 0-16 7.2-16 16V416c0 8.8 7.2 16 16 16H384c8.8 0 16-7.2 16-16V96c0-8.8-7.2-16-16-16H64zM0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM200 344V280H136c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V168c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H248v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" fill="currentColor"/></svg></span>';
+
+            function postHidden(post) {
+                // post-filter.js hides via jQuery .hide() on the child blocks
+                var body = post.querySelector(":scope > .body");
+                return body != null && body.style.display === "none";
+            }
+            function syncBtn(btn, post) {
+                var hidden = postHidden(post);
+                btn.innerHTML = hidden ? plusIcon : minusIcon;
+                btn.classList.toggle("st-hidden", hidden);
+                post.classList.toggle("st-index-hidden", hidden);
+            }
+            function proxyMenu(post, wantUnhide) {
+                // Drive the site's own menu items so persistence and refresh
+                // behavior stay entirely post-filter's
+                var menuBtn = post.querySelector("a.post-btn");
+                if (!menuBtn) return;
+                var rootCl = doc.documentElement.classList;
+                rootCl.add("st-menu-silent");
+                try {
+                    menuBtn.click();
+                    var item = doc.querySelector(".post-menu li#filter-menu-" + (wantUnhide ? "unhide" : "hide") + ":not(.hidden)");
+                    if (item) item.click();
+                } finally {
+                    $(".post-menu", doc).each(function () { this.remove(); });
+                    $(".post-btn-open", doc).each(function () { this.classList.remove("post-btn-open"); });
+                    rootCl.remove("st-menu-silent");
+                }
+            }
+            function makeButton(post) {
+                var btn = doc.createElement("a");
+                btn.className = "reply hide-button st-index-hide";
+                btn.href = "javascript:void(0)";
+                btn.setAttribute("for", post.id);
+                post._stHideBtn = btn;
+                syncBtn(btn, post);
+                post.parentNode.insertBefore(btn, post);
+                return btn;
+            }
+            function addReplyButton(post) {
+                if (post._stHideBtn || !post.id) return;
+                var btn = makeButton(post);
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    proxyMenu(post, postHidden(post));
+                    syncBtn(btn, post);
+                });
+            }
+            function addOPButton(op) {
+                if (op._stHideBtn || !op.id) return;
+                var btn = makeButton(op);
+                btn.classList.add("st-thread-hide");
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    // post-filter's own [–] quick-toggle (hidden by our CSS)
+                    var link = op.querySelector("a.hide-thread-link");
+                    if (link) link.click();
+                    setTimeout(function () { syncBtn(btn, op); }, 0);
+                });
+            }
+            $SS.addIndexHideButtons = function (root) {
+                if (root && root.matches && root.matches(".post.reply")) {
+                    if (root.parentNode && root.parentNode.classList &&
+                        root.parentNode.classList.contains("thread"))
+                        addReplyButton(root);
+                    return;
+                }
+                var scope = root && root.querySelectorAll ? root : doc;
+                scope.querySelectorAll(".thread > .post.reply").forEach(addReplyButton);
+                scope.querySelectorAll(".thread > .post.op").forEach(addOPButton);
+            };
+            $SS.addIndexHideButtons();
+            // post-filter applies stored hides around the same time we build
+            // the buttons; resync once it has settled
+            var resync = function () {
+                $("a.st-index-hide", doc).each(function () {
+                    var post = doc.getElementById(this.getAttribute("for"));
+                    if (post && this.parentNode) syncBtn(this, post);
+                });
+            };
+            setTimeout(resync, 800);
+            // Collapsing expanded replies removes the posts; drop the orphaned
+            // buttons and restore the omitted line expand.js only re-shows
+            // inside the OP
+            doc.addEventListener("click", function (e) {
+                var t = e.target.closest && e.target.closest("span.hide-expanded");
+                if (!t) return;
+                var thread = t.closest(".thread");
+                setTimeout(function () {
+                    $("a.st-index-hide", doc).each(function () {
+                        var post = doc.getElementById(this.getAttribute("for"));
+                        if (!post || !post.isConnected) this.remove();
+                    });
+                    if (thread)
+                        thread.querySelectorAll(":scope > span.omitted").forEach(function (s) {
+                            s.style.display = "";
+                        });
+                }, 0);
+            }, true);
+        },
+        initIndexNav: function () {
+            // 4chan-X-style index control row above the post form: nav links
+            // built from destinations the site actually has, a reload link with
+            // a loaded-N-minutes-ago label, and a client-side OP search that
+            // filters the threads on the loaded page. Bump-order/paged controls
+            // are server-side on 4chan and have no tower backend, so no row for
+            // them here.
+            if (document.getElementById("st-index-nav")) return;
+            var doc = document,
+                anchor = doc.querySelector("form[name=post]:not(#quick-reply)") ||
+                    doc.querySelector("form[name=postcontrols]");
+            if (!anchor) return;
+
+            var nav = doc.createElement("div");
+            nav.id = "st-index-nav";
+
+            function addLink(text, href, onclick) {
+                var a = doc.createElement("a");
+                a.textContent = text;
+                a.href = href;
+                if (onclick) a.addEventListener("click", onclick);
+                nav.appendChild(a);
+                return a;
+            }
+            addLink("Catalog", "/" + $SS.location.board + "/catalog.html");
+            addLink("Archive", "https://archive.holotower.org/");
+            addLink("Bottom", "javascript:void(0)", function (e) {
+                e.preventDefault();
+                window.scrollTo(0, doc.documentElement.scrollHeight);
+            });
+            addLink("Refresh", "javascript:void(0)", function (e) {
+                e.preventDefault();
+                location.reload();
+            });
+
+            var age = doc.createElement("span");
+            age.id = "st-index-age";
+            age.textContent = "just now";
+            nav.appendChild(age);
+            var loadedAt = Date.now();
+            setInterval(function () {
+                var m = Math.round((Date.now() - loadedAt) / 60000);
+                age.textContent = m < 1 ? "just now" : m + " min ago";
+            }, 60000);
+
+            var search = doc.createElement("input");
+            search.type = "text";
+            search.id = "st-index-search";
+            search.placeholder = "Search OPs…";
+            search.addEventListener("input", function () {
+                var q = search.value.trim().toLowerCase();
+                // class-based hiding only: post-hover keeps its own inline-
+                // hidden thread clones that must not be revealed on clear
+                doc.querySelectorAll("div[id^='thread_']").forEach(function (t) {
+                    var show = true;
+                    if (q) {
+                        var op = t.querySelector(".post.op");
+                        show = (op ? op.textContent : t.textContent).toLowerCase().indexOf(q) !== -1;
+                    }
+                    t.classList.toggle("st-search-hidden", !show);
+                });
+            });
+            nav.appendChild(search);
+
+            anchor.parentNode.insertBefore(nav, anchor);
         },
         animateGifThumbs: function (root) {
             if (!$SS.conf["Animated GIF Thumbnails"]) return;
@@ -4610,6 +4810,20 @@
                         cl.toggle("top-header", isFixed);
                         cl.toggle("autohide", isFixed && headerEl.classList.contains("autohide"));
                     };
+                // TS only builds its fixed header on thread pages; extend its
+                // stored Fixed/Auto-hide Header preference to the index and
+                // catalog (its stylesheet ships on those pages too) so the
+                // header behaves the same site-wide.
+                if (!$SS.location.reply && headerEl) {
+                    try {
+                        var tsHeader = JSON.parse(localStorage.getItem("Thread Settings") || "{}"),
+                            wantFixed = tsHeader.headerFixed !== false;
+                        headerEl.classList.toggle("fixed", wantFixed);
+                        headerEl.classList.toggle("autohide", wantFixed && tsHeader.headerAutohide === true);
+                        if (wantFixed && document.body)
+                            document.body.style.setProperty("--header-height", (headerEl.offsetHeight || 25) + "px");
+                    } catch (e) { }
+                }
                 syncHeader();
                 if (headerEl && !$SS._headerObserver) {
                     $SS._headerObserver = new MutationObserver(syncHeader);

@@ -1,3 +1,18 @@
+### v1.0.4
+*2026-08-10*
+
+### v1.0.4
+*2026-08-10*
+
+4chan-parity pass over the index, driven by side-by-side comparisons with StyleChan on 4chan:
+
+- Post alignment: OP blocks now share left/right edges with replies (the site gave OPs a lone 20px right margin), and the "N posts omitted. Click to expand." summary always renders between the OP block and the replies on the page background — it used to render inside the OP background for short OPs and escape it under tall ones
+- Post hiding: one-click ⊟/⊞ hide buttons on every index OP and reply, styled like the thread-page ones. They proxy the site's own post-filter (the ▶ menu's Hide post and the old `[–]` link, which is now hidden), so hidden state persists in the site's storage and stays undoable from the menu; hidden posts keep a faded intro stub, and posts revealed via Click to expand get buttons too
+- Header: the board list is now fixed (with auto-hide) on index and catalog pages, following the Fixed Header / Auto-hide Header settings saved in Holotower TS — TS itself only builds its header on thread pages; the site's "Pin/Watch this board" links are hidden
+- New index control row above the post form: [Catalog] [Archive] [Bottom] [Refresh] with a loaded-N-min-ago label and a Search box that live-filters the loaded page's threads by OP text (bump-order/paged controls are server-side on 4chan and have no tower equivalent, so they are not faked)
+- Pagination themed to match the header: brackets and pipe removed, current page boxed, Next/Previous as plain links instead of a white strip with buttons
+- The script no longer overwrites `window.$`: the internal library is closure-local, so the site's jQuery survives even in environments that don't sandbox userscripts
+
 ### v1.0.3
 *2026-08-09*
 
