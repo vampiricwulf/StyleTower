@@ -768,6 +768,7 @@
                                     $SS.QRDialogCreationHandler({ target: node });
                                 if ($SS._initDone) {
                                     $SS.moveOPFiles(node);
+                                    $SS.tidyFileInfo(node);
                                     $SS.animateGifThumbs(node);
                                     $SS.relativeDates(node);
                                     $SS.replacePostMenuBtn(node);
@@ -818,6 +819,20 @@
                 }
                 // Normalize OP structure (move .files inside .post.op)
                 $SS.moveOPFiles();
+                $SS.tidyFileInfo();
+                // Compact single-line thread footer: pull the updater and thread
+                // stats up next to the [Return]/[Go to top]/[Catalog] links.
+                if ($SS.location.reply) {
+                    $.waitFor("#updater", function (updater) {
+                        var links = document.getElementById("thread-links");
+                        if (links && links.parentNode && updater.previousElementSibling !== links)
+                            links.parentNode.insertBefore(updater, links.nextSibling);
+                    });
+                    $.waitFor("#thread_stats", function (stats) {
+                        var ti = document.getElementById("thread-interactions");
+                        if (ti && stats.parentNode !== ti) ti.appendChild(stats);
+                    });
+                }
                 $SS.animateGifThumbs();
                 // Re-animate a thumb after the site's inline expansion collapses
                 // it back to the static thumbnail (that swap is src-only, which
@@ -852,9 +867,23 @@
                 }
 
                 // Auto-open the quick reply on thread pages (the floating
-                // .quick-reply-btn is the site's opener; #link-quick-reply was 4chan-X)
-                if ($SS.location.reply && $SS.conf["Pin Quick Reply"]) {
-                    $.waitFor("a.quick-reply-btn", function (link) { link.click(); });
+                // .quick-reply-btn is the site's opener; #link-quick-reply was
+                // 4chan-X). Autohide styles dock the QR as persistent UI, so
+                // they imply opening it too.
+                if ($SS.location.reply && ($SS.conf["Pin Quick Reply"] || $SS.conf["Autohide Style"] !== 0)) {
+                    var qrOpened = false,
+                        openQR = function () {
+                            if (qrOpened) return;
+                            qrOpened = true;
+                            var btn = document.querySelector("a.quick-reply-btn");
+                            if (btn) btn.click();
+                            // Some scripts pre-build the QR hidden; reveal it
+                            var qr = document.getElementById("quick-reply");
+                            if (qr && qr.style.display === "none") qr.style.display = "";
+                        };
+                    $.waitFor("a.quick-reply-btn, #quick-reply", function () {
+                        setTimeout(openQR, 50);
+                    });
                 }
 
                 if ($SS.conf["Catalog Links"]) {
@@ -1043,7 +1072,7 @@
                 "--sc-icon-options:url(\"data:image/svg+xml," + t.icons.options + "\");" +
                 // Styling hooks exposed by Holotower TS
                 "--subtle-border-color:" + t.brderColor.hex + ";" +
-                "--inline-background-color:rgba(" + t.textColor.rgb + ",.05);" +
+                "--inline-background-color:rgba(" + t.mainColor.shiftRGB(-16) + ",.8);" +
                 "--reply-background-color:rgba(" + t.mainColor.rgb + "," + t.replyOp + ");" +
                 "--ts-hover-color:" + t.linkHColor.hex + ";" +
                 "--link-hover-color:" + t.linkHColor.hex + ";" +
@@ -1085,6 +1114,17 @@
                 if (op) op.insertBefore(files, op.firstChild);
             });
         },
+        tidyFileInfo: function (root) {
+            // Drop vichan's leading "File: " label so the file line matches
+            // the 4chan layout (filename, size, dimensions, links). Site scripts
+            // may wrap the line in a span, so look inside one level.
+            var scope = root && root.querySelectorAll ? root : document;
+            scope.querySelectorAll("p.fileinfo").forEach(function (p) {
+                var n = p.firstChild;
+                if (n && n.nodeType === 1 && n.tagName === "SPAN") n = n.firstChild;
+                if (n && n.nodeType === 3 && /^\s*File:\s*$/.test(n.nodeValue)) n.remove();
+            });
+        },
         animateGifThumbs: function (root) {
             if (!$SS.conf["Animated GIF Thumbnails"]) return;
             var scope = root && root.querySelectorAll ? root : document;
@@ -1092,8 +1132,22 @@
                 var href = img.parentNode.href;
                 // Leave spoiler/deleted placeholder thumbs alone
                 if (/\/static\//.test(img.getAttribute("src") || "")) return;
-                if (img.classList.contains("full-image") || img.src === href) return;
-                img.src = href;
+                if (img.classList.contains("full-image")) return;
+                var apply = function () {
+                    if (!img.classList.contains("full-image") && img.src !== href)
+                        img.src = href;
+                };
+                apply();
+                // A lazy loader may overwrite the src with a placeholder and
+                // later its cached static thumb; re-assert the animated source
+                // whenever the src changes away from it.
+                if (!img._scGifObserved) {
+                    img._scGifObserved = true;
+                    new MutationObserver(function () {
+                        if (!img.classList.contains("full-image") && img.src !== href)
+                            setTimeout(apply, 60);
+                    }).observe(img, { attributes: true, attributeFilter: ["src"] });
+                }
             });
         },        initImageConvertOnDrop: function () {
             var MAX_BYTES = $SS.location.maxFileSize;
@@ -1569,6 +1623,17 @@
             var btns = root.querySelectorAll ? root.querySelectorAll("a.post-btn") : [];
             [].forEach.call(btns, function (btn) {
                 if (btn.textContent === "▶" || btn.textContent === "\u25B6") btn.textContent = "\u2771";
+                // vichan puts the menu button before the poster name, indenting
+                // every post header; 4chan-X keeps it after the post number.
+                var intro = btn.closest ? btn.closest("p.intro") : null;
+                if (intro) {
+                    var nums = intro.querySelectorAll("a.post_no");
+                    if (nums.length) {
+                        var last = nums[nums.length - 1];
+                        if (last.nextSibling !== btn)
+                            intro.insertBefore(btn, last.nextSibling);
+                    }
+                }
             });
         },
         displayMascots: function () {
@@ -2599,7 +2664,10 @@
                     $SS.conf["Margin Left"] = $SS.conf["Left Margin"] !== 999 ? $SS.conf["Left Margin"] : $SS.conf["Custom Left Margin"];
                     $SS.conf["Margin Right"] = $SS.conf["Right Margin"] !== 999 ? $SS.conf["Right Margin"] : $SS.conf["Custom Right Margin"];
                 };
-                $SS.conf["Margin Post Message"] = $SS.conf["Post Message Margin"] === 1 ? "4px 16px" : ($SS.conf["Post Message Margin"] === 3 ? "20px 40px" : "");
+                // "Normal" maps to 4chan's native blockquote margin; vichan's own
+                // div.body default is nearly zero, which makes text hug the post
+                // edge and wrap fully under thumbnails.
+                $SS.conf["Margin Post Message"] = $SS.conf["Post Message Margin"] === 1 ? "4px 16px" : ($SS.conf["Post Message Margin"] === 3 ? "20px 40px" : "13px 40px");
                 $SS.conf["Width Decoration"] = $SS.conf["Decoration Width"] !== 999 ? $SS.conf["Decoration Width"] : $SS.conf["Custom Decoration Width"];
             },
             get: function (name) {
@@ -2649,13 +2717,22 @@
                         boardlist.appendChild(makeNavSpan());
                     });
                 });
-                // The header links are floated right, so DOM order runs right-to-left:
-                // moving the link before the site/TS [Options] anchor (added async)
-                // places it directly to Options' right.
+                // The header links are floated right, so DOM order runs right-to-left.
+                // Target order (left to right): [Options] [StyleTower] [caret], i.e.
+                // DOM order caret, StyleTower, Options. TS builds the caret late,
+                // so reposition once it exists.
                 $.waitFor(".boardlist a[title='Options']", function (optionsLink) {
                     var boardlist = optionsLink.closest(".boardlist"),
                         span = boardlist && boardlist.querySelector("#StyleTowerLink");
-                    if (span) boardlist.insertBefore(span, optionsLink);
+                    if (!span) return;
+                    var place = function () {
+                        var toggle = boardlist.querySelector(".hb-toggle");
+                        if (toggle) boardlist.insertBefore(span, toggle.nextSibling);
+                        else boardlist.insertBefore(span, optionsLink);
+                    };
+                    place();
+                    if (!boardlist.querySelector(".hb-toggle"))
+                        $.waitFor(".boardlist .hb-toggle", place);
                 });
             },
             show: function () {

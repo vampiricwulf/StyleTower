@@ -17,6 +17,10 @@ hr:not(#unread-line),
 :root.hide-navlinktop div.banner,
 :root.hide-navlinks div.banner,
 :root.hide-navlinks #thread-links,
+#expand-all-images,
+#watch-thread,
+label:has(> a.threading-toggle),
+.boardlist.bottom,
 [hidden] {
   display: none;
 }

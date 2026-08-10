@@ -46,7 +46,8 @@ body>.boardlist {
   }
 }
 /* Backlinks */
-:root:not(.backlink-icon) p.intro .mentioned a {
+:root:not(.backlink-icon) p.intro .mentioned a,
+:root:not(.backlink-icon) p.intro .clone-mentioned a {
   font-size: " + $SS.conf["Backlink Font Size"] + "px !important;
 }
 /* Options panels + others -> capped to not break */
@@ -89,7 +90,8 @@ button.outline {
 :root.underline-quotes div.body a[onclick*='highlightReply'],
 :root.underline-quotes div.body a[onclick*='citeReply'],
 :root.underline-quotes div.body a.quotelink,
-:root.underline-quotes p.intro .mentioned a {
+:root.underline-quotes p.intro .mentioned a,
+:root.underline-quotes p.intro .clone-mentioned a {
   text-decoration: underline !important;
 }
 a.options-button,

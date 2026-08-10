@@ -1,3 +1,17 @@
+### v1.0.2
+*2026-08-09*
+
+4chan-parity pass over the whole thread view, driven by side-by-side screenshot comparisons with StyleChan on 4chan:
+
+- Posts: body text gets the 4chan indent ("Normal" message margin now maps to 4chan's blockquote margin), vichan's asymmetric reply padding and `max-width: 94%` cap are removed (posts reach the sidebar), `p.intro` loses vichan's stray margins, the "File:" label is stripped from file lines, the post menu button sits after the post number instead of indenting the poster name, and own/quoting-you highlight borders use upstream's exact styles (dashed/solid)
+- Thread header/footer: single-line footer ([Return] [Go to top] [Catalog] [Update] … stats), Catalog links bracketed and de-buttoned, the "Posting mode: Reply" banner reduced to a plain link row, and the bottom board list, "Expand all images", "Watch this thread" and floating [Threading] toggles hidden; the StyleTower header icon sits between [Options] and the TS menu caret
+- Post hiding: hide/show buttons themed, hidden-post stubs sit on their own aligned line with breathing room and no longer capture the next post's hide button
+- Expanded quotes: backlinks inside TS's inline clones get the full backlink treatment (icons, colors, fonts), expanded backlinks/quotelinks show a clear indicator (bold + dotted underline, or the down-arrow icon in Backlink Icons mode), and the upstream `.inline` container theming is restored
+- Margin Between Replies rework: every setting (including Normal, now 4px) hides vichan's separator `<br>`s and forces its exact margin, making the ladder monotonic and spacing uniform under TS quote threading
+- Sidebar: the SS-like border sits exactly on the sidebar edge, mascots stay inside it, and the floating QR button moves below the sidebar content
+- Quick reply: the open QR anchors flush to the bottom (the site's global form margin pushed it 52px up), the vertical tab keeps its position, and any Autohide Style now opens the QR on thread entry automatically
+- Animated GIF Thumbnails now survive the site's lazy-loading placeholder overwrites
+
 ### v1.0.1
 *2026-08-09*
 

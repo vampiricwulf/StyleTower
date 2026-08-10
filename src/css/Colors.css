@@ -6,12 +6,10 @@ header,
 input,
 textarea,
 span.omitted,
-#thread-catalog,
 div.pages a.selected,
 .pln,
 select,
 form table th,
-div.banner,
 form[name=post] table td {
   color: var(--sc-textColor) !important;
 }
@@ -83,10 +81,12 @@ header h1 {
 }
 /* Backlinks */
 :root p.intro .mentioned a,
+:root p.intro .clone-mentioned a,
 a.post-btn {
   color: var(--sc-blinkColor) !important;
 }
-:root.backlink-shadow p.intro .mentioned a {
+:root.backlink-shadow p.intro .mentioned a,
+:root.backlink-shadow p.intro .clone-mentioned a {
   text-shadow: 1px 1px 5px;
 }
 :root div.body a[onclick*='highlightReply'],
@@ -116,7 +116,6 @@ body {
 .watch-menu,
 #quick-reply .handle,
 form table th,
-div.banner,
 form[name=post] table td {
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp))!important;
 }
@@ -150,7 +149,6 @@ form[name=post] table td {
 .options-button,
 #link-quick-reply,
 label[for='q-spoiler-image'],
-#thread-catalog,
 div.pages a.selected,
 input[value='Next'],
 input[value='Previous'],
@@ -194,6 +192,9 @@ hr {
   background-image: linear-gradient(to left, rgba(var(--sc-brderColor-rgb),0), rgb(var(--sc-brderColor-rgb)), rgba(var(--sc-brderColor-rgb),0));
 }
 .post-hover {
+  background: rgba(var(--sc-mainColor-shiftM16),.8)!important;
+}
+.inline {
   background: rgba(var(--sc-mainColor-shiftM16),.8)!important;
 }
 :root.post-info .reply>p.intro {
@@ -240,7 +241,6 @@ img.thread-image {
 :root.rounded-corners #oneechan-options,
 :root.rounded-corners .color-picker-btn,
 :root.rounded-corners.op-background .post.op,
-:root.rounded-corners #thread-catalog,
 :root.rounded-corners input[value='Next'],
 :root.rounded-corners input[value='Previous'],
 :root.rounded-corners #options_div,
@@ -283,7 +283,6 @@ form[name=post] table td {
 }
 .options-button,
 #link-quick-reply,
-#thread-catalog,
 div.pages a.selected,
 input[value='Next'],
 input[value='Previous'],

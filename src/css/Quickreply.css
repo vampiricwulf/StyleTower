@@ -2,6 +2,8 @@
 #quick-reply {
   box-shadow: none !important;
   border-radius: 0 !important;
+  /* the site's global form{margin-bottom:4em} pushes the bottom-anchored QR 52px up */
+  margin: 0 !important;
 }
 #quick-reply .close-btn {
   padding: 2px 3px 2px 4px !important;
@@ -80,7 +82,7 @@ form[name=post]:not(#quick-reply) input[type=submit] {
 :root.vertical-qr #quick-reply th {
   display: block;
   position: absolute;
-  bottom: 25vh;
+  bottom: 140px;
   right: 100%;
   width: max-content;
   min-width: 105px;

@@ -1,5 +1,6 @@
 /* Backlinks */
-:root.backlink-icon p.intro .mentioned a {
+:root.backlink-icon p.intro .mentioned a,
+:root.backlink-icon p.intro .clone-mentioned a {
   font-size: 0 !important;
   padding: " + (($SS.conf["Font Size"] < 12) ? 5 : 6) + "px !important;
   margin-right: 0 !important;
@@ -9,7 +10,14 @@
   left: 2px;
   background-image: var(--sc-icon-backlink) !important;
 }
-:root.backlink-icon p.intro .mentioned a:hover {
+:root.backlink-icon p.intro .mentioned a:hover,
+:root.backlink-icon p.intro .clone-mentioned a:hover {
+  opacity: 1 !important;
+}
+/* Expanded (inlined) backlink: swap to the down-arrow icon, as upstream does */
+:root.backlink-icon p.intro .mentioned a.inline-active,
+:root.backlink-icon p.intro .clone-mentioned a.inline-active {
+  background-image: var(--sc-icon-downArrow) !important;
   opacity: 1 !important;
 }
 /* From 4chanSS */

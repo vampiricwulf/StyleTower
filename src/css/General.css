@@ -6,11 +6,19 @@ body {
   margin-bottom: 0;
 }
 /* Replies */
+/* vichan gives replies asymmetric padding (0.2em 0.3em 0.5em 0.6em) and caps
+   them at max-width 94% (the gap before the sidebar); 4chan posts have neither -
+   the intro padding and body margins provide the interior spacing */
+div.post.reply {
+  padding: 0 !important;
+  max-width: none !important;
+}
 div.post.op {
   display: block;
 }
 p.intro {
-  padding: 5px 13px;
+  margin: 0 !important;
+  padding: 5px 13px !important;
   display: block !important;
 }
 span.omitted {
@@ -30,13 +38,22 @@ span.omitted {
   content: '';
   display: block;
 }
+/* Margin Between Replies: the separator brs are always hidden and the margin
+   always forced so spacing is uniform whatever TS/lazy scripts do to the DOM;
+   Normal maps to 4px, keeping the option ladder monotonic */
 .thread>.post.reply:not(.thread>.post:last-of-type),
 .threadContainer>.post.reply,
+.threadingContainer>.post.reply,
 :root.op-background .thread>.post.op:not(.thread>.post:last-of-type) {
-  margin-bottom: " + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : '0') + "px !important;
+  margin-bottom: " + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : 4) + "px !important;
 }
-/* vichan separates posts with bare br elements; hide them so the margin option actually controls spacing */
-" + ($SS.conf["Margin Between Replies"] !== '' ? ".thread > br:not(.clear), .threadContainer > br:not(.clear) { display: none !important; }" : "") + "
+.thread > br:not(.clear),
+.threadContainer > br:not(.clear),
+.threadingContainer > br:not(.clear),
+.post + br:not(.clear),
+.reply + br:not(.clear) {
+  display: none !important;
+}
 .container~.inline {
   margin: 2px 0 2px 13px !important;
 }
@@ -112,7 +129,11 @@ div.body {
 :root.post-info .post.reply.post-hover {
   padding: 0 0 1px !important;
 }
-/* Menu button */
+/* Menu button (relocated after the post number in replacePostMenuBtn; the site's
+   generated CSS gives it negative margins meant for its original position) */
+p.intro a.post-btn {
+  margin: 0 0 0 5px !important;
+}
 :root.reply-fit-width .post.reply .container {
   padding-right: 5px;
 }
@@ -278,10 +299,68 @@ div.pages a.selected {
   padding-top: 3px;
   transition: opacity .3s ease-in 0s;
 }
-/* Navlinks */
-body.active-thread div.banner {
-  padding-top: .4%;
-  margin-bottom: .4%;
+/* Thread nav banner: 4chan-style plain link row (font-size 0 hides the
+   "Posting mode: Reply" text node; links restore their size) */
+div.banner {
+  font-size: 0 !important;
+  background: none !important;
+  text-align: left;
+  padding: 0 !important;
+  margin: 8px 0 !important;
+}
+div.banner a {
+  font-size: " + $SS.conf["Font Size"] + "px !important;
+  margin-right: 5px;
+}
+/* Thread footer: single compact line ([Return] [Go to top] [Catalog] [Update] ... stats);
+   the updater/stats are relocated next to the links in DOMLoaded */
+#updater {
+  float: left;
+}
+/* TS post hiding: theme the hide/show buttons (TS already neutralizes the
+   .reply background/border they inherit from their class) */
+a.reply.hide-button,
+a.reply.show-button {
+  color: var(--sc-blinkColor) !important;
+  opacity: .5;
+  text-decoration: none !important;
+}
+/* The stub must own its line: hide/show buttons are floats, so a hidden post's
+   stub otherwise pairs up with the NEXT post's hide button on one line. Flex
+   centers TS's plus icon with the stub text (its vertical-align hacks assume
+   the inline float context). */
+a.reply.show-button {
+  float: none !important;
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: fit-content;
+  margin-top: 8px;
+}
+a.reply.show-button svg.plus,
+a.reply.show-button .hide-icon {
+  vertical-align: baseline !important;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+}
+a.reply.hide-button:hover,
+a.reply.show-button:hover {
+  opacity: 1;
+  color: var(--sc-linkHColor) !important;
+}
+#update_thread {
+  padding-left: 0 !important;
+}
+/* Bracket the Catalog links to match the neighboring nav links */
+#thread-catalog::before,
+header div.subtitle a::before {
+  content: '[';
+}
+#thread-catalog::after,
+header div.subtitle a::after {
+  content: ']';
 }
 #thread-interactions {
   margin-bottom: 5px;
@@ -323,6 +402,13 @@ form[name=postcontrols] {
 }
 #styletower-mascots.mascots-left {
   left: 10px;
+}
+/* Keep mascots inside the 306px sidebar area (border sits at its left edge) */
+:root.right-sidebar #styletower-mascots.mascots-right {
+  right: 3px;
+}
+:root.left-sidebar #styletower-mascots.mascots-left {
+  left: 3px;
 }
 #styletower-mascots img {
   max-width: 300px;

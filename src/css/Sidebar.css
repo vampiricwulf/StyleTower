@@ -50,6 +50,7 @@
   content:'';
   height:100%;
   width:306px;
+  box-sizing: border-box;
   position:fixed;
   top:0;
   right: 0;

@@ -20,17 +20,33 @@
 :root.oneechan.highlight-you .hasQuoteYou.post.reply,
 :root.oneechan.highlight-you .quoting-you.post.op,
 :root.oneechan.highlight-you .quoting-you.post.reply {
-  border-left: " + $SS.conf["Width Decoration"] + "px var(--you-border-style, solid) rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
+  border-left: " + $SS.conf["Width Decoration"] + "px solid rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 /* Your Posts */
 :root.oneechan.highlight-own .yourPost.post.op,
 :root.oneechan.highlight-own .yourPost.post.reply,
 :root.oneechan.highlight-own .post.op.you,
 :root.oneechan.highlight-own .post.reply.you {
-  border-left: " + $SS.conf["Width Decoration"] + "px var(--you-border-style, dashed) rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
+  border-left: " + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 /* Highlighted Reply BG */
 .reply.highlighted,
 .reply:target {
   background: rgba(var(--sc-replybgHLColor-rgb),0.8) !important;
+}
+/* Expanded (inlined) backlinks/quotelinks: TS marks them a.inline-active, but
+   the themed quotelink color and underline-disabled rules out-specific TS's own
+   indicator, so restate it at higher specificity with theme colors */
+:root.oneechan div.body a.inline-active,
+:root.oneechan p.intro .mentioned a.inline-active,
+:root.oneechan p.intro .clone-mentioned a.inline-active {
+  color: var(--sc-linkHColor) !important;
+  font-weight: bold !important;
+  text-decoration: underline dotted !important;
+  opacity: .85;
+}
+:root.oneechan div.body a.inline-active:hover,
+:root.oneechan p.intro .mentioned a.inline-active:hover,
+:root.oneechan p.intro .clone-mentioned a.inline-active:hover {
+  opacity: 1;
 }
