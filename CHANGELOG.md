@@ -1,3 +1,11 @@
+### v1.0.9
+*2026-08-11*
+
+- Replace JPG/PNG now actually save: on installs using userscript-manager storage, the settings migration mistakenly re-ran on every page load and reset both to off (a wrong storage-flag reference the localStorage-based tests couldn't catch)
+- Replace WEBM/MP4 now actually replaces: the site links video thumbnails to its player page (`/player.php?v=…`) rather than the file, so the format detection never matched — the file URL is now read from the player link
+- Replace Thumbnails settings apply immediately on Save instead of needing a page refresh
+- New **Replace WEBP** sub-option: sharp full-resolution WEBP thumbnails (Tower accepts WEBP uploads); animated WEBPs animate
+
 ### v1.0.8
 *2026-08-11*
 

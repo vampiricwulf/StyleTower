@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         StyleTower
-// @version      1.0.8
+// @version      1.0.9
 // @namespace    StyleTower
 // @description  Customizable themes for holotower.org.
 // @license      GPL-3.0; https://github.com/vampiricwulf/StyleTower/blob/main/LICENSE
@@ -133,6 +133,7 @@
         "Replace GIF": [true, "Animate GIF thumbnails.", "Replace Thumbnails", true, true],
         "Replace JPG": [true, "Sharp full-resolution JPG thumbnails.", "Replace Thumbnails", true, true],
         "Replace PNG": [true, "Sharp full-resolution PNG thumbnails.", "Replace Thumbnails", true, true],
+        "Replace WEBP": [true, "Sharp full-resolution WEBP thumbnails (animated WEBPs animate).", "Replace Thumbnails", true, true],
         "Replace WEBM/MP4": [false, "Muted looping video thumbnails for WEBM and MP4 files (sound only plays in the expanded player). Heaviest on bandwidth.", "Replace Thumbnails", true, true],
         "Backlink Icons": [false, "Use icons for backlinks instead of text."],
         "Backlink Shadow": [false, "Add a shadow to the backlink text."],
@@ -305,7 +306,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.8",
+        VERSION = "1.0.9",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
@@ -769,6 +770,9 @@
             $SS.disableSiteTheme();
             $SS.displayMascots();
             $SS.integrations.init();
+            // Runs on settings reloads too so Replace Thumbnails applies
+            // without a page refresh (idempotent per image)
+            $SS.replaceThumbnails();
 
             var div;
             if (reload !== true) {
@@ -879,7 +883,6 @@
                         if (ti && stats.parentNode !== ti) ti.appendChild(stats);
                     });
                 }
-                $SS.replaceThumbnails();
                 // Re-replace a thumb after the site's inline expansion collapses
                 // it back to the static thumbnail (that swap is src-only, which
                 // the childList observer doesn't see).
@@ -1393,12 +1396,19 @@
             if (!$SS.conf["Replace Thumbnails"]) return;
             var formatConf = {
                 gif: "Replace GIF", jpg: "Replace JPG", jpeg: "Replace JPG",
-                png: "Replace PNG", webm: "Replace WEBM/MP4", mp4: "Replace WEBM/MP4"
+                png: "Replace PNG", webp: "Replace WEBP",
+                webm: "Replace WEBM/MP4", mp4: "Replace WEBM/MP4"
             };
             var scope = root && root.querySelectorAll ? root : document;
             scope.querySelectorAll(".file > a > img.post-image").forEach(function (img) {
-                var href = img.parentNode.href || "",
-                    ext = (href.match(/\.([a-z0-9]+)(?:[?#]|$)/i) || [])[1];
+                var href = img.parentNode.href || "";
+                // Video thumbs link to the site player, with the actual file
+                // in the v= parameter
+                var pm = href.match(/\/player\.php\?[^#]*?\bv=([^&#]+)/);
+                if (pm) {
+                    try { href = decodeURIComponent(pm[1]); } catch (er) { href = pm[1]; }
+                }
+                var ext = (href.match(/\.([a-z0-9]+)(?:[?#]|$)/i) || [])[1];
                 ext = ext && ext.toLowerCase();
                 if (!ext || !formatConf[ext] || !$SS.conf[formatConf[ext]]) return;
                 // Leave spoiler/deleted placeholder thumbs alone
@@ -3057,7 +3067,7 @@
                 // Replace Thumbnails group (GIF-only to preserve behavior)
                 try {
                     var oldGif = this.get("Animated GIF Thumbnails"),
-                        newRaw = this.hasGM ? GM_getValue(NAMESPACE + "Replace Thumbnails") :
+                        newRaw = $SS.hasGM ? GM_getValue(NAMESPACE + "Replace Thumbnails") :
                             localStorage.getItem(NAMESPACE + "Replace Thumbnails");
                     if (oldGif === true && newRaw == undefined) {
                         this.set("Replace Thumbnails", true);
