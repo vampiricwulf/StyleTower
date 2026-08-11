@@ -132,8 +132,12 @@ form[name=post] table td {
   background: rgb(var(--sc-mainColor-shift15)) !important;
 }
 .tab-label,
-#oneechan-options {
+#oneechan-options,
+#add-mascot {
   background: rgb(var(--sc-mainColor-rgb)) !important;
+}
+#add-mascot {
+  color: var(--sc-textColor) !important;
 }
 /* Recolor Even Replies lives in setThemeVariables: its :nth-child(even of ...) selector
    (needed so TS's injected hover .post.dummy can't flip the parity) is mangled by cssmin. */

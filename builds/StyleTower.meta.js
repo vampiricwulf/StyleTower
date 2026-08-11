@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         StyleTower
-// @version      1.0.4
+// @version      1.0.5
 // @namespace    StyleTower
 // @description  Customizable themes for holotower.org.
 // @license      GPL-3.0; https://github.com/vampiricwulf/StyleTower/blob/main/LICENSE

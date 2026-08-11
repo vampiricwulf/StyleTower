@@ -544,3 +544,15 @@ form[name=postcontrols] {
   max-width: 300px;
   display: block;
 }
+/* Mascot display options (Mascots tab) */
+:root.mascot-overlap #styletower-mascots {
+  z-index: 5;
+}
+:root.mascot-dim #styletower-mascots {
+  opacity: .35;
+  transition: opacity .25s ease;
+  pointer-events: auto;
+}
+:root.mascot-dim #styletower-mascots:hover {
+  opacity: 1;
+}

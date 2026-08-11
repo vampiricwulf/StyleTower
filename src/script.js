@@ -239,8 +239,6 @@
         "Use StyleTower Icons": [true, "Replace site icons with themed SVG icons. Disable to use the vanilla icons.", null, true],
         "Style Scrollbars": [false, "Customize the look of scrollbars to match the theme.", null, true],
         "Thin Scrollbars": [false, "Use thinner scrollbars.", "Style Scrollbars", true, true],
-        "Enable Mascots": [false, "Display mascot images on the page and adjust their opacity.", null, true],
-        "Mascots": ["[]", "Mascot data (URLs and opacity).", "Enable Mascots", true, true],
         ":: Header": ["header", ""],
         "Show Header Background Gradient": [false, "Gives the header bar a gradient background."],
         "Show Header Shadow": [true, "Gives the header a drop shadow."],
@@ -262,6 +260,12 @@
         "ImgOps Links": [true, "Add imgops links after file info. Ported from Holotower ImgOps Links."],
         "Sauce Links": [true, "Add X/BSKY sauce links to files with matching filenames. Ported from Holotower X/BSKY Sauce."],
         "Catalog Highlights": [true, "Highlight and pin catalog threads via the Pin Settings button in the catalog. Ported from Holotower Catalog Highlights and Pin."],
+        "Enable Mascots": [false, "Display a mascot image in the bottom corner of the page. Selected mascots rotate randomly on each page load."],
+        "Hide Mascots in Catalog": [true, "Hides the mascot when viewing the catalog."],
+        "Mascots Overlap Posts": [false, "Render the mascot above posts and threads instead of behind them."],
+        "Reduce Mascot Opacity": [false, "Fade the mascot out until it is hovered. Note: the mascot captures the mouse where it overlaps the page."],
+        "Advanced Mascot Editor": [false, "Remembered mascot editor mode (set from the editor itself)."],
+        "Mascots": ["[]", "Mascot data.", null, null, true],
         "Themes": [],
         "Hidden Themes": [],
         "Selected Theme": 1,
@@ -1841,23 +1845,88 @@
                 }
             });
         },
-        displayMascots: function () {
+        mascotFilterCSS: function (m) {
+            // Per-mascot image filters; only non-default values contribute
+            var f = (m && m.filters) || {},
+                parts = [];
+            if (f.gray) parts.push("grayscale(" + f.gray + "%)");
+            if (f.sepia) parts.push("sepia(" + f.sepia + "%)");
+            if (f.invert) parts.push("invert(" + f.invert + "%)");
+            if (f.hue) parts.push("hue-rotate(" + f.hue + "deg)");
+            if (f.bright != null && f.bright !== 100) parts.push("brightness(" + f.bright + "%)");
+            if (f.contrast != null && f.contrast !== 100) parts.push("contrast(" + f.contrast + "%)");
+            if (f.sat != null && f.sat !== 100) parts.push("saturate(" + f.sat + "%)");
+            if (f.blur) parts.push("blur(" + f.blur + "px)");
+            return parts.join(" ");
+        },
+        displayMascots: function (previewMascot) {
+            // One mascot at a time, OneeChan-style: picked at random from the
+            // selected set (or forced by the editor's live preview)
             try {
                 var existing = document.getElementById("styletower-mascots");
                 if (existing) existing.remove();
-                if (!$SS.conf["Enable Mascots"]) return;
-                var mascots = [];
-                try { mascots = JSON.parse($SS.conf["Mascots"] || "[]"); } catch (e) {}
-                var available = mascots.filter(function (m) { return m.enabled !== false && m.url; });
-                if (!available.length) return;
-                var m = available.length > 1 ? available[Math.floor(Math.random() * available.length)] : available[0];
+                var m = previewMascot;
+                if (!m) {
+                    if (!$SS.conf["Enable Mascots"]) return;
+                    if ($SS.conf["Hide Mascots in Catalog"] && $SS.location.catalog) return;
+                    var mascots = [];
+                    try { mascots = JSON.parse($SS.conf["Mascots"] || "[]"); } catch (e) {}
+                    var board = $SS.location.board;
+                    var available = mascots.filter(function (mm) {
+                        if (mm.enabled === false || !mm.url) return false;
+                        if (mm.boards) {
+                            var list = String(mm.boards).split(",").map(function (b) {
+                                return b.trim();
+                            }).filter(Boolean);
+                            if (list.length && list.indexOf(board) === -1) return false;
+                        }
+                        return true;
+                    });
+                    if (!available.length) return;
+                    m = available.length > 1 ? available[Math.floor(Math.random() * available.length)] : available[0];
+                }
                 var container = document.createElement("div");
                 container.id = "styletower-mascots";
-                container.className = document.documentElement.classList.contains("left-sidebar") ? "mascots-left" : "mascots-right";
+                var side = m.side === "left" || m.side === "right" ? m.side :
+                    (document.documentElement.classList.contains("left-sidebar") ? "left" : "right");
+                container.className = "mascots-" + side;
+                var left = side === "left";
+                var off = parseInt(m.offset, 10) || 0,
+                    hoff = parseInt(m.hoffset, 10) || 0;
+                if (off) container.style.bottom = off + "px";
+                if (hoff) container.style[left ? "marginLeft" : "marginRight"] = hoff + "px";
                 var img = document.createElement("img");
                 img.src = m.url;
-                img.style.opacity = (m.opacity || 100) / 100;
+                img.style.opacity = (m.opacity == null ? 100 : m.opacity) / 100;
                 if (m.flip) img.style.transform = "scaleX(-1)";
+                // Free CSS sizes like OneeChan ("auto", "300px", "40vh"); bare
+                // numbers are treated as px
+                var size = function (v) {
+                    v = String(v == null ? "" : v).trim();
+                    if (!v || v === "auto") return "";
+                    return /^\d+$/.test(v) ? v + "px" : v;
+                };
+                var wCss = size(m.width),
+                    hCss = size(m.height),
+                    scale = parseInt(m.scale, 10) || 100;
+                if (wCss) img.style.width = wCss;
+                if (hCss) img.style.height = hCss;
+                // The 300px sidebar-fit cap only applies to fully auto-sized
+                // mascots; any explicit size or scale overrides it so images
+                // can grow past the sidebar without distorting
+                if (wCss || hCss || scale !== 100) img.style.maxWidth = "none";
+                if (!wCss && !hCss && scale !== 100) {
+                    var applyScale = function () {
+                        if (img.naturalWidth)
+                            img.style.width = Math.round(img.naturalWidth * scale / 100) + "px";
+                    };
+                    if (img.complete && img.naturalWidth) applyScale();
+                    else img.addEventListener("load", applyScale);
+                }
+                if (m.clip && (m.clip[0] || m.clip[1] || m.clip[2] || m.clip[3]))
+                    img.style.clipPath = "inset(" + (m.clip[0] || 0) + "px " + (m.clip[3] || 0) + "px " + (m.clip[2] || 0) + "px " + (m.clip[1] || 0) + "px)";
+                var filterCSS = $SS.mascotFilterCSS(m);
+                if (filterCSS) img.style.filter = filterCSS;
                 container.appendChild(img);
                 document.body.appendChild(container);
             } catch (e) {}
@@ -2952,6 +3021,7 @@
                             "<ul id=options-tabs>",
                             "<li class='tab-item'><label class='tab-label selected' for=main-select>Main</label></li>",
                             "<li class='tab-item'><label class='tab-label' for=misc-select>Misc</label></li>",
+                            "<li class='tab-item'><label class='tab-label' for=mascots-select>Mascots</label></li>",
                             "<li class='tab-item'><label class='tab-label' for=themes-select>Themes</label></li>",
                             "</ul><div id=options-container><input type=radio class=tab-select name=tab-select id=main-select hidden checked><div id='main-section' class='options-section'>",
                             "<p class='buttons-container'>",
@@ -2961,11 +3031,19 @@
                         ];
                     var key, val, des, id;
 
+                    // Working copy for the Mascots tab; serialized on Save
+                    try { $SS.options._mascotWork = JSON.parse($SS.conf["Mascots"] || "[]"); }
+                    catch (e) { $SS.options._mascotWork = []; }
+
                     for (key in defaultConfig) {
                         if (/^(Selected|Hidden)+\s(Themes?)+$/.test(key))
                             continue;
 
                         if (key === "Style Holotower TS Notifications" && !$SS.isTS())
+                            continue;
+
+                        // Set from the mascot editor's own checkbox, not the list
+                        if (key === "Advanced Mascot Editor")
                             continue;
 
                         if (defaultConfig[key][0] === "header") {
@@ -3009,19 +3087,16 @@
                             }
                             html += "</select></label>";
                             optionsHTML.push(html);
+                        } else if (key === "Enable Mascots") {
+                            // The Mascots tab: master toggle + display options render
+                            // into it via the generic branches below, then the
+                            // "Mascots" key emits the gallery
+                            optionsHTML.push("</div><input type=radio class=tab-select name=tab-select id=mascots-select hidden><div id='mascot-section' class='options-section'>" +
+                                "<p class='buttons-container'><span class='btn-right'><a class='options-button' name=save>Save</a><a class='options-button' name=cancel>Cancel</a></span></p>" +
+                                "<label class='option header'><span class='option-title'>:: Mascots</span></label>" +
+                                "<label class=option title=\"" + des + "\"><span class='option-title'>" + key + "</span><input" + (val ? " checked" : "") + " name='" + key + "' type=checkbox></label>");
                         } else if ((defaultConfig[key][4] === true) && (key === "Mascots")) {
-                            var pVal = $SS.conf["Enable Mascots"];
-                            id = "Enable_Mascots" + true;
-                            var mascots = [];
-                            try { mascots = JSON.parse($SS.conf["Mascots"] || "[]"); } catch (e) {}
-                            var rows = "<div class='option suboption mascot-container " + id + "'" + (!pVal ? "hidden" : "") + ">";
-                            mascots.forEach(function (m, i) {
-                                var url = (m.url || "").replace(/"/g, "&quot;");
-                                rows += "<div class='mascot-row'><input type=checkbox class='mascot-enabled' title='Enable this mascot'" + (m.enabled !== false ? " checked" : "") + "><input type=text class='mascot-url' value=\"" + url + "\" placeholder='URL or base64 image'><input type=range class='mascot-opacity' title='Opacity' min=0 max=100 value='" + (m.opacity || 100) + "'><span class='mascot-opacity-val'>" + (m.opacity || 100) + "%</span><input type=checkbox class='mascot-flip' title='Flip horizontally'" + (m.flip ? " checked" : "") + "><button class='mascot-remove' type=button title='Remove'>&times;</button></div>";
-                            });
-                            rows += "<a class='options-button mascot-add'>+ Add Mascot</a>";
-                            rows += "</div>";
-                            optionsHTML.push(rows);
+                            optionsHTML.push($SS.options.mascotGalleryHTML());
                         } else if (defaultConfig[key][4] === true) // sub-option
                         {
                             var pVal = $SS.conf[defaultConfig[key][2]];
@@ -3114,11 +3189,7 @@
                                     return;
                                 }
 
-                                for (key in imported) {
-                                    val = imported[key];
-                                    // Accept settings exported from upstream StyleChan
-                                    $SS.Config.set(key === "Use StyleChan Icons" ? "Use StyleTower Icons" : key, val);
-                                }
+                                $SS.options.importSettings(imported);
 
                                 if (confirm('Import successful. Refresh now?')) {
                                     return window.location.reload();
@@ -3189,39 +3260,40 @@
                                 this.setAttribute("hidden", "");
                             });
                     });
-                    $("input[name='Enable Mascots']", tOptions).bind("change", function () {
-                        var id = this.name.replace(/\s/g, "_") + this.checked,
-                            sub = $("." + id);
-                        if (sub.exists())
-                            sub.each(function () { this.removeAttribute("hidden"); });
-                        else
-                            $("[class*='" + this.name.replace(/\s/g, "_") + "']").each(function () {
-                                this.setAttribute("hidden", "");
-                            });
-                    });
-                    // Mascot handlers
+                    // Mascots tab: gallery interactions on the working copy
                     var optsNode = tOptions.elems[0];
                     if (optsNode) {
                         optsNode.addEventListener("click", function (e) {
-                            var add = e.target.closest(".mascot-add");
-                            if (add) {
-                                var container = add.closest(".mascot-container");
-                                var row = document.createElement("div");
-                                row.className = "mascot-row";
-                                row.innerHTML = "<input type=checkbox class='mascot-enabled' title='Enable this mascot' checked><input type=text class='mascot-url' value='' placeholder='URL or base64 image'><input type=range class='mascot-opacity' title='Opacity' min=0 max=100 value=100><span class='mascot-opacity-val'>100%</span><input type=checkbox class='mascot-flip' title='Flip horizontally'><button class='mascot-remove' type=button title='Remove'>&times;</button>";
-                                container.insertBefore(row, add);
+                            var work = $SS.options._mascotWork;
+                            if (!work) return;
+                            if (e.target.closest(".mascot-add")) {
+                                $SS.options.showMascotEditor(-1);
                                 return;
                             }
-                            var rem = e.target.closest(".mascot-remove");
-                            if (rem) {
-                                rem.closest(".mascot-row").remove();
+                            if (e.target.closest(".mascot-select-all") || e.target.closest(".mascot-select-none")) {
+                                var on = !!e.target.closest(".mascot-select-all");
+                                work.forEach(function (m) { m.enabled = on; });
+                                $SS.options.renderMascotGallery();
+                                return;
                             }
-                        });
-                        optsNode.addEventListener("input", function (e) {
-                            var range = e.target.closest(".mascot-opacity");
-                            if (range) {
-                                var display = range.parentNode.querySelector(".mascot-opacity-val");
-                                if (display) display.textContent = range.value + "%";
+                            var edit = e.target.closest(".mascot-edit");
+                            if (edit) {
+                                $SS.options.showMascotEditor(parseInt(edit.closest(".mascot-tile").getAttribute("data-idx")));
+                                return;
+                            }
+                            var del = e.target.closest(".mascot-del");
+                            if (del) {
+                                work.splice(parseInt(del.closest(".mascot-tile").getAttribute("data-idx")), 1);
+                                $SS.options.renderMascotGallery();
+                                return;
+                            }
+                            var tile = e.target.closest(".mascot-tile");
+                            if (tile) {
+                                var m = work[parseInt(tile.getAttribute("data-idx"))];
+                                if (m) {
+                                    m.enabled = m.enabled === false;
+                                    tile.classList.toggle("selected", m.enabled);
+                                }
                             }
                         });
                     }
@@ -3376,23 +3448,9 @@
                     $SS.Config.set(name, val);
                 });
 
-                // Save Mascots
-                var mascots = [];
-                document.querySelectorAll("#oneechan-options .mascot-row").forEach(function (row) {
-                    var input = row.querySelector(".mascot-url"),
-                        range = row.querySelector(".mascot-opacity"),
-                        enabled = row.querySelector(".mascot-enabled"),
-                        flip = row.querySelector(".mascot-flip");
-                    if (input && input.value.trim()) {
-                        mascots.push({
-                            url: input.value.trim(),
-                            opacity: parseInt(range ? range.value : 100),
-                            enabled: enabled ? enabled.checked : true,
-                            flip: flip ? flip.checked : false
-                        });
-                    }
-                });
-                $SS.Config.set("Mascots", JSON.stringify(mascots));
+                // Save Mascots (gallery edits live in the working copy)
+                if ($SS.options._mascotWork)
+                    $SS.Config.set("Mascots", JSON.stringify($SS.options._mascotWork));
 
                 // Save Themes
                 $("#oneechan-options #themes-section>div").each(function (index) {
@@ -3424,6 +3482,277 @@
                     $SS.options.close();
 
                 return $SS.init(true);
+            },
+            /* Settings import: accepts StyleTower, upstream StyleChan and
+               original OneeChan exports, normalizing renamed keys and both
+               foreign mascot formats into ours */
+            importSettings: function (imported) {
+                var keyMap = {
+                        "Use StyleChan Icons": "Use StyleTower Icons",
+                        "Style 4chanX Notifications": "Style Holotower TS Notifications",
+                        "Post Decoration Style": "Decoration Style",
+                        "Post Decoration Width": "Decoration Width",
+                        "Post Highlight Style": "Highlight Style"
+                    },
+                    num = function (v) {
+                        var n = parseInt(v, 10);
+                        return isNaN(n) ? 0 : n;
+                    },
+                    rawMascots = imported["Mascots"],
+                    // OneeChan stores mascots as a plain array (and has no
+                    // master toggle); StyleChan/StyleTower as a JSON string
+                    isOneeChan = Array.isArray(rawMascots) || ("Version Fix" in imported),
+                    mascots = null;
+
+                // OneeChan's three-state scrollbars → our two toggles
+                if (typeof imported["Scrollbar Type"] === "number") {
+                    imported["Style Scrollbars"] = imported["Scrollbar Type"] > 0;
+                    imported["Thin Scrollbars"] = imported["Scrollbar Type"] === 2;
+                }
+
+                if (typeof rawMascots === "string") {
+                    try { mascots = JSON.parse(rawMascots); } catch (e) { mascots = null; }
+                } else if (Array.isArray(rawMascots)) {
+                    mascots = rawMascots;
+                }
+                if (Array.isArray(mascots)) {
+                    var grayAll = imported["Grayscale Mascots"] === true;
+                    mascots = mascots.filter(function (m) {
+                        return m && (m.url || m.img);
+                    }).map(function (m) {
+                        var out = {
+                            name: m.name || "",
+                            url: m.url || m.img,
+                            width: m.width || "auto",
+                            height: m.height || "auto",
+                            opacity: m.opacity == null ? 100 : num(m.opacity),
+                            offset: num(m.offset),
+                            hoffset: num(m.hoffset),
+                            flip: m.flip === true,
+                            enabled: m.enabled !== false
+                        };
+                        if (m.scale) out.scale = num(m.scale);
+                        if (m.side === "left" || m.side === "right") out.side = m.side;
+                        if (m.boards) out.boards = String(m.boards);
+                        // ours is an array; OneeChan uses flat tclip/lclip/…
+                        var clip = Array.isArray(m.clip) ? m.clip :
+                            [num(m.tclip), num(m.lclip), num(m.bclip), num(m.rclip)];
+                        if (clip[0] || clip[1] || clip[2] || clip[3]) out.clip = clip;
+                        var fl = {}, fk, has = false;
+                        for (fk in (m.filters || {})) fl[fk] = m.filters[fk];
+                        if (grayAll && fl.gray == null) fl.gray = 100;
+                        for (fk in fl) { has = true; break; }
+                        if (has) out.filters = fl;
+                        return out;
+                    });
+                    imported["Mascots"] = JSON.stringify(mascots);
+                    if (imported["Enable Mascots"] === undefined && mascots.length)
+                        imported["Enable Mascots"] = true;
+                }
+                delete imported["Grayscale Mascots"];
+
+                for (var key in imported) {
+                    var target = keyMap[key] || key,
+                        val = imported[key];
+                    // Foreign bookkeeping and saved-site blobs never transfer
+                    if (/^(Hidden Themes|Themes|Selected Mascots|Hidden Mascots|Total Mascots|Version Fix|Scrollbar Type)$/.test(target))
+                        continue;
+                    if (/^Saved4chan\./.test(key))
+                        continue;
+                    if (/^(Selected Theme|NSFW Theme|Dark Theme|Light Theme)$/.test(target)) {
+                        // Theme indices only carry over from the shared
+                        // StyleChan/StyleTower default list, and only in range
+                        if (isOneeChan || typeof val !== "number" ||
+                            val < 0 || val >= ($SS.conf["Themes"] || []).length)
+                            continue;
+                    } else if (!(target in defaultConfig) && !/^SavedSite\./.test(key)) {
+                        continue;
+                    }
+                    $SS.Config.set(target, val);
+                }
+            },
+            /* Mascots tab (OneeChan-style gallery + editor over a working copy) */
+            mascotEsc: function (s) {
+                return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+            },
+            mascotName: function (m, i) {
+                if (m.name) return m.name;
+                var base = String(m.url || "").split("/").pop().split("?")[0]
+                    .replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim();
+                if (/^data:/i.test(m.url || "") || !base) base = "Mascot " + (i + 1);
+                return base;
+            },
+            mascotGalleryHTML: function () {
+                var work = $SS.options._mascotWork || [],
+                    esc = $SS.options.mascotEsc,
+                    html = ["<div class='option mascot-gallery-wrap'>",
+                        "<p class='mascot-controls'>",
+                        "<a class='options-button mascot-add' title='Add a new mascot.'>Add Mascot</a>",
+                        "<a class='options-button mascot-select-all' title='Select every mascot.'>All</a>",
+                        "<a class='options-button mascot-select-none' title='Deselect every mascot.'>None</a>",
+                        "<span class='mascot-hint'>Click a tile to select it; hover a tile to edit or delete.</span></p>",
+                        "<div class='mascot-gallery'>"];
+                if (!work.length)
+                    html.push("<span class='mascot-empty'>No mascots yet &mdash; use Add Mascot to create one.</span>");
+                work.forEach(function (m, i) {
+                    var name = esc($SS.options.mascotName(m, i)),
+                        filterCSS = $SS.mascotFilterCSS(m),
+                        tileStyle = (m.flip ? "transform:scaleX(-1);" : "") + (filterCSS ? "filter:" + filterCSS + ";" : "");
+                    html.push("<div class='mascot-tile" + (m.enabled !== false ? " selected" : "") + "' data-idx='" + i + "'>" +
+                        "<img src=\"" + esc(m.url) + "\" loading='lazy'" + (tileStyle ? " style='" + tileStyle + "'" : "") + ">" +
+                        "<span class='mascot-tile-name' title=\"" + name + "\">" + name + "</span>" +
+                        "<span class='mascot-tile-btns'><a class='mascot-edit' title='Edit mascot'>&#9998;</a><a class='mascot-del' title='Delete mascot'>&times;</a></span></div>");
+                });
+                html.push("</div></div>");
+                return html.join("");
+            },
+            renderMascotGallery: function () {
+                var wrap = document.querySelector("#mascot-section .mascot-gallery-wrap");
+                if (!wrap) return;
+                var tmp = document.createElement("div");
+                tmp.innerHTML = $SS.options.mascotGalleryHTML();
+                wrap.parentNode.replaceChild(tmp.firstChild, wrap);
+            },
+            showMascotEditor: function (mIndex) {
+                var bEdit = typeof mIndex === "number" && mIndex >= 0,
+                    work = $SS.options._mascotWork || ($SS.options._mascotWork = []),
+                    m = bEdit ? work[mIndex] : {},
+                    esc = $SS.options.mascotEsc;
+                if (!m) return;
+                var f = function (v, d) { return v === undefined || v === null ? d : v; },
+                    clip = m.clip || [0, 0, 0, 0],
+                    filters = m.filters || {},
+                    advanced = $SS.conf["Advanced Mascot Editor"] === true,
+                    off = parseInt(f(m.offset, 0), 10),
+                    hoff = parseInt(f(m.hoffset, 0), 10),
+                    slider = function (title, name, val, min, max, unit, tip, modeCls) {
+                        return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
+                            "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
+                            "<span class='mascot-opacity-val'>" + val + unit + "</span></label>";
+                    },
+                    div = $("<div id='add-mascot' class='dialog" + (advanced ? " advanced" : "") + "'>").html(
+                        "<label class='add-mascot-label mascot-mode-row' title='Simple mode keeps the intuitive controls; advanced exposes raw CSS sizes, precise offsets, clipping, page side and per-board lists.'><span class='option-title'>Advanced Editing:</span><input type=checkbox name=mAdvanced" + (advanced ? " checked" : "") + "></label>" +
+                        "<label class='add-mascot-label' title='Name shown in the gallery.'><span class='option-title'>Name:</span><input class='mascot-input' type=text name=mName value=\"" + esc(f(m.name, "")) + "\" placeholder='Mascot name'></label>" +
+                        "<label class='add-mascot-label' title='Image URL or data URI.'><span class='option-title'>Image:</span><input class='mascot-input' type=text name=mImg value=\"" + esc(f(m.url, "")) + "\" placeholder='https://&hellip; or data:image/&hellip;'></label>" +
+                        slider("Scale", "mScale", parseInt(f(m.scale, 100), 10), 10, 300, "%", "Resize the mascot while keeping its shape. Ignored when an exact Width or Height is set.") +
+                        "<label class='add-mascot-label adv-only' title='Exact CSS width (e.g. 500px, 25vw). Use auto to keep the original size and let Scale apply.'><span class='option-title'>Width:</span><input class='mascot-input' type=text name=mWidth value=\"" + esc(f(m.width, "auto")) + "\"></label>" +
+                        "<label class='add-mascot-label adv-only' title='Exact CSS height. Use auto to keep the original size.'><span class='option-title'>Height:</span><input class='mascot-input' type=text name=mHeight value=\"" + esc(f(m.height, "auto")) + "\"></label>" +
+                        slider("Opacity", "mOpacity", parseInt(f(m.opacity, 100), 10), 0, 100, "%", "0 is transparent, 100 is opaque.") +
+                        slider("Raise", "mOffsetS", off, -100, 400, "px", "Slide the mascot up from the bottom edge.", " simple-only") +
+                        slider("Push In", "mHOffsetS", hoff, -100, 400, "px", "Slide the mascot away from the screen edge toward the center.", " simple-only") +
+                        "<label class='add-mascot-label adv-only' title='Positive values lift the mascot up from the bottom edge; negative push it down.'><span class='option-title'>Vertical Offset:</span><input class='mascot-input' type=text name=mOffset value='" + off + "px'></label>" +
+                        "<label class='add-mascot-label adv-only' title='Positive values push the mascot from the screen edge toward the center; negative push it off-screen.'><span class='option-title'>Horizontal Offset:</span><input class='mascot-input' type=text name=mHOffset value='" + hoff + "px'></label>" +
+                        "<label class='add-mascot-label adv-only' title='Which side of the page the mascot sits on. Auto follows the sidebar position.'><span class='option-title'>Side:</span><select name=mSide class='mascot-input'><option value='auto'" + (f(m.side, "auto") === "auto" ? " selected" : "") + ">Auto</option><option value='right'" + (m.side === "right" ? " selected" : "") + ">Right</option><option value='left'" + (m.side === "left" ? " selected" : "") + ">Left</option></select></label>" +
+                        "<label class='add-mascot-label adv-only' title='Clip the edges of the image, in pixels: top, left, bottom, right.'><span class='option-title'>Clip (T/L/B/R):</span>" +
+                        "<span class='mascot-clip-inputs'><input class='mascot-input mascot-clip' type=text name=mTClip value='" + parseInt(f(clip[0], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mLClip value='" + parseInt(f(clip[1], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mBClip value='" + parseInt(f(clip[2], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mRClip value='" + parseInt(f(clip[3], 0), 10) + "'></span></label>" +
+                        "<label class='add-mascot-label' title='Flip the mascot image horizontally.'><span class='option-title'>Flip Image:</span><input type=checkbox name=mFlip" + (m.flip ? " checked" : "") + "></label>" +
+                        "<label class='add-mascot-label mascot-filter-head'><span class='option-title'>Image Filters</span></label>" +
+                        slider("Grayscale", "mFGray", parseInt(f(filters.gray, 0), 10), 0, 100, "%", "Desaturate the mascot.") +
+                        slider("Sepia", "mFSepia", parseInt(f(filters.sepia, 0), 10), 0, 100, "%", "Warm brownish tone.") +
+                        slider("Invert", "mFInvert", parseInt(f(filters.invert, 0), 10), 0, 100, "%", "Invert the image colors.") +
+                        slider("Hue Rotate", "mFHue", parseInt(f(filters.hue, 0), 10), 0, 360, "°", "Shift every color around the hue wheel.") +
+                        slider("Brightness", "mFBright", parseInt(f(filters.bright, 100), 10), 0, 200, "%", "100 is the original brightness.") +
+                        slider("Contrast", "mFContrast", parseInt(f(filters.contrast, 100), 10), 0, 200, "%", "100 is the original contrast.") +
+                        slider("Saturation", "mFSat", parseInt(f(filters.sat, 100), 10), 0, 200, "%", "100 is the original saturation; above boosts colors.") +
+                        slider("Blur", "mFBlur", parseInt(f(filters.blur, 0), 10), 0, 20, "px", "Gaussian blur radius.") +
+                        "<label class='add-mascot-label adv-only' title='Comma-separated boards to show this mascot on. Leave empty for all boards. Example: hlgg,jp'><span class='option-title'>Boards:</span><input class='mascot-input' type=text name=mBoards value=\"" + esc(f(m.boards, "")) + "\" placeholder='all boards'></label>" +
+                        "<div id='mascot-buttons-container'><a class='options-button' name=mSave>" + (bEdit ? "Save Mascot" : "Add Mascot") + "</a><a class='options-button' name=mCancel>Cancel</a></div>"),
+                    node = div.elems[0],
+                    collect = function () {
+                        var g = function (n) {
+                                var el = node.querySelector("[name=" + n + "]");
+                                return el ? el.value : "";
+                            },
+                            num = function (v) {
+                                var n = parseInt(v, 10);
+                                return isNaN(n) ? 0 : n;
+                            };
+                        var fl = {};
+                        if (num(g("mFGray"))) fl.gray = num(g("mFGray"));
+                        if (num(g("mFSepia"))) fl.sepia = num(g("mFSepia"));
+                        if (num(g("mFInvert"))) fl.invert = num(g("mFInvert"));
+                        if (num(g("mFHue"))) fl.hue = num(g("mFHue"));
+                        if (num(g("mFBright")) !== 100) fl.bright = num(g("mFBright"));
+                        if (num(g("mFContrast")) !== 100) fl.contrast = num(g("mFContrast"));
+                        if (num(g("mFSat")) !== 100) fl.sat = num(g("mFSat"));
+                        if (num(g("mFBlur"))) fl.blur = num(g("mFBlur"));
+                        var hasFilters = false, fk;
+                        for (fk in fl) { hasFilters = true; break; }
+                        var scaleVal = num(g("mScale")) || 100,
+                            sideVal = g("mSide");
+                        return {
+                            name: g("mName").trim(),
+                            url: g("mImg").trim(),
+                            scale: scaleVal !== 100 ? scaleVal : undefined,
+                            width: g("mWidth").trim() || "auto",
+                            height: g("mHeight").trim() || "auto",
+                            opacity: num(g("mOpacity")),
+                            offset: num(g("mOffset")),
+                            hoffset: num(g("mHOffset")),
+                            side: sideVal === "left" || sideVal === "right" ? sideVal : undefined,
+                            clip: [num(g("mTClip")), num(g("mLClip")), num(g("mBClip")), num(g("mRClip"))],
+                            flip: !!node.querySelector("[name=mFlip]").checked,
+                            filters: hasFilters ? fl : undefined,
+                            boards: g("mBoards").trim(),
+                            enabled: bEdit ? m.enabled !== false : true
+                        };
+                    },
+                    overlay2 = $("<div id=overlay2>").append(div),
+                    preview = function () {
+                        var o = collect();
+                        if (o.url) $SS.displayMascots(o);
+                    },
+                    closeEditor = function () {
+                        overlay2.remove();
+                        $("#overlay").removeClass("previewing");
+                        $SS.displayMascots();
+                    };
+                $(document.body).append(overlay2);
+                // Hide the options window while the editor previews on the live
+                // page (same pattern as the theme editor)
+                $("#overlay").addClass("previewing");
+                preview();
+                var setField = function (name, val) {
+                    var el = node.querySelector("[name=" + name + "]");
+                    if (el) el.value = val;
+                };
+                node.addEventListener("input", function (e) {
+                    var t = e.target;
+                    if (t.type === "range") {
+                        var vv = t.parentNode.querySelector(".mascot-opacity-val");
+                        if (vv) vv.textContent = t.value + (t.getAttribute("data-unit") || "%");
+                    }
+                    // The simple-mode position sliders and the advanced offset
+                    // inputs edit the same values; keep them in sync (the text
+                    // inputs are what collect() reads)
+                    if (t.name === "mOffsetS") setField("mOffset", t.value + "px");
+                    else if (t.name === "mHOffsetS") setField("mHOffset", t.value + "px");
+                    else if (t.name === "mOffset") setField("mOffsetS", parseInt(t.value, 10) || 0);
+                    else if (t.name === "mHOffset") setField("mHOffsetS", parseInt(t.value, 10) || 0);
+                    preview();
+                });
+                node.addEventListener("change", function (e) {
+                    if (e.target.name === "mAdvanced") {
+                        var adv = e.target.checked;
+                        node.classList.toggle("advanced", adv);
+                        $SS.conf["Advanced Mascot Editor"] = adv;
+                        $SS.Config.set("Advanced Mascot Editor", adv);
+                    }
+                    preview();
+                });
+                $("a[name=mSave]", div).bind("click", function () {
+                    var obj = collect();
+                    if (obj.url) {
+                        if (bEdit) work[mIndex] = obj;
+                        else work.push(obj);
+                        $SS.options.renderMascotGallery();
+                    }
+                    closeEditor();
+                });
+                $("a[name=mCancel]", div).bind("click", closeEditor);
+                overlay2.bind("click", function (e) {
+                    if (e.target === overlay2.elems[0]) closeEditor();
+                });
             },
             showTheme: function (tIndex) {
                 var div, overlay, previewThemeIndex = -1,
@@ -4800,6 +5129,8 @@
                 cl.toggle("use-sc-icons", $SS.conf["Use StyleTower Icons"]);
                 cl.toggle("highlight-you", $SS.conf["Highlight Posts Quoting You"] === true);
                 cl.toggle("highlight-own", $SS.conf["Highlight Own Posts"] === true);
+                cl.toggle("mascot-overlap", $SS.conf["Mascots Overlap Posts"] === true);
+                cl.toggle("mascot-dim", $SS.conf["Reduce Mascot Opacity"] === true);
                 // Holotower marks the fixed header on the boardlist element itself
                 // (Holotower TS "Fixed Header" / "Auto-hide Header" toggles); mirror
                 // that state onto :root as the classes the ported CSS keys off.

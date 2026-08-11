@@ -1,3 +1,15 @@
+### v1.0.5
+*2026-08-11*
+
+Mascot system rebuilt in the style of the original OneeChan, with more control than either ancestor:
+
+- New Mascots tab in the options (Main / Misc / Mascots / Themes) replacing the URL-row list: a gallery of tiles showing each mascot with its own filters and flip applied — click to select (selected mascots rotate randomly each page load), hover for edit/delete, plus Add / All / None controls
+- The master toggle and display options live in the tab: Hide Mascots in Catalog, Mascots Overlap Posts, and Reduce Mascot Opacity (fade until hover)
+- Per-mascot editor with live on-page preview while you type (the options window steps aside, like the theme editor). Simple mode keeps everything intuitive — Scale, Opacity, Raise and Push In sliders, Flip — while the remembered Advanced Editing toggle adds exact CSS Width/Height, precise pixel offsets (two-way synced with the sliders), page Side override, edge Clip and per-board lists
+- Per-mascot image filters, all sliders: Grayscale, Sepia, Invert, Hue Rotate, Brightness, Contrast, Saturation and Blur (replaces the short-lived global Grayscale option)
+- Scaling fixed: mascots can grow past the sidebar without stretching — the 300px sidebar-fit cap now only applies to fully auto-sized mascots, and the new Scale slider resizes from the image's natural size keeping its shape
+- Settings import now properly accepts OneeChan and StyleChan exports, including mascots: OneeChan's mascot format (flat clips, maxwidth flag, no master toggle) and StyleChan's row format both convert to StyleTower's, renamed options map across (Decoration/Highlight/Scrollbar/Icon/Notification keys), OneeChan's global grayscale becomes per-mascot filters, and 4chan-only or foreign bookkeeping keys are dropped instead of polluting storage; theme selection carries over from StyleChan exports (shared theme list) with range checking
+
 ### v1.0.4
 *2026-08-10*
 
