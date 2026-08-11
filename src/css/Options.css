@@ -494,6 +494,33 @@ span.option>select,
 .link-delim {
   opacity: .4;
 }
+/* Provenance badges (4chan-neXT-style): Tower = added vs upstream StyleChan,
+   changed = behaves differently here */
+[data-tower-status] > .option-title::after,
+label.tab-label[data-tower-status]::after {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: .04em;
+  line-height: 14px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+[data-tower-status='added'] > .option-title::after,
+label.tab-label[data-tower-status='added']::after {
+  content: 'Tower';
+  color: #fff;
+  background: #3fb950;
+}
+[data-tower-status='changed'] > .option-title::after,
+label.tab-label[data-tower-status='changed']::after {
+  content: 'changed';
+  color: #1a1a1a;
+  background: #d29922;
+}
 /* Mascots tab: gallery of tiles over the working copy */
 #mascot-section .option.mascot-gallery-wrap {
   height: auto !important;

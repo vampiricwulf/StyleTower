@@ -1,3 +1,13 @@
+### v1.0.8
+*2026-08-11*
+
+- Provenance badges in the options, in the style of 4chan-neXT: a green **Tower** pill marks options added relative to upstream StyleChan, an orange **changed** pill marks ones whose behavior differs here (including the reworked Mascots tab)
+- **Replace Thumbnails** with per-format sub-options replaces Animated GIF Thumbnails (existing setting migrates automatically): Replace GIF animates thumbs, Replace JPG/PNG show sharp full-resolution thumbnails, and Replace WEBM/MP4 puts a muted looping video in the thumbnail slot — sound only plays in the site's expanded player, which keeps working (clicks pass through to it)
+- **The home page is themed**: page frame, columns, side menu, Tower Tunes player, ticker, portal windows, poll and footer all follow the active theme instead of the hardcoded yellow look; the sidebar layouts no longer engage there (they rearranged the custom home header), and the home footer is no longer hidden
+- With an Autohide Style, TS's quick reply keybind (default `q`, custom bindings respected) now shows/hides the docked panel — press to slide it open with the comment box focused, press again to tuck it away — instead of closing and recreating the form
+- New **Mascot Max Width** option sets the sidebar-width cap globally; each mascot can override it in the editor (Default / Capped / Natural Size), and OneeChan imports keep both of its per-mascot states
+- File lines: the missing space between the filename and the size/dimensions parenthetical is back, and the imgops link's brackets no longer split ("[imgops ]")
+
 ### v1.0.7
 *2026-08-11*
 

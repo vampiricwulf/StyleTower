@@ -9,6 +9,7 @@
 <%= grunt.file.read('src/css/Icons.css') %>
 <%= grunt.file.read('src/css/Highlight.css') %>
 <%= grunt.file.read('src/css/Catalog.css') %>
+<%= grunt.file.read('src/css/Home.css') %>
 <%= grunt.file.read('src/css/Notifications.css') %>
 /* Notifications*/
 " + ($SS.conf["Center Notifications"] ? "#styletower-notifications{right:auto;left:50%;transform:translateX(-50%);width:min(500px,calc(100vw - 20px))}.ts-notifs #notification_container{right:auto!important;top:30px!important;left:50%!important;transform:translateX(-50%)!important;width:min(480px,calc(100vw - 20px))!important}" : "") + "

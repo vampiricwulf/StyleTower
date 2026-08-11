@@ -102,7 +102,11 @@
         "OP Background": [true, "Give OP a background similar to a reply."],
         "Recolor Even Replies": [false, "Makes every other post a darker color. If Quote Threading is enabled darkens every root reply."],
         "Reduce Thumbnail Opacity": [false, "Reduces opacity of thumbnails."],
-        "Animated GIF Thumbnails": [false, "Replace GIF thumbnails with the full animated image. Uses more bandwidth."],
+        "Replace Thumbnails": [false, "Replace thumbnails with the full file. Pick formats below. Uses more bandwidth.", null, true],
+        "Replace GIF": [true, "Animate GIF thumbnails.", "Replace Thumbnails", true, true],
+        "Replace JPG": [true, "Sharp full-resolution JPG thumbnails.", "Replace Thumbnails", true, true],
+        "Replace PNG": [true, "Sharp full-resolution PNG thumbnails.", "Replace Thumbnails", true, true],
+        "Replace WEBM/MP4": [false, "Muted looping video thumbnails for WEBM and MP4 files (sound only plays in the expanded player). Heaviest on bandwidth.", "Replace Thumbnails", true, true],
         "Backlink Icons": [false, "Use icons for backlinks instead of text."],
         "Backlink Shadow": [false, "Add a shadow to the backlink text."],
         "Borders": [
@@ -264,6 +268,7 @@
         "Hide Mascots in Catalog": [true, "Hides the mascot when viewing the catalog."],
         "Mascots Overlap Posts": [false, "Render the mascot above posts and threads instead of behind them."],
         "Reduce Mascot Opacity": [false, "Fade the mascot out until it is hovered. Note: the mascot captures the mouse where it overlaps the page."],
+        "Mascot Max Width": [true, "Cap mascots at the 300px sidebar width by default. Each mascot can override this in its editor."],
         "Advanced Mascot Editor": [false, "Remembered mascot editor mode (set from the editor itself)."],
         "Mascots": ["[]", "Mascot data.", null, null, true],
         "Themes": [],
@@ -777,7 +782,7 @@
                                     $SS.tidyFileInfo(node);
                                     $SS.moveOmittedSpans(node);
                                     if ($SS.addIndexHideButtons) $SS.addIndexHideButtons(node);
-                                    $SS.animateGifThumbs(node);
+                                    $SS.replaceThumbnails(node);
                                     $SS.relativeDates(node);
                                     $SS.replacePostMenuBtn(node);
                                 }
@@ -847,15 +852,15 @@
                         if (ti && stats.parentNode !== ti) ti.appendChild(stats);
                     });
                 }
-                $SS.animateGifThumbs();
-                // Re-animate a thumb after the site's inline expansion collapses
+                $SS.replaceThumbnails();
+                // Re-replace a thumb after the site's inline expansion collapses
                 // it back to the static thumbnail (that swap is src-only, which
                 // the childList observer doesn't see).
-                if ($SS.conf["Animated GIF Thumbnails"]) {
+                if ($SS.conf["Replace Thumbnails"]) {
                     document.addEventListener("click", function (e) {
                         var a = e.target.closest && e.target.closest(".file > a");
                         if (!a) return;
-                        setTimeout(function () { $SS.animateGifThumbs(a.closest(".file").parentNode); }, 150);
+                        setTimeout(function () { $SS.replaceThumbnails(a.closest(".file").parentNode); }, 150);
                     });
                 }
                 // Remember QR comments
@@ -898,6 +903,29 @@
                     $.waitFor("a.quick-reply-btn, #quick-reply", function () {
                         setTimeout(openQR, 50);
                     });
+                }
+
+                // With an Autohide Style the QR is persistent docked UI, so
+                // TS's quick reply keybind (which closes/reopens the form)
+                // fights it; repurpose the same binding as a show/hide toggle.
+                // Capture phase runs before TS's bubble listener.
+                if ($SS.location.reply && $SS.conf["Autohide Style"] !== 0) {
+                    document.addEventListener("keydown", function (e) {
+                        var tag = e.target.tagName;
+                        if (tag === "INPUT" || tag === "TEXTAREA" || !e.key) return;
+                        var kb = { ctrl: false, alt: false, shift: false, key: "q" };
+                        try {
+                            var ts = JSON.parse(localStorage.getItem("Thread Settings") || "{}");
+                            if (ts.enableQuickReply === false) return;
+                            if (ts.kbQuickReply) kb = ts.kbQuickReply;
+                        } catch (er) {}
+                        if (e.key.toLowerCase() !== String(kb.key || "q").toLowerCase() ||
+                            e.ctrlKey !== !!kb.ctrl || e.altKey !== !!kb.alt || e.shiftKey !== !!kb.shift)
+                            return;
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        $SS.toggleAutohideQR();
+                    }, true);
                 }
 
                 if ($SS.conf["Catalog Links"]) {
@@ -1334,21 +1362,64 @@
 
             anchor.parentNode.insertBefore(nav, anchor);
         },
-        animateGifThumbs: function (root) {
-            if (!$SS.conf["Animated GIF Thumbnails"]) return;
+        replaceThumbnails: function (root) {
+            if (!$SS.conf["Replace Thumbnails"]) return;
+            var formatConf = {
+                gif: "Replace GIF", jpg: "Replace JPG", jpeg: "Replace JPG",
+                png: "Replace PNG", webm: "Replace WEBM/MP4", mp4: "Replace WEBM/MP4"
+            };
             var scope = root && root.querySelectorAll ? root : document;
-            scope.querySelectorAll(".file > a[href$='.gif'] > img.post-image, .file > a[href$='.GIF'] > img.post-image").forEach(function (img) {
-                var href = img.parentNode.href;
+            scope.querySelectorAll(".file > a > img.post-image").forEach(function (img) {
+                var href = img.parentNode.href || "",
+                    ext = (href.match(/\.([a-z0-9]+)(?:[?#]|$)/i) || [])[1];
+                ext = ext && ext.toLowerCase();
+                if (!ext || !formatConf[ext] || !$SS.conf[formatConf[ext]]) return;
                 // Leave spoiler/deleted placeholder thumbs alone
                 if (/\/static\//.test(img.getAttribute("src") || "")) return;
                 if (img.classList.contains("full-image")) return;
+                if (ext === "webm" || ext === "mp4") {
+                    // Video thumbnail: the site's expand-video.js binds its
+                    // click on the original img, so keep it (hidden via the
+                    // st-video-thumb class) and forward clicks to it
+                    if (img._scVideoThumb) return;
+                    img._scVideoThumb = true;
+                    var file = img.closest(".file");
+                    var video = document.createElement("video");
+                    video.className = "st-thumb-video";
+                    video.src = href;
+                    video.muted = true;
+                    video.loop = true;
+                    video.autoplay = true;
+                    video.playsInline = true;
+                    video.style.width = img.style.width || (img.width ? img.width + "px" : "");
+                    video.style.height = img.style.height || (img.height ? img.height + "px" : "");
+                    img.parentNode.insertBefore(video, img.nextSibling);
+                    if (file) file.classList.add("st-video-thumb");
+                    video.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        img.click();
+                    });
+                    // While the site's expanded player is open, hide the
+                    // looping thumb; bring it back on collapse
+                    new MutationObserver(function () {
+                        var expanded = false, sib = img.parentNode.querySelectorAll("div > video");
+                        sib.forEach(function (v) {
+                            if (v !== video && v.parentNode.style.display !== "none") expanded = true;
+                        });
+                        video.style.display = expanded ? "none" : "";
+                        if (expanded) { try { video.pause(); } catch (er) {} }
+                        else { try { video.play(); } catch (er) {} }
+                    }).observe(img.parentNode, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+                    return;
+                }
                 var apply = function () {
                     if (!img.classList.contains("full-image") && img.src !== href)
                         img.src = href;
                 };
                 apply();
                 // A lazy loader may overwrite the src with a placeholder and
-                // later its cached static thumb; re-assert the animated source
+                // later its cached static thumb; re-assert the full source
                 // whenever the src changes away from it.
                 if (!img._scGifObserved) {
                     img._scGifObserved = true;
@@ -1750,6 +1821,28 @@
                 }
             }
         },
+        toggleAutohideQR: function () {
+            // All three autohide styles expand on the .focus class (maintained
+            // by initNativeQRAutohide's focus delegation), so showing = focus
+            // the comment box and hiding = blur it
+            var qr = document.getElementById("quick-reply");
+            if (!qr || qr.style.display === "none") {
+                var btn = document.querySelector("a.quick-reply-btn");
+                if (btn) btn.click();
+                qr = document.getElementById("quick-reply");
+                if (qr && qr.style.display === "none") qr.style.display = "";
+            }
+            if (!qr) return;
+            if (qr.classList.contains("focus")) {
+                var active = document.activeElement;
+                if (active && qr.contains(active)) active.blur();
+                qr.classList.remove("focus");
+            } else {
+                var body = qr.querySelector("textarea[name=body]");
+                if (body) body.focus();
+                else qr.classList.add("focus");
+            }
+        },
         initNativeQRAutohide: function () {
             // The quick reply is recreated each time it opens, so use delegation
             document.addEventListener("focusin", function (e) {
@@ -1912,10 +2005,12 @@
                 if (wCss) img.style.width = wCss;
                 if (hCss) img.style.height = hCss;
                 // The 300px sidebar-fit cap only applies to fully auto-sized
-                // mascots; any explicit size or scale overrides it, and the
-                // per-mascot Max Width flag (OneeChan's maxwidth) disables it
-                // outright so images render at natural size
-                if (wCss || hCss || scale !== 100 || m.maxwidth === false)
+                // mascots; any explicit size or scale overrides it. Whether it
+                // applies at all comes from the Mascot Max Width option, which
+                // each mascot can override (true/false; undefined = global)
+                var capped = m.maxwidth === undefined || m.maxwidth === null ?
+                    $SS.conf["Mascot Max Width"] !== false : m.maxwidth !== false;
+                if (wCss || hCss || scale !== 100 || !capped)
                     img.style.maxWidth = "none";
                 if (!wCss && !hCss && scale !== 100) {
                     var applyScale = function () {
@@ -2931,6 +3026,22 @@
                     };
                 };
 
+                // One-time migration: "Animated GIF Thumbnails" became the
+                // Replace Thumbnails group (GIF-only to preserve behavior)
+                try {
+                    var oldGif = this.get("Animated GIF Thumbnails"),
+                        newRaw = this.hasGM ? GM_getValue(NAMESPACE + "Replace Thumbnails") :
+                            localStorage.getItem(NAMESPACE + "Replace Thumbnails");
+                    if (oldGif === true && newRaw == undefined) {
+                        this.set("Replace Thumbnails", true);
+                        this.set("Replace JPG", false);
+                        this.set("Replace PNG", false);
+                        $SS.conf["Replace Thumbnails"] = true;
+                        $SS.conf["Replace JPG"] = false;
+                        $SS.conf["Replace PNG"] = false;
+                    }
+                } catch (e) {}
+
                 // Include saved site settings in exports
                 var chanKeys = ["stylesheet", "name", "email", "password", "own_posts", "watch_js", "hidden_threads", "catalog"];
                 chanKeys.forEach(function (key) {
@@ -3178,6 +3289,43 @@
                     optionsHTML.push("</div></div>");
                     tOptions.html(optionsHTML.join(""));
                     overlay.append(tOptions);
+
+                    // Provenance badges (4chan-neXT-style): 'Tower' marks
+                    // options added relative to upstream StyleChan, 'changed'
+                    // marks ones whose behavior differs here
+                    (function () {
+                        var status = {
+                                "Replace Thumbnails": "added",
+                                "QR Button Image": "added",
+                                "Auto Scroll": "added",
+                                "ImgOps Links": "added",
+                                "Sauce Links": "added",
+                                "Catalog Highlights": "added",
+                                "Hide Mascots in Catalog": "added",
+                                "Mascots Overlap Posts": "added",
+                                "Reduce Mascot Opacity": "added",
+                                "Mascot Max Width": "added",
+                                "Use StyleTower Icons": "changed",
+                                "Style Holotower TS Notifications": "changed",
+                                "Margin Between Replies": "changed",
+                                "Autohide Style": "changed",
+                                "Enable Mascots": "changed"
+                            },
+                            rootEl = tOptions.elems[0];
+                        if (!rootEl) return;
+                        Object.keys(status).forEach(function (k) {
+                            var input = rootEl.querySelector("[name='" + k + "']"),
+                                row = input && (input.closest("label.option") || input.closest(".option"));
+                            if (row) row.setAttribute("data-tower-status", status[k]);
+                        });
+                        rootEl.querySelectorAll("label.option.header").forEach(function (h) {
+                            var t = h.textContent || "";
+                            if (t.indexOf(":: Holotower") !== -1) h.setAttribute("data-tower-status", "added");
+                            if (t.indexOf(":: Mascots") !== -1) h.setAttribute("data-tower-status", "changed");
+                        });
+                        var mtab = rootEl.querySelector("label.tab-label[for=mascots-select]");
+                        if (mtab) mtab.setAttribute("data-tower-status", "changed");
+                    })();
 
                     $(".import-input", tOptions).bind("change", function () {
                         var file = this.files[0],
@@ -3555,7 +3703,10 @@
                             enabled: m.enabled !== false
                         };
                         if (m.scale) out.scale = num(m.scale);
+                        // OneeChan marks maxwidth per mascot; keep both states
+                        // explicit so our global default can't flip them
                         if (m.maxwidth === false) out.maxwidth = false;
+                        else if (m.maxwidth === true) out.maxwidth = true;
                         if (m.side === "left" || m.side === "right") out.side = m.side;
                         if (m.boards) out.boards = String(m.boards);
                         // ours is an array; OneeChan uses flat tclip/lclip/…
@@ -3670,7 +3821,7 @@
                         "<label class='add-mascot-label' title='Name shown in the gallery.'><span class='option-title'>Name:</span><input class='mascot-input' type=text name=mName value=\"" + esc(f(m.name, "")) + "\" placeholder='Mascot name'></label>" +
                         "<label class='add-mascot-label' title='Image URL or data URI.'><span class='option-title'>Image:</span><input class='mascot-input' type=text name=mImg value=\"" + esc(f(m.url, "")) + "\" placeholder='https://&hellip; or data:image/&hellip;'></label>" +
                         slider("Scale", "mScale", parseInt(f(m.scale, 100), 10), 10, 300, "%", "Resize the mascot while keeping its shape. Ignored when an exact Width or Height is set.") +
-                        "<label class='add-mascot-label' title='Cap the mascot at the 300px sidebar width. Untick to show the image at its natural size.'><span class='option-title'>Max Width:</span><input type=checkbox name=mMaxwidth" + (m.maxwidth !== false ? " checked" : "") + "></label>" +
+                        "<label class='add-mascot-label' title='Cap this mascot at the 300px sidebar width. Default follows the Mascot Max Width option; Natural Size shows the full image.'><span class='option-title'>Max Width:</span><select name=mMaxwidth class='mascot-input'><option value='default'" + (m.maxwidth === undefined || m.maxwidth === null ? " selected" : "") + ">Default</option><option value='on'" + (m.maxwidth === true ? " selected" : "") + ">Capped</option><option value='off'" + (m.maxwidth === false ? " selected" : "") + ">Natural Size</option></select></label>" +
                         "<label class='add-mascot-label adv-only' title='Exact CSS width (e.g. 500px, 25vw). Use auto to keep the original size and let Scale apply.'><span class='option-title'>Width:</span><input class='mascot-input' type=text name=mWidth value=\"" + esc(f(m.width, "auto")) + "\"></label>" +
                         "<label class='add-mascot-label adv-only' title='Exact CSS height. Use auto to keep the original size.'><span class='option-title'>Height:</span><input class='mascot-input' type=text name=mHeight value=\"" + esc(f(m.height, "auto")) + "\"></label>" +
                         slider("Opacity", "mOpacity", parseInt(f(m.opacity, 100), 10), 0, 100, "%", "0 is transparent, 100 is opaque.") +
@@ -3720,7 +3871,8 @@
                             name: g("mName").trim(),
                             url: g("mImg").trim(),
                             scale: scaleVal !== 100 ? scaleVal : undefined,
-                            maxwidth: node.querySelector("[name=mMaxwidth]").checked ? undefined : false,
+                            maxwidth: g("mMaxwidth") === "on" ? true :
+                                g("mMaxwidth") === "off" ? false : undefined,
                             width: g("mWidth").trim() || "auto",
                             height: g("mHeight").trim() || "auto",
                             opacity: num(g("mOpacity")),
@@ -5109,7 +5261,10 @@
 
         classes: {
             init: function () {
-                var cl = document.documentElement.classList;
+                var cl = document.documentElement.classList,
+                    // The home page has its own layout; several board-page
+                    // layout features must not engage there
+                    isHome = !!document.body && document.body.classList.contains("homepage-standard-mode");
                 cl.add("oneechan");
                 cl.toggle("isLight", $SS.theme.textColor.isLight === true);
                 cl.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
@@ -5130,10 +5285,12 @@
                 cl.toggle("hl-outline", $SS.conf["Decoration Style"] === 2);
                 cl.toggle("hl-border-down", $SS.conf["Decoration Style"] === 3);
                 if (!$SS.location.report) {
-                    cl.toggle("right-sidebar", $SS.conf["Sidebar Position"] === 1);
-                    cl.toggle("left-sidebar", $SS.conf["Sidebar Position"] === 2);
-                    cl.toggle("ss-sidebar", $SS.conf["SS-like Sidebar"] === true);
-                    cl.toggle("mini-sidebar", $SS.conf["Minimal Sidebar"] === true);
+                    // The sidebar rearranges the board header/banner; on the
+                    // home page that mangles its custom layout
+                    cl.toggle("right-sidebar", $SS.conf["Sidebar Position"] === 1 && !isHome);
+                    cl.toggle("left-sidebar", $SS.conf["Sidebar Position"] === 2 && !isHome);
+                    cl.toggle("ss-sidebar", $SS.conf["SS-like Sidebar"] === true && !isHome);
+                    cl.toggle("mini-sidebar", $SS.conf["Minimal Sidebar"] === true && !isHome);
                 }
                 cl.toggle("recolor-even", $SS.conf["Recolor Even Replies"] === true);
                 cl.toggle("alt-spoiler", $SS.conf["Invert Spoiler"] === true);
@@ -5168,6 +5325,7 @@
                 cl.toggle("highlight-own", $SS.conf["Highlight Own Posts"] === true);
                 cl.toggle("mascot-overlap", $SS.conf["Mascots Overlap Posts"] === true);
                 cl.toggle("mascot-dim", $SS.conf["Reduce Mascot Opacity"] === true);
+                cl.toggle("st-home", isHome);
                 // Holotower marks the fixed header on the boardlist element itself
                 // (Holotower TS "Fixed Header" / "Auto-hide Header" toggles); mirror
                 // that state onto :root as the classes the ported CSS keys off.
@@ -5182,7 +5340,7 @@
                 // stored Fixed/Auto-hide Header preference to the index and
                 // catalog (its stylesheet ships on those pages too) so the
                 // header behaves the same site-wide.
-                if (!$SS.location.reply && headerEl) {
+                if (!$SS.location.reply && headerEl && !isHome) {
                     try {
                         var tsHeader = JSON.parse(localStorage.getItem("Thread Settings") || "{}"),
                             wantFixed = tsHeader.headerFixed !== false;

@@ -1,0 +1,178 @@
+/* Holotower home page: its own style-home.css is a hardcoded warm-yellow
+   look, so retheme its surfaces with the active theme. Everything scoped to
+   :root.st-home (set in classes.init from body.homepage-standard-mode). */
+:root.st-home body {
+  background: var(--sc-bgColor) !important;
+  color: var(--sc-textColor) !important;
+}
+/* Generic links first; specific components override below by order */
+:root.st-home .page a {
+  color: var(--sc-linkColor);
+}
+:root.st-home .page a:hover {
+  color: var(--sc-linkHColor);
+}
+/* Page frame + columns */
+:root.st-home #page {
+  background: var(--sc-bgColor) !important;
+  border-color: var(--sc-brderColor) !important;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, .3) !important;
+}
+:root.st-home #layout,
+:root.st-home .main-column {
+  background: var(--sc-bgColor) !important;
+}
+:root.st-home .left-column {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .sub-panel {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-inputbColor) !important;
+}
+:root.st-home .right-panel {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .thread-list li,
+:root.st-home .window-mods .info-list li,
+:root.st-home .poll-results {
+  border-color: rgba(var(--sc-brderColor-rgb), .5) !important;
+}
+:root.st-home .featured-frame {
+  background: var(--sc-inputColor) !important;
+}
+:root.st-home .poll-button {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-inputbColor) !important;
+  color: var(--sc-textColor) !important;
+}
+:root.st-home .poll-button.secondary,
+:root.st-home .poll-button:hover {
+  background: rgb(var(--sc-mainColor-shift15)) !important;
+}
+/* Top banner + nav */
+:root.st-home #top-banner {
+  background: rgba(var(--sc-headerBGColor-rgb), var(--sc-navOp)) !important;
+  border-bottom-color: var(--sc-brderColor) !important;
+}
+:root.st-home .top-tagline {
+  color: var(--sc-headerColor);
+}
+:root.st-home .top-tagline-subtext {
+  color: var(--sc-headerColor);
+  opacity: .7;
+}
+:root.st-home a.top-nav-link {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-brderColor) !important;
+  color: var(--sc-linkColor) !important;
+}
+:root.st-home a.top-nav-link:hover {
+  background: rgb(var(--sc-mainColor-shift15)) !important;
+  color: var(--sc-linkHColor) !important;
+}
+/* Side panels + menu */
+:root.st-home .side-panel {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home a.menu-button {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-brderColor) !important;
+  color: var(--sc-textColor) !important;
+}
+:root.st-home a.menu-button:hover {
+  background: rgb(var(--sc-mainColor-shift15)) !important;
+}
+:root.st-home .side-heading,
+:root.st-home .panel-heading,
+:root.st-home .skyline-title,
+:root.st-home .skyline-friends-title,
+:root.st-home .friend-name {
+  color: var(--sc-titleColor) !important;
+}
+:root.st-home .skyline-subtitle {
+  color: var(--sc-textColor) !important;
+  opacity: .8;
+}
+/* Hero + ticker */
+:root.st-home .skyline {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .skyline-right {
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .ticker {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+/* Portal windows */
+:root.st-home .window {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .35) !important;
+}
+:root.st-home .window-titlebar {
+  background: rgb(var(--sc-headerBGColor-rgb)) !important;
+  color: var(--sc-headerColor) !important;
+}
+:root.st-home .thread-title {
+  color: var(--sc-linkColor);
+}
+:root.st-home .thread-meta,
+:root.st-home .thread-stats {
+  opacity: .7;
+}
+:root.st-home .featured-frame {
+  border-color: var(--sc-brderColor) !important;
+}
+/* Music player */
+:root.st-home .music-player {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .music-display {
+  background: var(--sc-inputColor) !important;
+  border-color: var(--sc-inputbColor) !important;
+}
+:root.st-home .music-label {
+  color: var(--sc-textColor);
+  opacity: .7;
+}
+:root.st-home .music-button {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-inputbColor) !important;
+  color: var(--sc-textColor) !important;
+}
+:root.st-home .music-button:hover {
+  background: rgb(var(--sc-mainColor-shift15)) !important;
+}
+:root.st-home .music-seek {
+  background: var(--sc-inputColor) !important;
+  border-color: var(--sc-inputbColor) !important;
+}
+:root.st-home .music-seek::-webkit-slider-runnable-track {
+  background: var(--sc-inputColor) !important;
+}
+:root.st-home .music-seek::-webkit-slider-thumb {
+  background: var(--sc-textColor) !important;
+  border-color: var(--sc-inputbColor) !important;
+}
+:root.st-home .music-seek::-moz-range-track {
+  background: var(--sc-inputColor) !important;
+}
+:root.st-home .music-seek::-moz-range-thumb {
+  background: var(--sc-textColor) !important;
+  border-color: var(--sc-inputbColor) !important;
+}
+:root.st-home .music-playlist li.active {
+  background: rgb(var(--sc-mainColor-shift15)) !important;
+}
+/* Footer */
+:root.st-home #footer {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+  color: var(--sc-textColor) !important;
+}

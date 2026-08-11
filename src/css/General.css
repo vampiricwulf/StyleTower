@@ -519,6 +519,18 @@ form[name=postcontrols] {
   word-break: break-word;
   margin-bottom: 15px; /* unrelated to issue #90 */
 }
+/* Replace WEBM thumbnails: the looping video stands in for the thumb img,
+   which stays in the DOM (hidden) because the site's expand-video click
+   handler is bound to it */
+.st-video-thumb img.post-image {
+  display: none !important;
+}
+video.st-thumb-video {
+  display: block;
+  cursor: pointer;
+  max-width: 300px;
+  max-height: 300px;
+}
 /* Mascots */
 #styletower-mascots {
   position: fixed;

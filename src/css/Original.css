@@ -36,9 +36,12 @@ p.fileinfo {
   margin-left: 13px !important;
   margin-bottom: 2px !important;
 }
-/* Space between the filename link and the size/dimensions parenthetical */
-p.fileinfo > a:first-of-type {
-  margin-right: 4px;
+/* Space between the filename link and the size/dimensions parenthetical.
+   The margin sits on the parenthetical because the filename may or may not be
+   span-wrapped — an anchor selector would catch the appended imgops link and
+   split its brackets instead */
+p.fileinfo > .unimportant {
+  margin-left: 4px;
 }
 /* Padding according to header position */
 .fixed.bottom-header body.active-thread {
