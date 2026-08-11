@@ -1923,8 +1923,15 @@
                     if (img.complete && img.naturalWidth) applyScale();
                     else img.addEventListener("load", applyScale);
                 }
-                if (m.clip && (m.clip[0] || m.clip[1] || m.clip[2] || m.clip[3]))
-                    img.style.clipPath = "inset(" + (m.clip[0] || 0) + "px " + (m.clip[3] || 0) + "px " + (m.clip[2] || 0) + "px " + (m.clip[1] || 0) + "px)";
+                if (m.clip && (m.clip[0] || m.clip[1] || m.clip[2] || m.clip[3])) {
+                    // Clip values describe the VISIBLE image (OneeChan
+                    // semantics). clip-path applies before the flip transform,
+                    // so swap L/R for flipped mascots to keep that meaning
+                    var cT = m.clip[0] || 0, cL = m.clip[1] || 0,
+                        cB = m.clip[2] || 0, cR = m.clip[3] || 0;
+                    if (m.flip) { var cTmp = cL; cL = cR; cR = cTmp; }
+                    img.style.clipPath = "inset(" + cT + "px " + cR + "px " + cB + "px " + cL + "px)";
+                }
                 var filterCSS = $SS.mascotFilterCSS(m);
                 if (filterCSS) img.style.filter = filterCSS;
                 container.appendChild(img);
@@ -3194,6 +3201,9 @@
                                 if (confirm('Import successful. Refresh now?')) {
                                     return window.location.reload();
                                 }
+                                // Close so the open dialog's pre-import state
+                                // can't overwrite the import via a later Save
+                                $SS.options.close();
 
                             };
                         })(file);
@@ -3487,7 +3497,18 @@
                original OneeChan exports, normalizing renamed keys and both
                foreign mascot formats into ours */
             importSettings: function (imported) {
-                var keyMap = {
+                // OneeChan's default theme list in its own order (v5.x): its
+                // exported theme indices point into this, not into our list
+                var ONEECHAN_THEMES = ["Vimyanized Dark", "Muted", "Surf", "Stilig",
+                        "Minimalistic Mayhem", "Blackboard", "Dark Flat", "Yukimura",
+                        "Photons + Odin", "Photon", "Original Minimalistic Mayhem",
+                        "Tomorrow", "Yotsuba", "Yotsuba B", "Yotsuba Purple",
+                        "安心院なじみ", "Solarized Dark", "4chan Rewired Modded",
+                        "4chan Dark Upgrade", "Yasashii", "AppChan", "Zenburned",
+                        "Monokai", "Ao ni sarasu", "Blue Tone", "Cold Snap",
+                        "Midnight Caek", "Cyber Blue", "Colorblind", "Stalenhag",
+                        "Blue Phallus", "Prisma Magica"],
+                    keyMap = {
                         "Use StyleChan Icons": "Use StyleTower Icons",
                         "Style 4chanX Notifications": "Style Holotower TS Notifications",
                         "Post Decoration Style": "Decoration Style",
@@ -3560,11 +3581,22 @@
                     if (/^Saved4chan\./.test(key))
                         continue;
                     if (/^(Selected Theme|NSFW Theme|Dark Theme|Light Theme)$/.test(target)) {
-                        // Theme indices only carry over from the shared
-                        // StyleChan/StyleTower default list, and only in range
-                        if (isOneeChan || typeof val !== "number" ||
-                            val < 0 || val >= ($SS.conf["Themes"] || []).length)
+                        if (typeof val !== "number" || val < 0) continue;
+                        if (isOneeChan) {
+                            // OneeChan's theme order differs from ours: resolve
+                            // the index to a theme name, then find that name in
+                            // our list. Themes we don't ship are skipped
+                            var tName = ONEECHAN_THEMES[val], mapped = -1;
+                            ($SS.conf["Themes"] || []).forEach(function (t, ti) {
+                                if (mapped === -1 && t && t.name === tName) mapped = ti;
+                            });
+                            if (mapped === -1) continue;
+                            val = mapped;
+                        } else if (val >= ($SS.conf["Themes"] || []).length) {
+                            // StyleChan/StyleTower share the default list;
+                            // just guard the range
                             continue;
+                        }
                     } else if (!(target in defaultConfig) && !/^SavedSite\./.test(key)) {
                         continue;
                     }
@@ -3643,7 +3675,7 @@
                         "<label class='add-mascot-label adv-only' title='Positive values lift the mascot up from the bottom edge; negative push it down.'><span class='option-title'>Vertical Offset:</span><input class='mascot-input' type=text name=mOffset value='" + off + "px'></label>" +
                         "<label class='add-mascot-label adv-only' title='Positive values push the mascot from the screen edge toward the center; negative push it off-screen.'><span class='option-title'>Horizontal Offset:</span><input class='mascot-input' type=text name=mHOffset value='" + hoff + "px'></label>" +
                         "<label class='add-mascot-label adv-only' title='Which side of the page the mascot sits on. Auto follows the sidebar position.'><span class='option-title'>Side:</span><select name=mSide class='mascot-input'><option value='auto'" + (f(m.side, "auto") === "auto" ? " selected" : "") + ">Auto</option><option value='right'" + (m.side === "right" ? " selected" : "") + ">Right</option><option value='left'" + (m.side === "left" ? " selected" : "") + ">Left</option></select></label>" +
-                        "<label class='add-mascot-label adv-only' title='Clip the edges of the image, in pixels: top, left, bottom, right.'><span class='option-title'>Clip (T/L/B/R):</span>" +
+                        "<label class='add-mascot-label adv-only' title='Clip the edges of the image as displayed, in pixels: top, left, bottom, right. Left/right always mean the visible sides, even when the image is flipped.'><span class='option-title'>Clip (T/L/B/R):</span>" +
                         "<span class='mascot-clip-inputs'><input class='mascot-input mascot-clip' type=text name=mTClip value='" + parseInt(f(clip[0], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mLClip value='" + parseInt(f(clip[1], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mBClip value='" + parseInt(f(clip[2], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mRClip value='" + parseInt(f(clip[3], 0), 10) + "'></span></label>" +
                         "<label class='add-mascot-label' title='Flip the mascot image horizontally.'><span class='option-title'>Flip Image:</span><input type=checkbox name=mFlip" + (m.flip ? " checked" : "") + "></label>" +
                         "<label class='add-mascot-label mascot-filter-head'><span class='option-title'>Image Filters</span></label>" +

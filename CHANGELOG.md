@@ -1,3 +1,10 @@
+### v1.0.6
+*2026-08-11*
+
+- Mascot clipping now matches OneeChan's semantics: clip left/right always mean the visible sides of the image, even when it is flipped (clip-path applies before the flip transform, so flipped mascots previously clipped the mirrored side)
+- Selected/NSFW theme now imports from OneeChan exports: its theme list is ordered differently from ours, so the index is resolved by theme name (themes StyleTower doesn't ship are skipped instead of mis-selecting)
+- The options window closes after a settings import if the page isn't refreshed, so a later Save can no longer overwrite the imported values with the dialog's pre-import state
+
 ### v1.0.5
 *2026-08-11*
 
