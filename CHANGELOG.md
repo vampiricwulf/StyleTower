@@ -1,3 +1,10 @@
+### v1.0.7
+*2026-08-11*
+
+- The script now also runs on https://boards.holotower.org (matched in the userscript metadata and the Chrome extension manifest)
+- New per-mascot Max Width option (OneeChan's maxwidth flag): untick to show a mascot at its natural size instead of capping it at the 300px sidebar width; imported OneeChan mascots keep their flag
+- Dynamically appended posts no longer get stray spacing: their `br.clear` separators are hidden like every other post separator (spacing comes solely from Margin Between Replies; nothing relies on the float clearing)
+
 ### v1.0.6
 *2026-08-11*
 

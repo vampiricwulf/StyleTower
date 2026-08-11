@@ -1,6 +1,6 @@
 {
   "name": "StyleTower",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "manifest_version": 2,
   "description": "Customizable themes for holotower.org.",
   "icons": {
@@ -10,8 +10,8 @@
   },
   "content_scripts": [{
     "js": ["script.js"],
-    "matches": ["*://holotower.org/*"],
-    "exclude_matches": ["*://holotower.org/mod.php*"],
+    "matches": ["*://holotower.org/*","*://boards.holotower.org/*"],
+    "exclude_matches": ["*://holotower.org/mod.php*","*://boards.holotower.org/mod.php*"],
     "all_frames": true,
     "run_at": "document_start"
   }],
@@ -19,6 +19,7 @@
   "update_url": "https://github.com/vampiricwulf/StyleTower/releases/latest/download/updates.xml",
   "permissions": [
     "storage",
-    "*://holotower.org/*"
+    "*://holotower.org/*",
+    "*://boards.holotower.org/*"
   ]
 }

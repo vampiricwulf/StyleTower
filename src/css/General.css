@@ -90,11 +90,14 @@ a.reply.hide-button.iq-hidden-post:has(+ br + .post.reply) {
   display: block !important;
   opacity: .3;
 }
-.thread > br:not(.clear),
-.threadContainer > br:not(.clear),
-.threadingContainer > br:not(.clear),
-.post + br:not(.clear),
-.reply + br:not(.clear) {
+/* br.clear included: dynamically appended posts use it as their separator,
+   and nothing relies on its float clearing (posts are BFCs and div.thread
+   itself clears) — spacing comes solely from the forced margins */
+.thread > br,
+.threadContainer > br,
+.threadingContainer > br,
+.post + br,
+.reply + br {
   display: none !important;
 }
 .container~.inline {

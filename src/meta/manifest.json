@@ -19,6 +19,7 @@
   "update_url": "<%= meta.downloads %>updates.xml",
   "permissions": [
     "storage",
-    "*://holotower.org/*"
+    "*://holotower.org/*",
+    "*://boards.holotower.org/*"
   ]
 }

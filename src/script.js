@@ -1912,9 +1912,11 @@
                 if (wCss) img.style.width = wCss;
                 if (hCss) img.style.height = hCss;
                 // The 300px sidebar-fit cap only applies to fully auto-sized
-                // mascots; any explicit size or scale overrides it so images
-                // can grow past the sidebar without distorting
-                if (wCss || hCss || scale !== 100) img.style.maxWidth = "none";
+                // mascots; any explicit size or scale overrides it, and the
+                // per-mascot Max Width flag (OneeChan's maxwidth) disables it
+                // outright so images render at natural size
+                if (wCss || hCss || scale !== 100 || m.maxwidth === false)
+                    img.style.maxWidth = "none";
                 if (!wCss && !hCss && scale !== 100) {
                     var applyScale = function () {
                         if (img.naturalWidth)
@@ -3553,6 +3555,7 @@
                             enabled: m.enabled !== false
                         };
                         if (m.scale) out.scale = num(m.scale);
+                        if (m.maxwidth === false) out.maxwidth = false;
                         if (m.side === "left" || m.side === "right") out.side = m.side;
                         if (m.boards) out.boards = String(m.boards);
                         // ours is an array; OneeChan uses flat tclip/lclip/…
@@ -3667,6 +3670,7 @@
                         "<label class='add-mascot-label' title='Name shown in the gallery.'><span class='option-title'>Name:</span><input class='mascot-input' type=text name=mName value=\"" + esc(f(m.name, "")) + "\" placeholder='Mascot name'></label>" +
                         "<label class='add-mascot-label' title='Image URL or data URI.'><span class='option-title'>Image:</span><input class='mascot-input' type=text name=mImg value=\"" + esc(f(m.url, "")) + "\" placeholder='https://&hellip; or data:image/&hellip;'></label>" +
                         slider("Scale", "mScale", parseInt(f(m.scale, 100), 10), 10, 300, "%", "Resize the mascot while keeping its shape. Ignored when an exact Width or Height is set.") +
+                        "<label class='add-mascot-label' title='Cap the mascot at the 300px sidebar width. Untick to show the image at its natural size.'><span class='option-title'>Max Width:</span><input type=checkbox name=mMaxwidth" + (m.maxwidth !== false ? " checked" : "") + "></label>" +
                         "<label class='add-mascot-label adv-only' title='Exact CSS width (e.g. 500px, 25vw). Use auto to keep the original size and let Scale apply.'><span class='option-title'>Width:</span><input class='mascot-input' type=text name=mWidth value=\"" + esc(f(m.width, "auto")) + "\"></label>" +
                         "<label class='add-mascot-label adv-only' title='Exact CSS height. Use auto to keep the original size.'><span class='option-title'>Height:</span><input class='mascot-input' type=text name=mHeight value=\"" + esc(f(m.height, "auto")) + "\"></label>" +
                         slider("Opacity", "mOpacity", parseInt(f(m.opacity, 100), 10), 0, 100, "%", "0 is transparent, 100 is opaque.") +
@@ -3716,6 +3720,7 @@
                             name: g("mName").trim(),
                             url: g("mImg").trim(),
                             scale: scaleVal !== 100 ? scaleVal : undefined,
+                            maxwidth: node.querySelector("[name=mMaxwidth]").checked ? undefined : false,
                             width: g("mWidth").trim() || "auto",
                             height: g("mHeight").trim() || "auto",
                             opacity: num(g("mOpacity")),
