@@ -5372,6 +5372,9 @@
 
         /* STRUCTS */
         Color: function (hex, incHover) {
+            // Themes from imports/old versions may carry 3-digit, prefixed or
+            // invalid values; normalize so the emitted CSS is always valid
+            hex = $SS.normalizeHex(hex) || "000000";
             this.hex = "#" + hex;
             this.private_rgb = $SS.RGBFromHex(hex);
             this.rgb = this.private_rgb.join(",");
@@ -5398,13 +5401,16 @@
             this.get = function () {
                 if (!this.img) return "none ";
 
-                var ret = "url('";
-                if ($SS.validBase64(this.img))
-                    ret = "data:image/" + $SS.typeofBase64(this.img) + ";base64," + this.img;
-                else
-                    ret = this.img;
+                var src;
+                if ($SS.validBase64(this.img)) {
+                    // Imported themes may keep the data: prefix; strip it so it
+                    // can't be doubled when the URI is rebuilt
+                    var b64 = $SS.cleanBase64(this.img);
+                    src = "data:image/" + $SS.typeofBase64(b64) + ";base64," + b64;
+                } else
+                    src = this.img;
 
-                return (this.RPA !== undefined ? "url('" : "") + ret + (this.RPA !== undefined ? "')" + this.RPA : "");
+                return "url('" + src + "')" + (this.RPA !== undefined ? " " + this.RPA : "");
             };
         },
         Theme: function (index) {
@@ -5445,7 +5451,6 @@
             this.headerLColor = new $SS.Color(theme.headerLColor);
             this.headerLHColor = new $SS.Color(theme.headerLHColor);
             this.headerBGColor = new $SS.Color(theme.headerBGColor);
-            this.headerbColor = new $SS.Color(theme.headerbColor);
             this.postHLColor = new $SS.Color(theme.postHLColor);
             this.quotesYouHLColor = new $SS.Color(theme.quotesYouHLColor);
             this.ownPostHLColor = new $SS.Color(theme.ownPostHLColor);
@@ -5604,13 +5609,31 @@
         },
         RGBFromHex: function (hex) {
             var rgb = [];
-            hex = parseInt(hex, 16);
+            hex = parseInt($SS.normalizeHex(hex) || "000000", 16);
 
             rgb[0] = (hex >> 16) & 0xFF;
             rgb[1] = (hex >> 8) & 0xFF;
             rgb[2] = hex & 0xFF;
 
             return rgb;
+        },
+        hexFromRGB: function (rgb) {
+            return ((1 << 24) | (rgb[0] << 16) | (rgb[1] << 8) | rgb[2]).toString(16).slice(1);
+        },
+        /* Returns a lowercase 6-digit hex (no "#") or null: 3-digit hex is
+           expanded, 8-digit hex drops its alpha, anything else is rejected */
+        normalizeHex: function (hex) {
+            if (typeof hex !== "string") return null;
+            hex = hex.replace(/^#/, "").toLowerCase();
+            if (/^[0-9a-f]{3}$/.test(hex))
+                return hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
+            if (/^[0-9a-f]{8}$/.test(hex)) return hex.substr(0, 6);
+            return /^[0-9a-f]{6}$/.test(hex) ? hex : null;
+        },
+        escapeHTML: function (s) {
+            return String(s == null ? "" : s)
+                .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         },
         isLight: function (rgb) {
             return rgb[0] + rgb[1] + rgb[2] >= 400;
@@ -5619,7 +5642,7 @@
             return str.replace(/(\r\n|\r|\n)/gm, "");
         },
         cleanBase64: function (b64) {
-            return b64.replace(/^(data:image\/(?:gif|jpe?g|png);base64,)(\r\n|\r|\n)?/gmi, "");
+            return b64.replace(/^(data:image\/(?:gif|jpe?g|png|webp|avif|svg\+xml);base64,)(\r\n|\r|\n)?/gmi, "");
         },
         typeofBase64: function (b64) {
             switch (b64.substr(0, 8)) {
@@ -5632,11 +5655,13 @@
                     return "jpeg";
                 case "iVBORw0K":
                 default:
+                    if (b64.substr(0, 5) === "UklGR") return "webp";
+                    if (b64.substr(0, 5) === "PHN2Z") return "svg+xml";
                     return "png";
             }
         },
         validBase64: function (b64) {
-            return /^(?:data:image\/(?:gif|jpe?g|png);base64,)?(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})$/i.test(b64);
+            return /^(?:data:image\/(?:gif|jpe?g|png|webp|avif|svg\+xml);base64,)?(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})$/i.test(b64);
         },
         validImageURL: function (img) {
             return /^https?:\/\/.+$/i.test(img);
