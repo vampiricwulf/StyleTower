@@ -326,6 +326,25 @@ img.thread-image {
 .watch-menu {
   box-shadow: 1px 1px 3px rgba(0,0,0,.1) !important;
 }
+/* Ban/error boxes: base style.css paints these white with #98E headers;
+   the site theme that used to recolor them is disabled, and our light
+   body text made the reason unreadable on dark themes */
+div.ban {
+  background: rgb(var(--sc-mainColor-rgb)) !important;
+  border: 1px solid var(--sc-brderColor) !important;
+}
+div.ban h2 {
+  background: var(--sc-headerBGColor) !important;
+  color: var(--sc-headerColor) !important;
+}
+.ban-reason-table th,
+.ban-reason-table td {
+  border-color: var(--sc-brderColor) !important;
+}
+.ban-reason-table th {
+  background-color: var(--sc-headerBGColor) !important;
+  color: var(--sc-headerColor) !important;
+}
 /* Alternative Spoiler Color */
 :root.alt-spoiler span.spoiler,
 :root.alt-spoiler span.spoiler:not(:hover)>a {

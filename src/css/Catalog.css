@@ -22,6 +22,12 @@ select#image_size {
   text-align-last: center;
   hyphens: auto;
 }
+/* Hover: base style.css falls back to Yotsuba B blue once the site theme
+   is disabled, flashing light cards on dark themes */
+.theme-catalog div.thread:hover {
+  background: rgba(var(--sc-hoverColor-rgb), .8) !important;
+  border-color: var(--sc-brderColor) !important;
+}
 /* Background */
 :root.catalog-background .theme-catalog #Grid div.thread {
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;

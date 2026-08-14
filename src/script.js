@@ -1057,6 +1057,10 @@
             var sidebarBgOpacity = !t.mainColor.isLight ? ".9" : ".2",
                 hoverRGB = t.hoverColor ? t.hoverColor.rgb : t.mainColor.shiftRGB(-16),
                 css = ":root{" +
+                // The disabled site theme used to declare this; without it
+                // native widgets (scrollbars, checkboxes, select dropdowns)
+                // render light-mode on dark themes
+                "color-scheme:" + (t.bgColor.isLight ? "light" : "dark") + ";" +
                 "--sc-textColor:" + t.textColor.hex + ";" +
                 "--sc-textColor-rgb:" + t.textColor.rgb + ";" +
                 "--sc-nameColor:" + t.nameColor.hex + ";" +
