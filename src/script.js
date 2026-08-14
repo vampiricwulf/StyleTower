@@ -3550,7 +3550,8 @@
                             $(this).val(--val + "px");
                     });
                     $("input[name='Opacity']", tOptions).bind("input", function () {
-                        $(this).next(".opacity-val").text($(this).val() + "%");
+                        var v = this.parentNode.querySelector(".mascot-opacity-val");
+                        if (v) v.textContent = this.value + "%";
                     });
 
                     // themes tab
