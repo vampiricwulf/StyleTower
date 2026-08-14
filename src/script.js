@@ -389,6 +389,10 @@
             dName: "Hover Preview BG",
             name: "hoverColor",
             property: "background-color"
+        }, {
+            dName: "Hover Outline",
+            name: "hoverOutColor",
+            property: "outline"
         }],
         $, $lib, $SS,
         $docBody = null,
@@ -1056,6 +1060,7 @@
             if (!t || t.hidden) return;
             var sidebarBgOpacity = !t.mainColor.isLight ? ".9" : ".2",
                 hoverRGB = t.hoverColor ? t.hoverColor.rgb : t.mainColor.shiftRGB(-16),
+                hoverOutRGB = t.hoverOutColor ? t.hoverOutColor.rgb : t.linkColor.rgb,
                 css = ":root{" +
                 // The disabled site theme used to declare this; without it
                 // native widgets (scrollbars, checkboxes, select dropdowns)
@@ -1105,6 +1110,9 @@
                 "--sc-unreadColor-rgb:" + t.unreadColor.rgb + ";" +
                 "--sc-threadHLColor-rgb:" + t.threadHLColor.rgb + ";" +
                 "--sc-hoverColor-rgb:" + hoverRGB + ";" +
+                "--sc-hoverOp:" + t.hoverOp + ";" +
+                "--sc-hoverOutColor-rgb:" + hoverOutRGB + ";" +
+                "--sc-hoverOutOp:" + t.hoverOutOp + ";" +
                 "--sc-postHLColor-rgb:" + t.postHLColor.rgb + ";" +
                 "--sc-quotesYouHLColor:" + t.quotesYouHLColor.hex + ";" +
                 "--sc-quotesYouHLColor-rgb:" + t.quotesYouHLColor.rgb + ";" +
@@ -1128,7 +1136,7 @@
                 "--sc-icon-options:url(\"data:image/svg+xml," + t.icons.options + "\");" +
                 // Styling hooks exposed by Holotower TS
                 "--subtle-border-color:" + t.brderColor.hex + ";" +
-                "--inline-background-color:rgba(" + hoverRGB + ",.8);" +
+                "--inline-background-color:rgba(" + hoverRGB + "," + t.hoverOp + ");" +
                 "--reply-background-color:rgba(" + t.mainColor.rgb + "," + t.replyOp + ");" +
                 "--ts-hover-color:" + t.linkHColor.hex + ";" +
                 "--link-hover-color:" + t.linkHColor.hex + ";" +
@@ -3569,6 +3577,8 @@
 
                 t.replyOp = $SS.normalizeOpacity(raw.replyOp, "1.0");
                 t.navOp = $SS.normalizeOpacity(raw.navOp, "0.9");
+                t.hoverOp = $SS.normalizeOpacity(raw.hoverOp, "0.8");
+                t.hoverOutOp = $SS.normalizeOpacity(raw.hoverOutOp, "0.5");
 
                 if (typeof raw.bgImg === "string" && raw.bgImg !== "") {
                     v = $SS.cleanBase64(raw.bgImg);
@@ -4082,9 +4092,16 @@
                     "<span class='preview-name' data-color='nameColor'>Anonymous</span>" +
                     "<span class='preview-trip' data-color='tripColor'> !tripcode</span>" +
                     "<span class='preview-date' data-color='textColor'> 10/01/03(Mon)12:00:00</span>" +
-                    "<span class='preview-postnum'> <a href='#' data-color='linkColor'>No.12345678</a></span>" +
-                    "<br><span class='preview-backlink' data-color='blinkColor'><a href='#'>&gt;&gt;12345678</a></span>" +
-                    "<br><span class='preview-quote' data-color='quoteColor'>&gt;be me, clickable</span>" +
+                    // Link-styled spans, not anchors: the site/TS quote
+                    // handlers bind to any >>-style anchor added to the DOM
+                    // and would treat these as real quotelinks
+                    "<span class='preview-postnum'> <span class='preview-link' data-color='linkColor'>No.12345678</span></span>" +
+                    "<br><span class='preview-backlink' data-color='blinkColor'><span class='preview-link'>&gt;&gt;12345678</span></span>" +
+                    "<div class='theme-preview-hover' data-color='hoverColor' title='Backlink hover preview'>" +
+                    "<span class='preview-name'>Anonymous</span><span class='preview-date'> 10/01/03(Mon)11:59:59</span>" +
+                    "<br>I appear when hovering the quotelink above." +
+                    "</div>" +
+                    "<span class='preview-quote' data-color='quoteColor'>&gt;be me, clickable</span>" +
                     "<br><span data-color='textColor'>I'm a dummy post and example text.</span>" +
                     "</div></div>";
 
@@ -4119,12 +4136,17 @@
                     "</select></label><label>" +
                     "<span class='option-title'>Reply Opacity:</span><input type=text name=replyOp value='" + $SS.normalizeOpacity(seed.replyOp, "1.0") + "'></label><label>" +
                     "<span class='option-title'>Header Opacity:</span><input type=text name=navOp value='" + $SS.normalizeOpacity(seed.navOp, "0.9") + "'>" +
+                    "</label><label>" +
+                    "<span class='option-title'>Hover Opacity:</span><input type=text name=hoverOp value='" + $SS.normalizeOpacity(seed.hoverOp, "0.8") + "'></label><label>" +
+                    "<span class='option-title'>Hover Outline Opacity:</span><input type=text name=hoverOutOp value='" + $SS.normalizeOpacity(seed.hoverOutOp, "0.5") + "'>" +
                     "</label>";
 
                 for (var i = 0, MAX = themeInputs.length; i < MAX; ++i) {
                     var hex = $SS.normalizeHex(seed[themeInputs[i].name]);
                     if (!hex && themeInputs[i].name === "hoverColor") // absent on pre-hoverColor themes: show the derived default
                         hex = $SS.hexFromRGB(new $SS.Color(seed.mainColor).shiftRGB(-16).split(","));
+                    if (!hex && themeInputs[i].name === "hoverOutColor") // ditto: outline derives from the link color
+                        hex = $SS.normalizeHex(seed.linkColor);
                     hex = hex || "000000";
                     var rgb = $SS.RGBFromHex(hex);
                     var textColor = $SS.isLight(rgb) ? "#000" : "#fff";
@@ -4151,6 +4173,7 @@
 
                 // Click preview elements to focus color inputs
                 $("[data-color]", div).bind("click", function (e) {
+                    e.preventDefault();
                     e.stopPropagation();
                     var name = this.getAttribute("data-color"),
                         input = div.elems[0].querySelector("input[name='" + name + "']");
@@ -4370,7 +4393,8 @@
                 if (!exp && bEdit && !tEdit.modified)
                     return overlay.remove();
 
-                var colorNames = {};
+                var colorNames = {},
+                    opDefaults = { replyOp: "1.0", navOp: "0.9", hoverOp: "0.8", hoverOutOp: "0.5" };
                 for (var c = 0, cMAX = themeInputs.length; c < cMAX; ++c)
                     colorNames[themeInputs[c].name] = themeInputs[c].dName;
 
@@ -4404,8 +4428,8 @@
                             }
                             val = "";
                         }
-                    } else if (this.name === "replyOp" || this.name === "navOp") {
-                        val = $SS.normalizeOpacity(this.value, this.name === "replyOp" ? "1.0" : "0.9");
+                    } else if (opDefaults[this.name] !== undefined) {
+                        val = $SS.normalizeOpacity(this.value, opDefaults[this.name]);
                     } else
                         val = this.value;
 
@@ -5649,6 +5673,9 @@
             // Hover previews default to the shade replies always used, so
             // themes without the key keep their look
             this.hoverColor = theme.hoverColor ? new $SS.Color(theme.hoverColor) : null;
+            this.hoverOutColor = theme.hoverOutColor ? new $SS.Color(theme.hoverOutColor) : null;
+            this.hoverOp = $SS.normalizeOpacity(theme.hoverOp, "0.8");
+            this.hoverOutOp = $SS.normalizeOpacity(theme.hoverOutOp, "0.5");
             this.codeBackground = (this.bgColor.isLight ? "255, 255, 255, 0.2" : "0, 0, 0, 0.2");
             this.codeBorder = (this.bgColor.isLight ? "204, 204, 204, 1.0" : "204, 204, 204, 0.1");
             this.icons = {

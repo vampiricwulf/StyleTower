@@ -195,9 +195,20 @@ input[name='Font Family']::-webkit-list-button {
 .preview-trip { color: var(--sc-tripColor); }
 .preview-subject { color: var(--sc-titleColor); font-weight: 700; }
 .preview-quote { color: var(--sc-quoteColor); }
-.preview-backlink a { color: var(--sc-blinkColor); }
+.preview-backlink { color: var(--sc-blinkColor); }
 .preview-date { color: var(--sc-textColor); font-size: 10px; }
-.preview-postnum a { color: var(--sc-linkColor); }
+.preview-postnum .preview-link { color: var(--sc-linkColor); }
+.preview-link { text-decoration: underline; cursor: pointer; }
+/* Mock backlink hover preview: same vars the real .post-hover consumes */
+.theme-preview-post .theme-preview-hover {
+  display: block;
+  margin: 8px 4px 8px 14px;
+  padding: 6px;
+  background: rgba(var(--sc-hoverColor-rgb), var(--sc-hoverOp));
+  outline: 2px solid rgba(var(--sc-hoverOutColor-rgb), var(--sc-hoverOutOp));
+  cursor: pointer;
+  font-size: 11px;
+}
 .theme-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 /* Add Theme */
 .side-switch {

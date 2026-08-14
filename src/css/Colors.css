@@ -206,10 +206,10 @@ hr:not(#unread-line) {
   background-image: linear-gradient(to left, rgba(var(--sc-unreadColor-rgb),0), rgb(var(--sc-unreadColor-rgb)), rgba(var(--sc-unreadColor-rgb),0));
 }
 .post-hover {
-  background: rgba(var(--sc-hoverColor-rgb),.8)!important;
+  background: rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))!important;
 }
 .inline {
-  background: rgba(var(--sc-hoverColor-rgb),.8)!important;
+  background: rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))!important;
 }
 :root.post-info .reply>p.intro {
   background: rgba(var(--sc-mainColor-shiftM16),.2);

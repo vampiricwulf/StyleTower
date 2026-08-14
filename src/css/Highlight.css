@@ -13,7 +13,7 @@
 }
 /* Outlines */
 .post-hover {
-  outline: 2px solid rgba(var(--sc-linkColor-rgb),0.5) !important;
+  outline: 2px solid rgba(var(--sc-hoverOutColor-rgb),var(--sc-hoverOutOp)) !important;
 }
 /* Posts Quoting You (marked by the site/TS; .oneechan boosts specificity over TS's hardcoded colors) */
 :root.oneechan.highlight-you .hasQuoteYou.post.op,

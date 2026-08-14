@@ -129,6 +129,8 @@ select { background: #1a1a1a; color: #bbb; border: 1px solid #333; border-radius
       <div class="opt-row"><select id="bgA"><option value="scroll">scroll</option><option value="fixed">fixed</option></select></div>
       <div class="opt-label">Reply / Header Opacity</div>
       <div class="opt-row"><input type="text" id="replyOp" value="1.0"><input type="text" id="navOp" value="0.9"></div>
+      <div class="opt-label">Hover BG / Outline Opacity</div>
+      <div class="opt-row"><input type="text" id="hoverOp" value="0.8"><input type="text" id="hoverOutOp" value="0.5"></div>
     </div>
     <div class="card">
       <div class="opt-label">Custom CSS (optional)</div>
@@ -156,7 +158,7 @@ var assigns = {
   headerLColor:'', headerLHColor:'', boardColor:'', inputColor:'', inputbColor:'',
   postHLColor:'', quotesYouHLColor:'', ownPostHLColor:'',
   replybgHLColor:'', replyslctColor:'',
-  unreadColor:'', threadHLColor:'', hoverColor:''
+  unreadColor:'', threadHLColor:'', hoverColor:'', hoverOutColor:''
 };
 var labels = {
   textColor:'Text', nameColor:'Name', tripColor:'Tripcode', linkColor:'Link', linkHColor:'Link Hover',
@@ -166,7 +168,7 @@ var labels = {
   boardColor:'Board Title', inputColor:'Input BG', inputbColor:'Input Border',
   postHLColor:'Post HL', quotesYouHLColor:'Quotes You HL', ownPostHLColor:'Own Post HL',
   replybgHLColor:'Reply BG HL', replyslctColor:'Reply Select HL',
-  unreadColor:'Unread Line', threadHLColor:'Thread HL', hoverColor:'Hover Preview BG'
+  unreadColor:'Unread Line', threadHLColor:'Thread HL', hoverColor:'Hover Preview BG', hoverOutColor:'Hover Outline'
 };
 var defaults = { textColor:'ccc', nameColor:'117743', tripColor:'228854', linkColor:'8ab4f8',
   linkHColor:'aac4f8', quoteColor:'789922', titleColor:'cc1105', blinkColor:'886644',
@@ -175,7 +177,7 @@ var defaults = { textColor:'ccc', nameColor:'117743', tripColor:'228854', linkCo
   headerLHColor:'aac4f8', boardColor:'ddd', inputColor:'1a1a1a', inputbColor:'333',
   postHLColor:'8ab4f8', quotesYouHLColor:'dd0000', ownPostHLColor:'8ab4f8',
   replybgHLColor:'1a1a1a', replyslctColor:'8ab4f8',
-  unreadColor:'8ab4f8', threadHLColor:'8ab4f8', hoverColor:'1a1a1a' };
+  unreadColor:'8ab4f8', threadHLColor:'8ab4f8', hoverColor:'1a1a1a', hoverOutColor:'8ab4f8' };
 
 function parseHex(s) {
   s = s.replace(/^#/, '').toLowerCase();
@@ -246,7 +248,7 @@ function autoAssign() {
     'textColor','headerColor','boardColor','nameColor','linkColor','headerLColor',
     'quoteColor','linkHColor','headerLHColor','titleColor','blinkColor','qlColor',
     'tripColor','postHLColor','quotesYouHLColor','ownPostHLColor','replybgHLColor','replyslctColor',
-    'unreadColor','threadHLColor','hoverColor'];
+    'unreadColor','threadHLColor','hoverColor','hoverOutColor'];
   for (var i = 0; i < order.length && i < colors.length; i++) assigns[order[i]] = colors[i];
   if (assigns.textColor === assigns.mainColor && colors.length > 1) assigns.textColor = colors[1] || colors[0];
   renderAssigns();
@@ -312,6 +314,8 @@ function buildTheme() {
     authorName: document.getElementById('themeAuthor').value || 'You',
     authorTrip: document.getElementById('themeTrip').value || '', replyOp: document.getElementById('replyOp').value || '1.0',
     navOp: document.getElementById('navOp').value || '0.9',
+    hoverOp: document.getElementById('hoverOp').value || '0.8',
+    hoverOutOp: document.getElementById('hoverOutOp').value || '0.5',
     customCSS: document.getElementById('customCSS').value || '' };
   t.bgImg = document.getElementById('bgImg').value || false;
   if (t.bgImg) t.bgRPA = (document.getElementById('bgR').value||'repeat')+' '+(document.getElementById('bgPY').value||'top')+' '+(document.getElementById('bgPX').value||'left')+' '+(document.getElementById('bgA').value||'scroll');
