@@ -4251,10 +4251,6 @@
                                 }
                             } else if (val !== "") {
                                 // For non-color inputs, include if not empty
-                                if (this.name === "bgImg") {
-                                    var b64 = $("input[name=customIMGB64]", overlay);
-                                    val = b64.exists() ? decodeURIComponent(b64.val()) : val;
-                                }
                                 previewTheme[this.name] = val;
                             }
                         }
@@ -4448,8 +4444,7 @@
                     var val;
 
                     if (this.name === "bgImg") {
-                        var b64 = $("input[name=customIMGB64]", overlay);
-                        val = b64.exists() ? decodeURIComponent(b64.val()) : this.value;
+                        val = this.value;
 
                         if (val !== "" && !$SS.validImageURL(val) && !$SS.validBase64(val)) {
                             error = true;
