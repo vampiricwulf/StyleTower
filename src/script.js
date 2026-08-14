@@ -1134,6 +1134,7 @@
                 "--sc-icon-msg:url(\"data:image/svg+xml," + t.icons.msg + "\");" +
                 "--sc-icon-menu:url(\"data:image/svg+xml," + t.icons.menuIcon.replace("currentColor", "rgb(" + t.headerLColor.rgb + ")") + "\");" +
                 "--sc-icon-options:url(\"data:image/svg+xml," + t.icons.options + "\");" +
+                "--sc-icon-emote:url(\"data:image/svg+xml," + t.icons.emote + "\");" +
                 // Styling hooks exposed by Holotower TS
                 "--subtle-border-color:" + t.brderColor.hex + ";" +
                 "--inline-background-color:rgba(" + hoverRGB + "," + t.hoverOp + ");" +
@@ -5699,6 +5700,8 @@
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M15.5,3.029l-10.8,6.235L4.7,21.735L15.5,27.971l10.8-6.235V9.265L15.5,3.029zM24.988,10.599L16,15.789v10.378c0,0.275-0.225,0.5-0.5,0.5s-0.5-0.225-0.5-0.5V15.786l-8.987-5.188c-0.239-0.138-0.321-0.444-0.183-0.683c0.138-0.238,0.444-0.321,0.683-0.183l8.988,5.189l8.988-5.189c0.238-0.138,0.545-0.055,0.684,0.184C25.309,10.155,25.227,10.461,24.988,10.599z'/></svg>",
                 downArrow: "<svg viewBox='7 4 29 27' preserveAspectRatio='xMidYMid meet' height='16' width='16' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M8.037,11.166L14.5,22.359c0.825,1.43,2.175,1.43,3,0l6.463-11.194c0.826-1.429,0.15-2.598-1.5-2.598H9.537C7.886,8.568,7.211,9.737,8.037,11.166z'/></svg>",
+                emote: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
+                    "<path fill='rgb(" + this.textColor.rgb + ")' fill-rule='evenodd' d='M15,3C8.4,3,3,8.4,3,15s5.4,12,12,12,12-5.4,12-12S21.6,3,15,3ZM15,5.2c5.4,0,9.8,4.4,9.8,9.8s-4.4,9.8-9.8,9.8S5.2,20.4,5.2,15,9.6,5.2,15,5.2ZM12.6,11.9a1.9,1.9,0,1,1-3.8,0,1.9,1.9,0,0,1,3.8,0ZM21.2,11.9a1.9,1.9,0,1,1-3.8,0,1.9,1.9,0,0,1,3.8,0ZM8.9,17.4c1.2,2.6,3.5,4.2,6.1,4.2s4.9-1.6,6.1-4.2l-1.7-0.8c-0.9,1.9-2.6,3.1-4.4,3.1s-3.5-1.2-4.4-3.1Z'/></svg>",
                 options: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.headerLColor.rgb + ")' d='M15,10.5c-2.485,0-4.5,2.015-4.5,4.5s2.015,4.5,4.5,4.5s4.5-2.015,4.5-4.5S17.485,10.5,15,10.5z M27.5,17.16v-4.32l-3.02-0.5c-0.22-0.79-0.53-1.54-0.94-2.24l1.78-2.49l-3.05-3.05l-2.49,1.78c-0.7-0.4-1.45-0.72-2.24-0.94L16.16,2.4h-4.32l-0.5,3.02c-0.79,0.22-1.54,0.53-2.24,0.94L6.61,4.58L3.56,7.63l1.78,2.49c-0.4,0.7-0.72,1.45-0.94,2.24l-3.02,0.5v4.32l3.02,0.5c0.22,0.79,0.53,1.54,0.94,2.24l-1.78,2.49l3.05,3.05l2.49-1.78c0.7,0.4,1.45,0.72,2.24,0.94l0.5,3.02h4.32l0.5-3.02c0.79-0.22,1.54-0.53,2.24-0.94l2.49,1.78l3.05-3.05l-1.78-2.49c0.4-0.7,0.72-1.45,0.94-2.24L27.5,17.16z'/></svg>"
             };

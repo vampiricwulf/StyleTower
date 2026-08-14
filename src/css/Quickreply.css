@@ -145,3 +145,28 @@ form[name=post] .cf-turnstile {
 #upload_filename input[name=filename] {
   box-sizing: border-box;
 }
+/* Emote menu (Holotower Emote Menu userscript): dress its button and list
+   like the QR's own inputs; selectors no-op when the script isn't installed */
+#quick-reply #emote-menu {
+  background: var(--sc-inputColor) !important;
+  border: 1px solid var(--sc-inputbColor) !important;
+  box-sizing: border-box !important;
+  transition: background .2s;
+}
+#quick-reply #emote-menu:hover {
+  background: rgb(var(--sc-inputColor-hover)) !important;
+}
+:root.rounded-corners #quick-reply #emote-menu {
+  border-radius: 3px;
+}
+#quick-reply #emote-list {
+  background: var(--sc-inputColor) !important;
+  border: 1px solid var(--sc-inputbColor) !important;
+  box-sizing: border-box;
+}
+:root.rounded-corners #quick-reply #emote-list {
+  border-radius: 3px;
+}
+#quick-reply #emote-list > img:hover {
+  background: rgb(var(--sc-inputColor-shift25));
+}

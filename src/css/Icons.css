@@ -96,3 +96,22 @@
 :root.use-sc-icons #scroll-buttons a#nav-to-top::before {
   transform: rotate(180deg);
 }
+/* Emote menu button (companion userscript): swap its hardcoded emote PNG
+   for a theme-colored smiley, same pattern as the scroll arrows */
+:root.use-sc-icons #quick-reply #emote-menu img {
+  display: none;
+}
+:root.use-sc-icons #quick-reply #emote-menu::before {
+  content: '';
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-image: var(--sc-icon-emote);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: .8;
+}
+:root.use-sc-icons #quick-reply #emote-menu:hover::before {
+  opacity: 1;
+}
