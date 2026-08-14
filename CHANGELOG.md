@@ -1,3 +1,10 @@
+### v1.0.12
+*2026-08-14*
+
+- Saving a theme in the editor now always selects and applies it: the selection is set directly instead of simulating a click on the theme's preview tile, whose already-selected guard could skip both the selection and the save
+- Under System Theming, saving a theme also assigns it to whichever Dark/Light slot currently governs the display, so the save is visible instead of appearing to do nothing; the Dark/Light dropdowns update in step
+- Saving an edit with no changes no longer leaves the in-memory theme selection pointing at the removed live-preview slot
+
 ### v1.0.11
 *2026-08-13*
 

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         StyleTower
-// @version      1.0.11
+// @version      1.0.12
 // @namespace    StyleTower
 // @description  Customizable themes for holotower.org.
 // @license      GPL-3.0; https://github.com/vampiricwulf/StyleTower/blob/main/LICENSE
@@ -306,7 +306,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.11",
+        VERSION = "1.0.12",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
@@ -4421,8 +4421,14 @@
                     error = false,
                     div;
 
-                if (!exp && bEdit && !tEdit.modified)
+                if (!exp && bEdit && !tEdit.modified) {
+                    // A live preview may have been spliced out above, leaving
+                    // the in-memory selection dangling past the array end;
+                    // re-init restores the stored state
+                    if (previewIndex !== -1)
+                        $SS.init(true);
                     return overlay.remove();
+                }
 
                 var colorNames = {},
                     opDefaults = { replyOp: "1.0", navOp: "0.9", hoverOp: "0.8", hoverOutOp: "0.5" };
@@ -4503,7 +4509,26 @@
                 }
 
                 if (div && div.exists()) {
-                    div.fire("click").scrollIntoView(true);
+                    // Select the saved theme explicitly rather than firing a
+                    // click on its preview: the click handler's
+                    // already-selected guard reads classes rendered from
+                    // stale mid-preview state and can skip both the
+                    // selection and the save
+                    div.parent().children(".selected").removeClass("selected");
+                    div.parent().children(".nsfw").removeClass("nsfw");
+                    div.addClass("selected nsfw");
+                    div.scrollIntoView(true);
+                    // Under System Theming the page displays the Dark/Light
+                    // mapping, not the selection; point the governing slot at
+                    // the saved theme so saving is always visible
+                    if ($SS.conf["System Theming"]) {
+                        var slot = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                            "Dark Theme" : "Light Theme";
+                        $SS.conf[slot] = tIndex;
+                        $SS.Config.set(slot, tIndex);
+                    }
+                    $SS.options.saveThemeState();
+                    $SS.init(true);
                 }
 
                 // The list may have grown; keep the Dark/Light selects in step
