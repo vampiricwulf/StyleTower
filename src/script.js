@@ -3577,7 +3577,9 @@
                 left.append($("<a class='options-button' name=restoreThemes title='Restore hidden default themes'>Restore", tOptions)
                     .bind("click", function () {
                         $SS.conf["Hidden Themes"] = [];
+                        $SS.Config.set("Hidden Themes", []);
                         $("#themes-section>div[hidden]").show();
+                        $(this).hide();
                     })
                 );
 
@@ -3610,33 +3612,27 @@
                     $SS.options.show();
                 }
             },
-            save: function () {
+            /* Persists only theme state (list, selection, hidden). Callers
+               re-apply with $SS.init(true). Guarded: writing while the
+               panel is gone would collect nothing and wipe every user
+               theme from storage. */
+            saveThemeState: function () {
+                if (!$("#oneechan-options #themes-section").exists())
+                    return false;
+
                 var themes = [],
                     nsfwTheme,
                     selectedTheme;
 
-                // Save main
-                $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
-                    var $this = $(this),
-                        name = $this.attr("name"),
-                        val = $this.val();
-
-                    if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)){
-                        val = parseInt(val);
+                $("#oneechan-options #themes-section>div").each(function () {
+                    var oldIndex = parseInt(this.id.substr(5)),
+                        t = $SS.conf["Themes"][oldIndex];
+                    if (t && !t.default && !t._isPreview) {
+                        // Editor bookkeeping must not reach storage
+                        delete t.modified;
+                        delete t.mHandler;
+                        themes.push(t);
                     }
-
-                    $SS.Config.set(name, val);
-                });
-
-                // Save Mascots (gallery edits live in the working copy)
-                if ($SS.options._mascotWork)
-                    $SS.Config.set("Mascots", JSON.stringify($SS.options._mascotWork));
-
-                // Save Themes
-                $("#oneechan-options #themes-section>div").each(function (index) {
-                    var oldIndex = parseInt(this.id.substr(5));
-                    if ($SS.conf["Themes"][oldIndex] && !$SS.conf["Themes"][oldIndex].default)
-                        themes.push($SS.conf["Themes"][oldIndex]);
                 });
 
                 selectedTheme = (selectedTheme = $("#oneechan-options #themes-section>div.selected")).exists() ?
@@ -3657,6 +3653,45 @@
                 $SS.Config.set("Selected Theme", selectedTheme);
                 $SS.Config.set("NSFW Theme", nsfwTheme);
                 $SS.Config.set("Hidden Themes", $SS.conf["Hidden Themes"]);
+                return true;
+            },
+            /* Rebuilds the Dark/Light Theme select options after the theme
+               list changes shape (delete/import), so their indices can't go
+               stale against the compacted array */
+            refreshThemeSelects: function () {
+                $("#oneechan-options select[name='Dark Theme'], #oneechan-options select[name='Light Theme']").each(function () {
+                    var cur = parseInt($SS.conf[this.name], 10) || 0,
+                        html = "";
+                    for (var i = 0, MAX = $SS.conf["Themes"].length; i < MAX; ++i)
+                        html += "<option value='" + i + "'" + (i === cur ? " selected" : "") + ">" +
+                            $SS.escapeHTML($SS.conf["Themes"][i].name) + "</option>";
+                    this.innerHTML = html;
+                });
+            },
+            save: function () {
+                // Never write from a dead panel: the collectors below would
+                // see nothing and wipe stored state
+                if (!$("#oneechan-options").exists())
+                    return;
+
+                // Save main
+                $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
+                    var $this = $(this),
+                        name = $this.attr("name"),
+                        val = $this.val();
+
+                    if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)){
+                        val = parseInt(val);
+                    }
+
+                    $SS.Config.set(name, val);
+                });
+
+                // Save Mascots (gallery edits live in the working copy)
+                if ($SS.options._mascotWork)
+                    $SS.Config.set("Mascots", JSON.stringify($SS.options._mascotWork));
+
+                $SS.options.saveThemeState();
 
                 if ($SS.options.saveAndClose)
                     $SS.options.close();
@@ -4364,16 +4399,48 @@
                     div.fire("click").scrollIntoView(true);
                 }
 
+                // The list may have grown; keep the Dark/Light selects in step
+                $SS.options.refreshThemeSelects();
                 $("#overlay").removeClass("previewing");
                 return overlay.remove();
             },
             deleteTheme: function (tIndex) {
-                if ($SS.conf["Themes"][tIndex].default &&
-                    $SS.conf["Hidden Themes"].push(tIndex) === 1)
-                    $("#themes-section a[name=restoreThemes]").show();
+                var t = $SS.conf["Themes"][tIndex];
+                if (!t) return;
 
-                return $SS.conf["Themes"][tIndex].default ?
-                    $("#theme" + tIndex).removeClass("selected").hide() : $("#theme" + tIndex).remove();
+                // Defaults are hidden, not deleted
+                if (t.default) {
+                    if ($SS.conf["Hidden Themes"].indexOf(tIndex) === -1 &&
+                        $SS.conf["Hidden Themes"].push(tIndex) === 1)
+                        $("#themes-section a[name=restoreThemes]").show();
+                    $SS.Config.set("Hidden Themes", $SS.conf["Hidden Themes"]);
+                    return $("#theme" + tIndex).removeClass("selected").hide();
+                }
+
+                if (!confirm('Delete theme "' + t.name + '"? This cannot be undone.'))
+                    return;
+
+                // Remove from the array itself, not just the DOM: every index
+                // after this shifts down, so compact the index-based settings
+                // and rebuild the tab or the stale div ids would persist a
+                // selection pointing at the wrong (or no) theme
+                $SS.conf["Themes"].splice(tIndex, 1);
+                ["Selected Theme", "NSFW Theme", "Dark Theme", "Light Theme"].forEach(function (key) {
+                    var v = parseInt($SS.conf[key], 10) || 0;
+                    if (v === tIndex) v = 0;
+                    else if (v > tIndex) v--;
+                    $SS.conf[key] = v;
+                    $SS.Config.set(key, v);
+                });
+
+                var tOptions = $("#oneechan-options");
+                if (tOptions.exists()) {
+                    $SS.options.createThemesTab(tOptions);
+                    $SS.options.refreshThemeSelects();
+                }
+
+                $SS.options.saveThemeState();
+                return $SS.init(true);
             },
         },
 
@@ -5594,30 +5661,39 @@
                 $(div).bind("click", function () {
                     var $this = $(this);
 
-                    if ($this.hasClass("selected nsfw")) return;
+                    // classList.contains never matches a two-token string, so
+                    // test the classes separately
+                    if ($this.hasClass("selected") && $this.hasClass("nsfw")) return;
 
                     $this.parent().children(".selected").removeClass("selected");
                     $this.parent().children(".nsfw").removeClass("nsfw");
                     $this.addClass("selected nsfw");
-                    $SS.options.save();
+                    // Theme state only: picking a theme must not commit
+                    // half-edited settings from the other tabs
+                    $SS.options.saveThemeState();
+                    $SS.init(true);
                 });
 
                 $("a[title='Sets the SFW theme.']", div).bind("click", function (e) {
                     e.stopPropagation();
                     var $this = $(this);
-                    if ($this.hasClass("selected")) return;
+                    if ($this.parent().parent().parent().hasClass("selected")) return;
 
                     $this.parent().parent().parent().parent().children(".selected").removeClass("selected");
                     $this.parent().parent().parent().addClass("selected");
+                    $SS.options.saveThemeState();
+                    $SS.init(true);
                 });
 
                 $("a[title='Sets the NSFW theme.']", div).bind("click", function (e) {
                     e.stopPropagation();
                     var $this = $(this);
-                    if ($this.hasClass("nsfw")) return;
+                    if ($this.parent().parent().parent().hasClass("nsfw")) return;
 
                     $this.parent().parent().parent().parent().children(".nsfw").removeClass("nsfw");
                     $this.parent().parent().parent().addClass("nsfw");
+                    $SS.options.saveThemeState();
+                    $SS.init(true);
                 });
                 $("a[title=Delete]", div).bind("click", function (e) {
                     e.stopPropagation();
