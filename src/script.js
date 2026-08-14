@@ -2234,7 +2234,11 @@
             if (submitTd && submitTd.classList.contains("submit")) {
                 var subjectTd = submitTd.previousElementSibling;
                 if (subjectTd) subjectTd.setAttribute("colspan", "2");
-                submitTd.remove();
+                // Keep the emptied cell as a hidden anchor: companion scripts
+                // (e.g. the emote menu) insert their rows relative to
+                // td.submit, and removing it made their injection silently
+                // no-op whenever we processed the QR before they did
+                submitTd.hidden = true;
             }
         },
         syncTSPostingControls: function (qr, attempts) {
