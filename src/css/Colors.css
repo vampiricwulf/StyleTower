@@ -137,9 +137,11 @@ form[name=post] table td {
 }
 .tab-label,
 #oneechan-options,
+#add-theme,
 #add-mascot {
   background: rgb(var(--sc-mainColor-rgb)) !important;
 }
+#add-theme,
 #add-mascot {
   color: var(--sc-textColor) !important;
 }
