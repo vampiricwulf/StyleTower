@@ -3150,6 +3150,11 @@
                 });
             },
             show: function () {
+                // A theme/mascot editor is open: closing the panel under it
+                // would leave the editor orphaned and its Save with nothing
+                // to write to
+                if ($("#overlay2").exists())
+                    return;
                 if ($("#overlay").exists())
                     $SS.options.close();
                 else {
@@ -3990,6 +3995,8 @@
                         $("#overlay").removeClass("previewing");
                         $SS.displayMascots();
                     };
+                // The theme editor shares the #overlay2 id; never allow two
+                $("#overlay2").remove();
                 $(document.body).append(overlay2);
                 // Hide the options window while the editor previews on the live
                 // page (same pattern as the theme editor)
@@ -4038,6 +4045,8 @@
                 });
             },
             showTheme: function (tIndex) {
+                // The mascot editor shares the #overlay2 id; never allow two
+                $("#overlay2").remove();
                 var div, overlay, previewThemeIndex = -1,
                     bEdit = typeof tIndex === "number",
                     tEdit = bEdit ? $SS.conf["Themes"][tIndex] : null,
