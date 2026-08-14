@@ -3223,7 +3223,7 @@
                                 "<select name='" + key + "'>";
                             for (var i = 0, MAX = $SS.conf["Themes"].length; i < MAX; ++i) {
                                 html += "<option value='" + i + "'" + (i == val ? " selected" : "") + ">" +
-                                    $SS.conf["Themes"][i].name + "</option>";
+                                    $SS.escapeHTML($SS.conf["Themes"][i].name) + "</option>";
                             }
                             html += "</select></label>";
                             optionsHTML.push(html);
@@ -3537,6 +3537,41 @@
                     return $(getDocBody()).append(overlay);
                 }
             },
+            /* Reduces an imported theme object to known keys with validated
+               values. Foreign flags never survive: an imported "default"
+               would be skipped by every save and vanish on reload, and
+               editor bookkeeping must not enter the array */
+            sanitizeTheme: function (raw) {
+                var t = {},
+                    strKeys = ["name", "authorName", "authorTrip", "customCSS"],
+                    i, k, v;
+
+                for (i = 0; i < strKeys.length; i++)
+                    if (typeof raw[strKeys[i]] === "string" && raw[strKeys[i]] !== "")
+                        t[strKeys[i]] = raw[strKeys[i]];
+                if (!t.name)
+                    t.name = "Imported Theme";
+
+                for (i = 0; i < themeInputs.length; i++) {
+                    k = themeInputs[i].name;
+                    v = $SS.normalizeHex(raw[k]);
+                    if (v) t[k] = v;
+                }
+
+                t.replyOp = $SS.normalizeOpacity(raw.replyOp, "1.0");
+                t.navOp = $SS.normalizeOpacity(raw.navOp, "0.9");
+
+                if (typeof raw.bgImg === "string" && raw.bgImg !== "") {
+                    v = $SS.cleanBase64(raw.bgImg);
+                    if ($SS.validImageURL(v) || $SS.validBase64(v)) {
+                        t.bgImg = v;
+                        t.bgRPA = typeof raw.bgRPA === "string" && /^\S+ \S+ \S+ \S+$/.test(raw.bgRPA) ?
+                            raw.bgRPA : "repeat top left scroll";
+                    }
+                }
+
+                return t;
+            },
             createThemesTab: function (tOptions) {
                 var themes = $("#themes-section", tOptions).html(""),
                     p = $("<p class='buttons-container'>"),
@@ -3559,16 +3594,20 @@
                                     return;
                                 }
 
-                                if (!theme.textColor || !theme.mainColor) {
+                                if (!theme || typeof theme !== "object" || Array.isArray(theme) ||
+                                    !theme.textColor || !theme.mainColor) {
                                     alert("Invalid theme file!");
                                     return;
                                 }
+
+                                theme = $SS.options.sanitizeTheme(theme);
 
                                 index = $SS.conf["Themes"].push(theme);
                                 theme = new $SS.Theme(--index);
                                 div = theme.preview();
                                 $("#overlay #themes-section").append(div);
                                 div.fire("click").scrollIntoView(true);
+                                $SS.options.refreshThemeSelects();
                             };
                         })(file);
 
@@ -5640,9 +5679,9 @@
                     " id=theme" + this.index + " class=\'theme-preview " + (($SS.conf["Selected Theme"] == $SS.conf["NSFW Theme"]) && ($SS.conf["Selected Theme"] == this.index) ? "selected nsfw" : ($SS.conf["Selected Theme"] == this.index ? "selected " : "") + ($SS.conf["NSFW Theme"] == this.index ? "nsfw " : "")) + "\'>").html("<div class=reply " +
                         "style='background-color:" + this.mainColor.hex + "!important;border:1px solid " + this.brderColor.hex + "!important;color:" + this.textColor.hex + "!important'>" +
                         "<span style='display:inline-block;width:10px;height:10px;border-radius:2px;background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;box-shadow:rgba(" + this.mainColor.shiftRGB(64) + ",.3) 0 1px;'></span>&ensp;" +
-                        "<span style='color:" + this.titleColor.hex + "!important; font-weight: bold !important'>" + this.name + "</span>&ensp;" +
-                        "<span style='color:" + this.nameColor.hex + "!important; font-weight: bold !important'>" + this.authorName + "</span>&ensp;" +
-                        "<span style='color:" + this.tripColor.hex + "!important'> " + this.authorTrip + "</span>" +
+                        "<span style='color:" + this.titleColor.hex + "!important; font-weight: bold !important'>" + $SS.escapeHTML(this.name) + "</span>&ensp;" +
+                        "<span style='color:" + this.nameColor.hex + "!important; font-weight: bold !important'>" + $SS.escapeHTML(this.authorName) + "</span>&ensp;" +
+                        "<span style='color:" + this.tripColor.hex + "!important'> " + $SS.escapeHTML(this.authorTrip) + "</span>" +
                         "<time style='color:" + this.textColor.hex + "'> 20XX.01.01 12:00 </time>" +
                         "<a href='javascript:;' style='color:" + this.linkColor.hex + "!important' " +
                         "onmouseover='this.setAttribute(\"style\",\"color:" + this.linkHColor.hex + "!important\")' " +
