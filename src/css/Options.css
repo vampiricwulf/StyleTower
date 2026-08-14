@@ -265,6 +265,9 @@ input[name='Font Family']::-webkit-list-button {
   box-sizing: border-box;
   border: 1px solid transparent;
 }
+#add-theme .theme-fields > label:nth-child(even) {
+  background: rgba(var(--sc-mainColor-shiftM16), .35);
+}
 #add-theme .theme-fields > label.picked {
   outline: 1px dashed var(--sc-linkColor);
   outline-offset: -2px;
