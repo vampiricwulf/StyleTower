@@ -1,3 +1,8 @@
+### v1.0.11
+*2026-08-13*
+
+- Unread Line recoloring now matches TS's marker as browsers actually store it: the inline `0 3px red` box-shadow is re-serialized (Blink stores `red 0px 3px`), so v1.0.10's authored-order match never applied
+
 ### v1.0.10
 *2026-08-13*
 
