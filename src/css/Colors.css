@@ -107,17 +107,21 @@ pre {
 body {
   background: var(--sc-bgImg) var(--sc-bgColor) !important;
 }
+/* Reply Opacity only affects post surfaces; UI chrome stays opaque so a
+   transparent-reply theme can't blank out dialogs and the post form */
 .reply,
+:root.op-background .post.op {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp))!important;
+}
 #options_div,
 #alert_div,
 #pin-settings,
 #header-bar.dialog,
-:root.op-background .post.op,
 .watch-menu,
 #quick-reply .handle,
 form table th,
 form[name=post] table td {
-  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp))!important;
+  background: rgb(var(--sc-mainColor-rgb))!important;
 }
 /* Post menu: the site paints .post-menu ul with colors sampled at load plus a hardcoded text color, so override with !important */
 .post-menu ul {

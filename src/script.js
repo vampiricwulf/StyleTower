@@ -5439,8 +5439,10 @@
             this.default = theme.default;
             this.replyBrder = theme.replyBrder;
             this.bgImg = new $SS.Image(theme.bgImg, theme.bgRPA);
-            this.replyOp = theme.replyOp;
-            this.navOp = theme.navOp;
+            // Free-text in old saves: clamp to 0..1 so a stray value can't
+            // invalidate every rgba() consumer
+            this.replyOp = $SS.normalizeOpacity(theme.replyOp, "1.0");
+            this.navOp = $SS.normalizeOpacity(theme.navOp, "0.9");
             this.bgColor = new $SS.Color(theme.bgColor);
             this.mainColor = new $SS.Color(theme.mainColor);
             this.brderColor = new $SS.Color(theme.brderColor);
@@ -5642,6 +5644,12 @@
                 return hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
             if (/^[0-9a-f]{8}$/.test(hex)) return hex.substr(0, 6);
             return /^[0-9a-f]{6}$/.test(hex) ? hex : null;
+        },
+        /* Returns the value clamped to 0..1 as a string, or fallback when
+           the value isn't numeric (cleared field, junk text, old saves) */
+        normalizeOpacity: function (val, fallback) {
+            var op = parseFloat(val);
+            return isNaN(op) ? fallback : String(Math.min(Math.max(op, 0), 1));
         },
         escapeHTML: function (s) {
             return String(s == null ? "" : s)
