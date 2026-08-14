@@ -3968,19 +3968,21 @@
                     bEdit = typeof tIndex === "number",
                     tEdit = bEdit ? $SS.conf["Themes"][tIndex] : null,
                     themeIndex = tIndex,
-                    originalSelectedTheme = $SS.conf["Selected Theme"]; // Store originally selected theme
+                    originalSelectedTheme = $SS.conf["Selected Theme"], // Store originally selected theme
+                    esc = $SS.escapeHTML,
+                    // New themes seed from the selected theme instead of
+                    // all-black fields, so creating one starts from what's
+                    // on screen rather than blanking the page
+                    seed = bEdit ? tEdit :
+                        ($SS.conf["Themes"][originalSelectedTheme] || $SS.conf["Themes"][0] || {}),
+                    RPA, themeR, themePY, themePX, themeA;
 
-                if (bEdit) {
-                    var RPA, themeR, themePY, themePX, themeA;
-
-                    if (tEdit.bgImg && tEdit.bgRPA) {
-                        RPA = tEdit.bgRPA.split(" ");
-                        themeR = RPA[0];
-                        themePY = RPA[1];
-                        themePX = RPA[2];
-                        themeA = RPA[3];
-                    }
-
+                if (seed.bgImg && seed.bgRPA) {
+                    RPA = seed.bgRPA.split(" ");
+                    themeR = RPA[0];
+                    themePY = RPA[1];
+                    themePX = RPA[2];
+                    themeA = RPA[3];
                 }
 
                 div = $("<div id='add-theme' class='dialog'>");
@@ -3999,40 +4001,44 @@
                     "<br><span data-color='textColor'>I'm a dummy post and example text.</span>" +
                     "</div></div>";
 
+                var seedBG = seed.bgImg && ($SS.validImageURL(seed.bgImg) || $SS.validBase64(seed.bgImg)) ? seed.bgImg : "";
                 var innerHTML = previewPost + "<div class='theme-body'><div class='theme-fields'><label>" +
-                    "<span class='option-title'>Theme Name:</span><input type=text name=name value='" + (bEdit ? tEdit.name : "") + "'>" +
+                    "<span class='option-title'>Theme Name:</span><input type=text name=name value=\"" + (bEdit ? esc(tEdit.name) : "") + "\">" +
                     "</label><label>" +
-                    "<span class='option-title'>Author Name:</span><input type=text name=authorName value='" + (bEdit ? (tEdit.authorName !== undefined ? tEdit.authorName : "") : "") + "'>" +
+                    "<span class='option-title'>Author Name:</span><input type=text name=authorName value=\"" + (bEdit ? esc(tEdit.authorName) : "") + "\">" +
                     "</label><label>" +
-                    "<span class='option-title'>Author Tripcode:</span><input type=text name=authorTrip value='" + (bEdit ? (tEdit.authorTrip !== undefined ? tEdit.authorTrip : "") : "") + "'>" +
+                    "<span class='option-title'>Author Tripcode:</span><input type=text name=authorTrip value=\"" + (bEdit ? esc(tEdit.authorTrip) : "") + "\">" +
                     "</label><label>" +
-                    "<span class='option-title'>BG Image:</span><input type=text name=bgImg value=" + (bEdit ? ($SS.validImageURL(tEdit.bgImg) ? tEdit.bgImg + "" : ($SS.validBase64(tEdit.bgImg) ? tEdit.bgImg : "")) : "") + "></label><label>" +
+                    "<span class='option-title'>BG Image:</span><input type=text name=bgImg value=\"" + esc(seedBG) + "\"></label><label>" +
                     "<span class='option-title'>BG Repeat:</span><select name=bgR>" +
-                    "<option" + (bEdit && themeR === "no-repeat" ? " selected" : "") + ">no-repeat</option>" +
-                    "<option" + (bEdit && themeR === "repeat" ? " selected" : "") + ">repeat</option>" +
-                    "<option" + (bEdit && themeR === "repeat-x" ? " selected" : "") + ">repeat-x</option>" +
-                    "<option" + (bEdit && themeR === "repeat-y" ? " selected" : "") + ">repeat-y</option>" +
+                    "<option" + (themeR === "no-repeat" ? " selected" : "") + ">no-repeat</option>" +
+                    "<option" + (themeR === "repeat" ? " selected" : "") + ">repeat</option>" +
+                    "<option" + (themeR === "repeat-x" ? " selected" : "") + ">repeat-x</option>" +
+                    "<option" + (themeR === "repeat-y" ? " selected" : "") + ">repeat-y</option>" +
                     "</select></label><label>" +
                     "<span class='option-title'>BG Attachment:</span><select name=bgA>" +
-                    "<option" + (bEdit && themeA === "fixed" ? " selected" : "") + ">fixed</option>" +
-                    "<option" + (bEdit && themeA === "scroll" ? " selected" : "") + ">scroll</option>" +
+                    "<option" + (themeA === "fixed" ? " selected" : "") + ">fixed</option>" +
+                    "<option" + (themeA === "scroll" ? " selected" : "") + ">scroll</option>" +
                     "</select></label><label>" +
                     "<span class='option-title'>BG Position-X:</span><select name=bgPX>" +
-                    "<option" + (bEdit && themePX === "left" ? " selected" : "") + ">left</option>" +
-                    "<option" + (bEdit && themePX === "center" ? " selected" : "") + ">center</option>" +
-                    "<option" + (bEdit && themePX === "right" ? " selected" : "") + ">right</option>" +
+                    "<option" + (themePX === "left" ? " selected" : "") + ">left</option>" +
+                    "<option" + (themePX === "center" ? " selected" : "") + ">center</option>" +
+                    "<option" + (themePX === "right" ? " selected" : "") + ">right</option>" +
                     "</select></label><label>" +
                     "<span class='option-title'>BG Position-Y:</span><select name=bgPY>" +
-                    "<option" + (bEdit && themePY === "top" ? " selected" : "") + ">top</option>" +
-                    "<option" + (bEdit && themePY === "center" ? " selected" : "") + ">center</option>" +
-                    "<option" + (bEdit && themePY === "bottom" ? " selected" : "") + ">bottom</option>" +
+                    "<option" + (themePY === "top" ? " selected" : "") + ">top</option>" +
+                    "<option" + (themePY === "center" ? " selected" : "") + ">center</option>" +
+                    "<option" + (themePY === "bottom" ? " selected" : "") + ">bottom</option>" +
                     "</select></label><label>" +
-                    "<span class='option-title'>Reply Opacity:</span><input type=text name=replyOp value='" + (bEdit ? tEdit.replyOp : "1.0") + "'></label><label>" +
-                    "<span class='option-title'>Header Opacity:</span><input type=text name=navOp value='" + (bEdit ? tEdit.navOp : "0.9") + "'>" +
+                    "<span class='option-title'>Reply Opacity:</span><input type=text name=replyOp value='" + $SS.normalizeOpacity(seed.replyOp, "1.0") + "'></label><label>" +
+                    "<span class='option-title'>Header Opacity:</span><input type=text name=navOp value='" + $SS.normalizeOpacity(seed.navOp, "0.9") + "'>" +
                     "</label>";
 
                 for (var i = 0, MAX = themeInputs.length; i < MAX; ++i) {
-                    var hex = (bEdit ? tEdit[themeInputs[i].name] : "000000") || "000000";
+                    var hex = $SS.normalizeHex(seed[themeInputs[i].name]);
+                    if (!hex && themeInputs[i].name === "hoverColor") // absent on pre-hoverColor themes: show the derived default
+                        hex = $SS.hexFromRGB(new $SS.Color(seed.mainColor).shiftRGB(-16).split(","));
+                    hex = hex || "000000";
                     var rgb = $SS.RGBFromHex(hex);
                     var textColor = $SS.isLight(rgb) ? "#000" : "#fff";
                     innerHTML += "<label><span class='option-title'>" + themeInputs[i].dName + ":</span>" +
@@ -4049,8 +4055,8 @@
                     "<a class='options-button' name=" + (bEdit ? "edit" : "add") + ">Save</a><a class='options-button' name=cancel>Cancel</a></div>";
 
                 div.html(innerHTML);
-                if (bEdit && tEdit.customCSS)
-                    div.elems[0].querySelector("textarea[name=customCSS]").value = tEdit.customCSS;
+                if (seed.customCSS)
+                    div.elems[0].querySelector("textarea[name=customCSS]").value = seed.customCSS;
 
                 $(".side-switch", div).bind("click", function () {
                     div.elems[0].classList.toggle("left");
@@ -4139,6 +4145,10 @@
                     $SS.conf["Selected Theme"] = previewThemeIndex;
                     $SS.theme = new $SS.Theme(previewThemeIndex);
                     $SS.setThemeVariables();
+                    // Scheme-dependent root classes must track the preview,
+                    // or light-on-dark previews render half-applied
+                    document.documentElement.classList.toggle("isLight", $SS.theme.textColor.isLight === true);
+                    document.documentElement.classList.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
                 };
 
                 // Sync color swatch to hex text input and trigger preview
@@ -4171,10 +4181,16 @@
 
                 $("a[name=export]", div).bind("click", function () {
                     var theme = $SS.options.addTheme(themeIndex, true);
-                    if ($("a[download]", div).exists())
+                    if (!theme || $("a[download]", div).exists())
                         return;
-                    var exportalert = $("<a class='options-button' download='" + theme.name + ".json' href='data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(theme)))) + "'>Save me!");
-                    return $(this).replace(exportalert);
+                    // Built via the DOM so a quote in the name can't break out
+                    // of the download attribute
+                    var exportalert = document.createElement("a");
+                    exportalert.className = "options-button";
+                    exportalert.download = (theme.name || "theme") + ".json";
+                    exportalert.href = "data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(theme))));
+                    exportalert.textContent = "Save me!";
+                    return $(this).replace($(exportalert));
                 });
 
                 if (bEdit) {
@@ -4197,8 +4213,21 @@
                     }
                     // Always restore to the originally selected theme (not the theme being edited)
                     $SS.conf["Selected Theme"] = originalSelectedTheme;
-                    $SS.theme = new $SS.Theme(originalSelectedTheme);
+                    // Re-derive the displayed theme the way init does: under
+                    // System Theming the page shows the Dark/Light theme, not
+                    // the selected one
+                    var active;
+                    if ($SS.conf["System Theming"]) {
+                        active = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                            parseInt($SS.conf["Dark Theme"], 10) : parseInt($SS.conf["Light Theme"], 10);
+                    } else {
+                        active = $SS.location.nsfw ? $SS.conf["NSFW Theme"] : originalSelectedTheme;
+                    }
+                    if (!$SS.conf["Themes"][active]) active = 0;
+                    $SS.theme = new $SS.Theme(active);
                     $SS.setThemeVariables();
+                    document.documentElement.classList.toggle("isLight", $SS.theme.textColor.isLight === true);
+                    document.documentElement.classList.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
                     $SS.insertCSS();
                     $("#overlay").removeClass("previewing");
                     $("#overlay2").remove();
@@ -4207,7 +4236,7 @@
                 if (bEdit)
                     $("input,textarea,select", div).bind("change", tEdit.mHandler = function () {
                         tEdit.modified = true;
-                        $("input,textarea,select", $("#addTheme")).unbind("change", tEdit.mHandler);
+                        $("input,textarea,select", $("#add-theme")).unbind("change", tEdit.mHandler);
                     });
 
                 return $(document.body).append(overlay);
@@ -4215,19 +4244,23 @@
             addTheme: function (tIndex, exp) {
                 var overlay = $("#overlay2");
 
-                // Remove preview theme if it exists (from live preview)
+                // Remove preview theme if it exists (from live preview).
+                // Export leaves it alone: the editor stays open and the
+                // preview must keep rendering
                 var previewIndex = -1;
-                for (var i = $SS.conf["Themes"].length - 1; i >= 0; i--) {
-                    if ($SS.conf["Themes"][i] && $SS.conf["Themes"][i]._isPreview) {
-                        previewIndex = i;
-                        break;
+                if (!exp) {
+                    for (var i = $SS.conf["Themes"].length - 1; i >= 0; i--) {
+                        if ($SS.conf["Themes"][i] && $SS.conf["Themes"][i]._isPreview) {
+                            previewIndex = i;
+                            break;
+                        }
                     }
-                }
-                if (previewIndex !== -1) {
-                    $SS.conf["Themes"].splice(previewIndex, 1);
-                    // Adjust tIndex if it was after the preview theme
-                    if (typeof tIndex === "number" && tIndex > previewIndex) {
-                        tIndex--;
+                    if (previewIndex !== -1) {
+                        $SS.conf["Themes"].splice(previewIndex, 1);
+                        // Adjust tIndex if it was after the preview theme
+                        if (typeof tIndex === "number" && tIndex > previewIndex) {
+                            tIndex--;
+                        }
                     }
                 }
 
@@ -4250,6 +4283,10 @@
                 if (!exp && bEdit && !tEdit.modified)
                     return overlay.remove();
 
+                var colorNames = {};
+                for (var c = 0, cMAX = themeInputs.length; c < cMAX; ++c)
+                    colorNames[themeInputs[c].name] = themeInputs[c].dName;
+
                 $("input[type=text],textarea", overlay).each(function () {
                     var val;
 
@@ -4269,6 +4306,19 @@
 
                         if (bEdit && tEdit.default && tEdit.name === val)
                             val += " [Modded]";
+                    } else if (colorNames[this.name]) {
+                        // Colors must round-trip as 6-digit hex; junk here
+                        // would silently kill every rule using the variable
+                        val = $SS.normalizeHex(this.value);
+                        if (val === null) {
+                            if (this.value !== "") {
+                                error = true;
+                                return alert("\"" + this.value + "\" is not a valid hex color for " + colorNames[this.name] + "!");
+                            }
+                            val = "";
+                        }
+                    } else if (this.name === "replyOp" || this.name === "navOp") {
+                        val = $SS.normalizeOpacity(this.value, this.name === "replyOp" ? "1.0" : "0.9");
                     } else
                         val = this.value;
 
@@ -4277,6 +4327,9 @@
                 });
 
                 if (error) return;
+
+                if (!tTheme.name)
+                    tTheme.name = "Unnamed Theme";
 
                 if (tTheme.bgImg)
                     tTheme.bgRPA = makeRPA();
@@ -4287,14 +4340,19 @@
                     $SS.conf["Themes"][tIndex] = tTheme;
                     tTheme = new $SS.Theme(tIndex);
                     div = $("#theme" + tIndex, $("#overlay"));
+                    var fresh = tTheme.preview();
                     if (div.exists()) {
-                        div.replace(tTheme.preview());
+                        // replace() returns the detached node; keep the live
+                        // one so the click below lands in the document
+                        div.replace(fresh);
+                        div = fresh;
                     } else {
-                        div = tTheme.preview();
+                        div = fresh;
                         $("#overlay #themes-section").append(div);
                     }
                 } else {
-                    tTheme.author = "You";
+                    if (!tTheme.authorName)
+                        tTheme.authorName = "You";
                     tIndex = $SS.conf["Themes"].push(tTheme);
                     tTheme = new $SS.Theme(--tIndex);
                     div = tTheme.preview();
