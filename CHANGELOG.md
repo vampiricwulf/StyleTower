@@ -1,3 +1,19 @@
+### v1.0.10
+*2026-08-13*
+
+- Theme edits now save reliably: deleting a theme removes it from the saved list and can no longer shift the selection onto the wrong theme (or reset to Yotsuba) after the next click, the per-theme SFW/NSFW buttons persist immediately, and a save fired while the options panel is closed can no longer wipe every user theme from storage
+- Clicking a theme saves only theme state instead of silently committing half-edited settings from the other tabs; the tab Save buttons still save everything
+- Theme editor: the dialog has its own themed background again, option rows alternate shading for readability, new themes start from the currently selected theme instead of an all-black palette (which also used to black out the page on the first live-preview keystroke), colors are validated as hex on save, opacities clamp to 0–1, quotes in names/authors no longer corrupt the form on round-trip, live previews keep the light/dark root classes in sync, and Cancel restores the correct theme under System Theming
+- Editor preview: clicking any element jumps to its color field without firing the site's real quote/hover handlers, and a mock backlink hover preview shows the hover styling live
+- New theme options **Hover Preview BG**, **Hover Outline**, **Hover Opacity** and **Hover Outline Opacity** control the backlink/quote hover previews and inline quote expansions (previously hardcoded); defaults keep existing themes looking identical
+- **Unread Line** now actually applies: TS's hardcoded red last-read marker and the legacy `#unread-line` element both follow the theme color (the option previously did nothing)
+- **Highlighted Threads** now backs the catalog highlight color when a pin setting has no color of its own (previously did nothing), and **Reply Selection** draws a first-party outline on highlighted replies
+- **Reply Opacity** 0 no longer blanks the UI: it only affects posts and catalog/home cards, while dialogs, the post form, the watch menu and the QR handle stay opaque
+- Native widgets (scrollbars, checkboxes, select dropdowns) follow the theme's light/dark scheme, catalog cards no longer flash Yotsuba-blue on hover, and ban pages are themed instead of unreadable light-on-white on dark themes
+- Imported theme files are sanitized — colors validated, bgImg `data:` prefixes cleaned (a doubled prefix used to break backgrounds), foreign flags dropped (a `default`-flagged import used to vanish on reload) — and theme names are escaped everywhere they render
+- Emote menu (companion userscript): the emote list no longer intermittently fails to attach on fresh loads with the QR already open, and its button and list wear the QR's themed input style with the button aligned to the Subject field
+- Theme Creator tool: gains the new hover color/opacity fields plus Unread Line and Thread HL, a Custom CSS box, clipboard-API copying with honest failure reporting, and no longer extracts English words like "decade" as colors
+
 ### v1.0.9
 *2026-08-11*
 
