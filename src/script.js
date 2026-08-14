@@ -4491,6 +4491,15 @@
                     div.parent().children(".nsfw").removeClass("nsfw");
                     div.addClass("selected nsfw");
                     div.scrollIntoView(true);
+                    // Under System Theming the page displays the Dark/Light
+                    // mapping, not the selection; point the governing slot at
+                    // the saved theme so saving is always visible
+                    if ($SS.conf["System Theming"]) {
+                        var slot = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                            "Dark Theme" : "Light Theme";
+                        $SS.conf[slot] = tIndex;
+                        $SS.Config.set(slot, tIndex);
+                    }
                     $SS.options.saveThemeState();
                     $SS.init(true);
                 }
