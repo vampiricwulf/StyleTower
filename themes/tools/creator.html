@@ -131,6 +131,10 @@ select { background: #1a1a1a; color: #bbb; border: 1px solid #333; border-radius
       <div class="opt-row"><input type="text" id="replyOp" value="1.0"><input type="text" id="navOp" value="0.9"></div>
     </div>
     <div class="card">
+      <div class="opt-label">Custom CSS (optional)</div>
+      <textarea id="customCSS" placeholder="/* extra CSS shipped with the theme */" style="height:90px"></textarea>
+    </div>
+    <div class="card">
       <input type="text" id="themeName" placeholder="Theme name" style="margin-bottom:.4em">
       <input type="text" id="themeAuthor" placeholder="Author" style="margin-bottom:.4em">
       <input type="text" id="themeTrip" placeholder="Author Tripcode" style="margin-bottom:.5em">
@@ -151,7 +155,8 @@ var assigns = {
   mainColor:'', brderColor:'', bgColor:'', headerColor:'', headerBGColor:'',
   headerLColor:'', headerLHColor:'', boardColor:'', inputColor:'', inputbColor:'',
   postHLColor:'', quotesYouHLColor:'', ownPostHLColor:'',
-  replybgHLColor:'', replyslctColor:''
+  replybgHLColor:'', replyslctColor:'',
+  unreadColor:'', threadHLColor:'', hoverColor:''
 };
 var labels = {
   textColor:'Text', nameColor:'Name', tripColor:'Tripcode', linkColor:'Link', linkHColor:'Link Hover',
@@ -160,7 +165,8 @@ var labels = {
   headerBGColor:'Header BG', headerLColor:'Header Link', headerLHColor:'Header Link Hover',
   boardColor:'Board Title', inputColor:'Input BG', inputbColor:'Input Border',
   postHLColor:'Post HL', quotesYouHLColor:'Quotes You HL', ownPostHLColor:'Own Post HL',
-  replybgHLColor:'Reply BG HL', replyslctColor:'Reply Select HL'
+  replybgHLColor:'Reply BG HL', replyslctColor:'Reply Select HL',
+  unreadColor:'Unread Line', threadHLColor:'Thread HL', hoverColor:'Hover Preview BG'
 };
 var defaults = { textColor:'ccc', nameColor:'117743', tripColor:'228854', linkColor:'8ab4f8',
   linkHColor:'aac4f8', quoteColor:'789922', titleColor:'cc1105', blinkColor:'886644',
@@ -168,7 +174,8 @@ var defaults = { textColor:'ccc', nameColor:'117743', tripColor:'228854', linkCo
   headerColor:'ddd', headerBGColor:'252525', headerLColor:'8ab4f8',
   headerLHColor:'aac4f8', boardColor:'ddd', inputColor:'1a1a1a', inputbColor:'333',
   postHLColor:'8ab4f8', quotesYouHLColor:'dd0000', ownPostHLColor:'8ab4f8',
-  replybgHLColor:'1a1a1a', replyslctColor:'8ab4f8' };
+  replybgHLColor:'1a1a1a', replyslctColor:'8ab4f8',
+  unreadColor:'8ab4f8', threadHLColor:'8ab4f8', hoverColor:'1a1a1a' };
 
 function parseHex(s) {
   s = s.replace(/^#/, '').toLowerCase();
@@ -189,7 +196,8 @@ function extract() {
   (raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g)||[]).forEach(function(m){
     var d = m.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/); if(d) found.push(parseInt(d[1]).toString(16).padStart(2,'0')+parseInt(d[2]).toString(16).padStart(2,'0')+parseInt(d[3]).toString(16).padStart(2,'0'));
   });
-  (raw.match(/\b[0-9a-fA-F]{6}\b/g)||[]).forEach(function(c){ if(found.indexOf(c)===-1) found.push(c); });
+  // Bare hex needs at least one digit, or English words like "decade" become swatches
+  (raw.match(/\b(?=[a-fA-F]*\d)[0-9a-fA-F]{6}\b/g)||[]).forEach(function(c){ c=c.toLowerCase(); if(found.indexOf(c)===-1) found.push(c); });
   colors = found.filter(function(v,i,a){ return a.indexOf(v)===i; });
   selectedIdx = -1;
   renderSwatches(); renderAssigns();
@@ -224,9 +232,10 @@ function randomize() {
   if (!colors.length) return extract();
   var keys = Object.keys(assigns), shuffled = colors.slice().sort(function(){ return Math.random()-0.5; });
   for (var i = 0; i < keys.length; i++) assigns[keys[i]] = shuffled[i % shuffled.length];
-  if (assigns.textColor === assigns.mainColor && colors.length > 1) {
+  // Text must stay readable against both the reply and body backgrounds
+  if ((assigns.textColor === assigns.mainColor || assigns.textColor === assigns.bgColor) && colors.length > 1) {
     for (var j = 0; j < colors.length; j++) {
-      if (colors[j] !== assigns.mainColor) { assigns.textColor = colors[j]; break; }
+      if (colors[j] !== assigns.mainColor && colors[j] !== assigns.bgColor) { assigns.textColor = colors[j]; break; }
     }
   }
   renderAssigns();
@@ -236,7 +245,8 @@ function autoAssign() {
   var order = ['bgColor','mainColor','brderColor','headerBGColor','inputColor','inputbColor',
     'textColor','headerColor','boardColor','nameColor','linkColor','headerLColor',
     'quoteColor','linkHColor','headerLHColor','titleColor','blinkColor','qlColor',
-    'tripColor','postHLColor','quotesYouHLColor','ownPostHLColor','replybgHLColor','replyslctColor'];
+    'tripColor','postHLColor','quotesYouHLColor','ownPostHLColor','replybgHLColor','replyslctColor',
+    'unreadColor','threadHLColor','hoverColor'];
   for (var i = 0; i < order.length && i < colors.length; i++) assigns[order[i]] = colors[i];
   if (assigns.textColor === assigns.mainColor && colors.length > 1) assigns.textColor = colors[1] || colors[0];
   renderAssigns();
@@ -301,7 +311,8 @@ function buildTheme() {
   var t = { name: document.getElementById('themeName').value || 'New Theme',
     authorName: document.getElementById('themeAuthor').value || 'You',
     authorTrip: document.getElementById('themeTrip').value || '', replyOp: document.getElementById('replyOp').value || '1.0',
-    navOp: document.getElementById('navOp').value || '0.9', customCSS: '' };
+    navOp: document.getElementById('navOp').value || '0.9',
+    customCSS: document.getElementById('customCSS').value || '' };
   t.bgImg = document.getElementById('bgImg').value || false;
   if (t.bgImg) t.bgRPA = (document.getElementById('bgR').value||'repeat')+' '+(document.getElementById('bgPY').value||'top')+' '+(document.getElementById('bgPX').value||'left')+' '+(document.getElementById('bgA').value||'scroll');
   for (var k in assigns) t[k] = assigns[k] || defaults[k];
@@ -315,10 +326,24 @@ function download() {
   var s = document.getElementById('status'); s.textContent = 'Downloaded: ' + a.download; s.className = 'result-text success';
 }
 function copy() {
-  var ta = document.createElement('textarea');
-  ta.value = JSON.stringify(buildTheme(), null, 2);
-  document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-  var s = document.getElementById('status'); s.textContent = 'Copied!'; s.className = 'result-text success';
+  var json = JSON.stringify(buildTheme(), null, 2),
+    s = document.getElementById('status'),
+    ok = function () { s.textContent = 'Copied!'; s.className = 'result-text success'; },
+    legacy = function () {
+      var ta = document.createElement('textarea');
+      ta.value = json;
+      document.body.appendChild(ta); ta.select();
+      try {
+        document.execCommand('copy');
+        ok();
+      } catch (e) {
+        s.textContent = 'Copy failed — use Download instead.'; s.className = 'result-text error';
+      }
+      document.body.removeChild(ta);
+    };
+  if (navigator.clipboard && navigator.clipboard.writeText)
+    navigator.clipboard.writeText(json).then(ok, legacy);
+  else legacy();
 }
 renderAssigns();
 updatePreview();
