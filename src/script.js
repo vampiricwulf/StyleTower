@@ -769,15 +769,26 @@
                 });
 
                 var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+                var touchesInline = function (n) {
+                    return n.nodeType === 1 && ((n.matches && n.matches(".inline-quote-container")) ||
+                        (n.querySelector && n.querySelector(".inline-quote-container") != null));
+                };
                 var observer = new MutationObserver(function (mutations) {
-                    var i, j, MAX, _MAX, nodes, node;
+                    var i, j, MAX, _MAX, nodes, node, inlineSync = false;
 
                     for (i = 0, MAX = mutations.length; i < MAX; ++i) {
+                        // Containers vanish on collapse; watch removals too
+                        nodes = mutations[i].removedNodes;
+                        for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
+                            if (!inlineSync && touchesInline(nodes[j])) inlineSync = true;
+                        }
+
                         nodes = mutations[i].addedNodes;
 
                         for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
                             node = nodes[j];
                             if (node.nodeType !== 1) continue;
+                            if (!inlineSync && touchesInline(node)) inlineSync = true;
                             var canHavePosts = node.nodeName !== "SCRIPT" && node.nodeName !== "STYLE" &&
                                 node.nodeName !== "LINK" && node.nodeName !== "META" && node.nodeName !== "BR";
 
@@ -806,6 +817,8 @@
                             }
                         }
                     }
+
+                    if (inlineSync) $SS.syncInlinedMarks();
                 });
 
                 // Observe only the body element instead of entire document for better performance
@@ -1208,6 +1221,28 @@
                 if (thread && thread.classList && thread.classList.contains("thread"))
                     thread.insertBefore(span, op.nextSibling);
             });
+        },
+        /* TS inline quoting: mark the originals of currently-inlined posts.
+           TS removes its containers from the DOM on collapse, so container
+           presence == inlined. TS only adds its own iq-hidden-post class
+           when its Hide Inlined Posts setting is on; this mark exists
+           either way so the faded style can apply when TS is not hiding */
+        syncInlinedMarks: function () {
+            var inlined = {};
+            document.querySelectorAll(".inline-quote-container[data-inlined-id]").forEach(function (c) {
+                inlined[c.getAttribute("data-inlined-id")] = true;
+            });
+            document.querySelectorAll(".post.st-inlined").forEach(function (p) {
+                var id = (p.id || "").replace(/^(?:reply_|op_)/, "");
+                // Clones (hover previews, inlined copies) never keep the mark
+                if (!inlined[id] || p.closest(".inline-quote-container") || p.classList.contains("post-hover"))
+                    p.classList.remove("st-inlined");
+            });
+            for (var k in inlined) {
+                var el = document.getElementById("reply_" + k) || document.getElementById("op_" + k);
+                if (el && !el.closest(".inline-quote-container"))
+                    el.classList.add("st-inlined");
+            }
         },
         initIndexPostHiding: function () {
             // The site's post-filter.js only exposes per-post hiding through
