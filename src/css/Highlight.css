@@ -34,6 +34,11 @@
 .reply:target {
   background: rgba(var(--sc-replybgHLColor-rgb),0.8) !important;
 }
+/* Reply Selection: first-party consumer (TS also receives it via --highlight-color) */
+.reply.highlighted,
+.reply:target {
+  outline: 1px solid rgba(var(--sc-replyslctColor-rgb),0.8) !important;
+}
 /* Expanded (inlined) backlinks/quotelinks: TS marks them a.inline-active, but
    the themed quotelink color and underline-disabled rules out-specific TS's own
    indicator, so restate it at higher specificity with theme colors */

@@ -192,14 +192,18 @@ textarea:hover,
 select:hover {
   background: rgb(var(--sc-inputColor-hover)) !important;
 }
-hr {
+hr:not(#unread-line) {
   background-image: linear-gradient(to left, rgba(var(--sc-brderColor-rgb),0), rgb(var(--sc-brderColor-rgb)), rgba(var(--sc-brderColor-rgb),0));
 }
+/* TS's new-posts marker: keyed to the theme's Unread Line color, not the border color */
+#unread-line {
+  background-image: linear-gradient(to left, rgba(var(--sc-unreadColor-rgb),0), rgb(var(--sc-unreadColor-rgb)), rgba(var(--sc-unreadColor-rgb),0));
+}
 .post-hover {
-  background: rgba(var(--sc-mainColor-shiftM16),.8)!important;
+  background: rgba(var(--sc-hoverColor-rgb),.8)!important;
 }
 .inline {
-  background: rgba(var(--sc-mainColor-shiftM16),.8)!important;
+  background: rgba(var(--sc-hoverColor-rgb),.8)!important;
 }
 :root.post-info .reply>p.intro {
   background: rgba(var(--sc-mainColor-shiftM16),.2);
