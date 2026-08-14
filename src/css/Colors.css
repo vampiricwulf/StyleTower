@@ -208,7 +208,7 @@ hr:not(#unread-line) {
 /* Current TS marks the last-read post with an inline hardcoded red bottom
    box-shadow instead; the exact-value match can't hit other inline shadows
    (post-hover clones use a different geometry) */
-div.post.reply[style*="box-shadow: 0 3px red"] {
+div.post.reply[style*='box-shadow: 0 3px red'] {
   box-shadow: 0 3px rgb(var(--sc-unreadColor-rgb)) !important;
 }
 .post-hover {
