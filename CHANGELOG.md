@@ -1,3 +1,10 @@
+### v1.0.13
+*2026-08-14*
+
+- TS's **Hide Inlined Posts** setting is respected again: StyleTower no longer force-shows the hidden originals. The faded/muted look for inlined posts now rides StyleTower's own marking (synced with TS's inline containers), so with TS's hiding off the originals fade exactly as before — and clones and hover previews are excluded
+- The Post Decoration **Opacity** slider updates its percentage readout while dragging (the handler called a method the DOM library doesn't have and targeted the wrong class, so it threw on every input)
+- Removed dead `customIMGB64` reads left over from StyleChan's image-upload flow
+
 ### v1.0.12
 *2026-08-14*
 
