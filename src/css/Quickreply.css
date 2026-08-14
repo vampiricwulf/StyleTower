@@ -33,8 +33,8 @@ form[name=post]:not(#quick-reply) input[type=submit] {
   width: 100% !important;
   margin-top: 1px !important;
 }
-/* Emote menu button/panel (emote userscript): left unstyled on purpose --
-   its inline styles and layout don't tolerate outside changes. */
+/* Emote menu button/panel (emote userscript): themed and aligned at the end
+   of this file; only its inline img sizing is left alone. */
 :root.expand-inputs form[name=post] input[type=text] {
   width: 100%;
   box-sizing: border-box;
@@ -152,6 +152,28 @@ form[name=post] .cf-turnstile {
   border: 1px solid var(--sc-inputbColor) !important;
   box-sizing: border-box !important;
   transition: background .2s;
+}
+/* Align the button with the subject field: stretch it to the exact input
+   height inside the cell (site td padding is 0). Gated on :has so browsers
+   without it keep the script's own float layout */
+#quick-reply td:has(> #emote-menu) {
+  position: relative;
+}
+#quick-reply td:has(> #emote-menu) input[name=subject] {
+  display: block;
+  width: 100% !important;
+  max-width: calc(100% - 26px) !important;
+  box-sizing: border-box;
+}
+#quick-reply td:has(> #emote-menu) #emote-menu {
+  float: none !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: auto !important;
+  width: 22px !important;
+  margin: 0 !important;
 }
 #quick-reply #emote-menu:hover {
   background: rgb(var(--sc-inputColor-hover)) !important;
