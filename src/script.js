@@ -864,6 +864,7 @@
                     $SS.initIndexPostHiding();
                     $SS.initIndexNav();
                 }
+                $SS.initCatalogCards();
                 // Compact single-line thread footer: pull the updater and thread
                 // stats up next to the [Return]/[Go to top]/[Catalog] links.
                 if ($SS.location.reply) {
@@ -1220,6 +1221,40 @@
                     thread = op.parentNode;
                 if (thread && thread.classList && thread.classList.contains("thread"))
                     thread.insertBefore(span, op.nextSibling);
+            });
+        },
+        /* Grid catalog cards: hover-reveal of the clipped teaser is gated on
+           holding Left Ctrl (the st-ctrl root class the CSS keys on), and a
+           click anywhere in a card opens its thread. Real links inside the
+           card, text selection and modified clicks stay untouched;
+           Ctrl+click follows the platform convention (background tab). */
+        initCatalogCards: function () {
+            if (!$SS.location.catalog || $SS._catalogCardsInit) return;
+            $SS._catalogCardsInit = true;
+
+            var cl = document.documentElement.classList;
+            document.addEventListener("keydown", function (e) {
+                if (e.code === "ControlLeft") cl.add("st-ctrl");
+            });
+            document.addEventListener("keyup", function (e) {
+                if (e.code === "ControlLeft") cl.remove("st-ctrl");
+            });
+            window.addEventListener("blur", function () { cl.remove("st-ctrl"); });
+
+            document.addEventListener("click", function (e) {
+                var card = e.target.closest ? e.target.closest(".theme-catalog #Grid div.thread") : null;
+                if (!card || e.target.closest("a")) return;
+                if (e.shiftKey || e.altKey || e.metaKey) return;
+                var sel = window.getSelection && window.getSelection();
+                if (sel && String(sel).length) return;
+                var link = card.querySelector("a[href]");
+                if (!link) return;
+                if (e.ctrlKey) {
+                    if (typeof GM_openInTab !== "undefined") GM_openInTab(link.href, { active: false });
+                    else { try { window.open(link.href, "_blank"); } catch (er) {} }
+                    return;
+                }
+                location.href = link.href;
             });
         },
         /* TS inline quoting: mark the originals of currently-inlined posts.
