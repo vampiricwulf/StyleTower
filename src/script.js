@@ -1223,29 +1223,13 @@
                     thread.insertBefore(span, op.nextSibling);
             });
         },
-        /* Grid catalog cards: hover-reveal of the clipped teaser is gated on
-           holding Left Ctrl (the st-ctrl root class the CSS keys on), and a
-           click anywhere in a card opens its thread. Real links inside the
-           card, text selection and modified clicks stay untouched;
-           Ctrl+click follows the platform convention (background tab). */
+        /* Grid catalog cards: a click anywhere in a card opens its thread.
+           Real links inside the card, text selection and modified clicks
+           stay untouched; Ctrl+click follows the platform convention
+           (background tab). */
         initCatalogCards: function () {
             if (!$SS.location.catalog || $SS._catalogCardsInit) return;
             $SS._catalogCardsInit = true;
-
-            var cl = document.documentElement.classList;
-            // Capture phase: other scripts' bubble handlers can't starve these
-            document.addEventListener("keydown", function (e) {
-                if (e.code === "ControlLeft") cl.add("st-ctrl");
-            }, true);
-            document.addEventListener("keyup", function (e) {
-                if (e.code === "ControlLeft") cl.remove("st-ctrl");
-            }, true);
-            window.addEventListener("blur", function () { cl.remove("st-ctrl"); });
-            // Self-healing against missed keyups: mouse events carry the live
-            // modifier state, and reaching another card requires movement
-            document.addEventListener("mousemove", function (e) {
-                if (!e.ctrlKey) cl.remove("st-ctrl");
-            }, { passive: true, capture: true });
 
             document.addEventListener("click", function (e) {
                 var card = e.target.closest ? e.target.closest(".theme-catalog #Grid div.thread") : null;

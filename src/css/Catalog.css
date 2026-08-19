@@ -17,20 +17,6 @@
 :root.oneechan .theme-catalog #Grid div.thread {
   cursor: pointer;
 }
-/* Holding Left Ctrl (st-ctrl, set in initCatalogCards) while hovering
-   reveals the clipped teaser: the card keeps its fixed box (no grid
-   reflow) while the text block overflows below as a solid panel above
-   the neighboring cards */
-:root.oneechan.st-ctrl .theme-catalog #Grid div.thread:hover {
-  overflow: visible;
-  position: relative;
-  z-index: 10;
-}
-:root.oneechan.st-ctrl .theme-catalog #Grid div.thread:hover .replies {
-  background: rgb(var(--sc-hoverColor-rgb));
-  outline: 1px solid var(--sc-brderColor);
-  padding-bottom: 6px;
-}
 /* Native Catalog */
 select#sort_by,
 select#image_size {
