@@ -101,9 +101,13 @@ select#image_size {
   }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto auto auto auto auto;
+    /* Fixed-width stat columns anchored to the right edge so R/I/No./time
+       align into scannable columns across every card; status pills sit
+       between subject and stats, where their presence costs subject space
+       instead of shifting the numbers */
+    grid-template-columns: minmax(0, 1fr) auto auto auto 4em 4em 7em 10.5em;
     grid-template-areas:
-      'subject replies images id time maxed sticky locked'
+      'subject maxed sticky locked replies images id time'
       'preview preview preview preview preview preview preview preview';
     column-gap: .8em;
     align-items: baseline;
@@ -148,6 +152,7 @@ select#image_size {
     font-size: 82%;
     white-space: nowrap;
     color: rgba(var(--sc-textColor-rgb), .6);
+    font-variant-numeric: tabular-nums;
   }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies::before { content: 'R: '; }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images::before { content: 'I: '; }
