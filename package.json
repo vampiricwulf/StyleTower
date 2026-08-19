@@ -16,11 +16,13 @@
     "mainBranch": "main",
     "matches": [
       "*://holotower.org/*",
-      "*://boards.holotower.org/*"
+      "*://boards.holotower.org/*",
+      "*://text.holotower.org/*"
     ],
     "exclude_matches": [
       "*://holotower.org/mod.php*",
-      "*://boards.holotower.org/mod.php*"
+      "*://boards.holotower.org/mod.php*",
+      "*://text.holotower.org/mod.php*"
     ],
     "files": {
       "metajs": "StyleTower.meta.js",

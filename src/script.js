@@ -5573,6 +5573,9 @@
                     // layout features must not engage there
                     isHome = !!document.body && document.body.classList.contains("homepage-standard-mode");
                 cl.add("oneechan");
+                // The text subdomain renders the same design without images;
+                // gives the ported CSS a hook for text-board adjustments
+                cl.toggle("st-text", $SS.location.sub === "text");
                 cl.toggle("isLight", $SS.theme.textColor.isLight === true);
                 cl.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
                 cl.toggle("underline-quotes", $SS.conf["Underline QuoteLinks"] === true);

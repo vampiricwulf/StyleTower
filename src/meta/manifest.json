@@ -20,6 +20,7 @@
   "permissions": [
     "storage",
     "*://holotower.org/*",
-    "*://boards.holotower.org/*"
+    "*://boards.holotower.org/*",
+    "*://text.holotower.org/*"
   ]
 }
