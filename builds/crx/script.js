@@ -279,7 +279,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.13",
+        VERSION = "1.0.14",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
@@ -1453,11 +1453,13 @@
                     video.src = href;
                     video.muted = true;
                     video.loop = true;
-                    video.autoplay = true;
+                    // No autoplay: playback is viewport-driven, and the
+                    // observer's initial callback starts visible ones
                     video.playsInline = true;
                     video.style.width = img.style.width || (img.width ? img.width + "px" : "");
                     video.style.height = img.style.height || (img.height ? img.height + "px" : "");
                     img.parentNode.insertBefore(video, img.nextSibling);
+                    $SS.observeThumbVideo(video);
                     if (file) file.classList.add("st-video-thumb");
                     video.addEventListener("click", function (e) {
                         e.preventDefault();
@@ -1473,7 +1475,7 @@
                         });
                         video.style.display = expanded ? "none" : "";
                         if (expanded) { try { video.pause(); } catch (er) {} }
-                        else { try { video.play(); } catch (er) {} }
+                        else if (video._stInView !== false) { try { video.play(); } catch (er) {} }
                     }).observe(img.parentNode, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
                     return;
                 }
@@ -1493,7 +1495,31 @@
                     }).observe(img, { attributes: true, attributeFilter: ["src"] });
                 }
             });
-        },        initImageConvertOnDrop: function () {
+        },
+        /* Playing videos hold a display wake lock and decode continuously,
+           so thumbnail videos only play while actually in the viewport: a
+           shared IntersectionObserver starts them as they scroll in (its
+           initial callback covers the on-load autoplay for visible ones)
+           and pauses them once out of view. The expanded-player logic keeps
+           its own display:none pause; its collapse resume checks _stInView
+           so a collapsed-offscreen video stays paused. */
+        observeThumbVideo: function (video) {
+            if (!$SS._thumbVideoIO) {
+                $SS._thumbVideoIO = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        var v = entry.target;
+                        v._stInView = entry.isIntersecting;
+                        if (entry.isIntersecting) {
+                            if (v.style.display !== "none") { try { v.play(); } catch (e) {} }
+                        } else {
+                            try { v.pause(); } catch (e) {}
+                        }
+                    });
+                }, { rootMargin: "100px" });
+            }
+            $SS._thumbVideoIO.observe(video);
+        },
+        initImageConvertOnDrop: function () {
             var MAX_BYTES = $SS.location.maxFileSize;
 
             function notify(msg) {

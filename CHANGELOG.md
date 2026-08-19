@@ -1,3 +1,8 @@
+### v1.0.14
+*2026-08-19*
+
+- Replace WEBM/MP4 thumbnails only play while in the viewport: they start as they scroll into view (100px early) and pause once out of it, so offscreen loops no longer hold a display wake lock that blocks display sleep, and decode work scales with what's visible instead of the whole thread. Auto-updater posts arriving below the fold start paused, and a thumb whose expanded player is collapsed offscreen stays paused
+
 ### v1.0.13
 *2026-08-14*
 
