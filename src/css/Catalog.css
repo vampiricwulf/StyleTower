@@ -191,18 +191,21 @@ select#image_size {
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky,
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked {
     font-size: 0 !important;
-    align-self: center;
   }
+  /* Plain labels, no boxes: padding/borders made pill-to-pill read wider
+     than pill-to-stats; bare text keeps every gap in the cluster at the
+     row's uniform column-gap */
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before,
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky::before,
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked::before {
     content: attr(data-label);
     font-size: 10px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .04em;
-    padding: 1px 6px;
-    border: 1px solid var(--sc-brderColor);
-    border-radius: 3px;
-    color: rgba(var(--sc-textColor-rgb), .75);
+    color: rgba(var(--sc-textColor-rgb), .6);
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before {
+    content: 'MAXED';
   }
 }
