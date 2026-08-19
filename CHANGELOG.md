@@ -1,3 +1,11 @@
+### v1.0.15
+*2026-08-19*
+
+- **The script now runs on https://text.holotower.org**, the imageless text mode of the site (boards.holotower.org stays matched until the site formally drops it)
+- **Text boards are fully themed**: the text-mode home (side logo box, Welcome panel and Net Friends badges included) follows the active theme, file info lines and the Embed form row theme like their imageboard counterparts, and the text catalog's colors all follow the theme on desktop and mobile
+- **The text catalog is redesigned**: instead of a nine-column table whose Preview column collapsed to a few characters inside sidebar layouts, each thread is a reply-style card — bold subject, R:/I: counts, post number and date in fixed columns that align vertically across every card, the preview clamped to three lines beneath, and STICKY/LOCKED/MAXED labels appearing only when set, evenly spaced. The quick filter and its "no matches" row work correctly, and below 700px the site's own stacked mobile layout takes over
+- **Grid catalog polish**: clicking anywhere in a card opens its thread (links inside, text selection and modified clicks still behave; Ctrl+click opens a background tab), hovering visibly lifts the card with a smart-shifted background and link-color border on any theme, the R/I stats line drops to the muted metadata tone, card borders follow the theme at rest, and the grid breathes with slightly wider gutters
+
 ### v1.0.14
 *2026-08-19*
 

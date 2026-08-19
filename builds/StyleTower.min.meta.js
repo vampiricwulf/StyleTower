@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         StyleTower [min]
-// @version      1.0.14
+// @version      1.0.15
 // @namespace    StyleTower
 // @description  Customizable themes for holotower.org. (minified)
 // @license      GPL-3.0; https://github.com/vampiricwulf/StyleTower/blob/main/LICENSE
 // @match        https://holotower.org/*
 // @match        https://boards.holotower.org/*
+// @match        https://text.holotower.org/*
 // @exclude      https://holotower.org/mod.php*
 // @exclude      https://boards.holotower.org/mod.php*
+// @exclude      https://text.holotower.org/mod.php*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
