@@ -85,6 +85,29 @@
 :root.st-home a.menu-button:hover {
   background: rgb(var(--sc-mainColor-shift15)) !important;
 }
+/* Text-mode home components: the text subdomain's home embeds a style block
+   painting these with hardcoded light colors (side logo box, Welcome panel,
+   Net Friends badges); mirror the treatment of their standard-home siblings */
+:root.st-home .side-logo-copy {
+  background-color: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .side-logo-copy-title {
+  color: var(--sc-boardColor) !important;
+}
+:root.st-home .skyline-copy-text-mode {
+  background-color: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .friend-badge {
+  background-color: rgb(var(--sc-mainColor-rgb)) !important;
+  border-color: var(--sc-brderColor) !important;
+  color: var(--sc-linkColor) !important;
+}
+:root.st-home .friend-badge:hover {
+  background-color: rgb(var(--sc-mainColor-shift15)) !important;
+  color: var(--sc-linkHColor) !important;
+}
 :root.st-home .side-heading,
 :root.st-home .panel-heading,
 :root.st-home .skyline-title,
