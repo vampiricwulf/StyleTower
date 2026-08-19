@@ -42,6 +42,12 @@ select#image_size {
   background: rgb(var(--sc-mainColor-hover)) !important;
   border-color: var(--sc-linkColor) !important;
 }
+/* The at-rest card rules carry #Grid (ID specificity), which outranked
+   the hover rule above and swallowed both signals; restate it above them */
+:root.oneechan .theme-catalog #Grid div.thread:hover {
+  background: rgb(var(--sc-mainColor-hover)) !important;
+  border-color: var(--sc-linkColor) !important;
+}
 /* Background */
 :root.catalog-background .theme-catalog #Grid div.thread {
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
