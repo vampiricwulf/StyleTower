@@ -90,9 +90,14 @@ select#image_size {
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-table thead {
     display: none;
   }
-  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr:not(.catalog-row),
-  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr:not(.catalog-row) td {
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr:not(.catalog-row):not([hidden]),
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr:not(.catalog-row):not([hidden]) td {
     display: block;
+  }
+  /* The quick filter toggles rows (and the no-matches row) via the hidden
+     attribute; the display overrides above must never resurrect them */
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr[hidden] {
+    display: none !important;
   }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-row {
     display: grid;
