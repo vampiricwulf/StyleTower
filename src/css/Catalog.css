@@ -4,7 +4,27 @@
   margin-right: 5px;
 }
 .theme-catalog #Grid div.thread {
-  margin: 2px 1px 0 0;
+  margin: 3px 3px 0 0;
+  border-color: rgba(var(--sc-brderColor-rgb), .6) !important;
+  transition: background-color .15s ease-in-out, border-color .15s ease-in-out;
+}
+/* Stats line in the muted metadata tone, matching the text catalog */
+.theme-catalog .replies > strong {
+  color: rgba(var(--sc-textColor-rgb), .6) !important;
+  font-weight: 400 !important;
+}
+/* Hover reveals the clipped teaser: the card keeps its fixed box (no grid
+   reflow) while the text block overflows below as a solid panel above the
+   neighboring cards */
+:root.oneechan .theme-catalog #Grid div.thread:hover {
+  overflow: visible;
+  position: relative;
+  z-index: 10;
+}
+:root.oneechan .theme-catalog #Grid div.thread:hover .replies {
+  background: rgb(var(--sc-hoverColor-rgb));
+  outline: 1px solid var(--sc-brderColor);
+  padding-bottom: 6px;
 }
 /* Native Catalog */
 select#sort_by,
