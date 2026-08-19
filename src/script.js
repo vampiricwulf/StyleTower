@@ -1233,13 +1233,19 @@
             $SS._catalogCardsInit = true;
 
             var cl = document.documentElement.classList;
+            // Capture phase: other scripts' bubble handlers can't starve these
             document.addEventListener("keydown", function (e) {
                 if (e.code === "ControlLeft") cl.add("st-ctrl");
-            });
+            }, true);
             document.addEventListener("keyup", function (e) {
                 if (e.code === "ControlLeft") cl.remove("st-ctrl");
-            });
+            }, true);
             window.addEventListener("blur", function () { cl.remove("st-ctrl"); });
+            // Self-healing against missed keyups: mouse events carry the live
+            // modifier state, and reaching another card requires movement
+            document.addEventListener("mousemove", function (e) {
+                if (!e.ctrlKey) cl.remove("st-ctrl");
+            }, { passive: true, capture: true });
 
             document.addEventListener("click", function (e) {
                 var card = e.target.closest ? e.target.closest(".theme-catalog #Grid div.thread") : null;
