@@ -101,15 +101,16 @@ select#image_size {
   }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-row {
     display: grid;
-    /* Fixed-width stat columns anchored to the right edge so R/I/No./time
-       align into scannable columns across every card; status pills sit
-       between subject and stats, where their presence costs subject space
-       instead of shifting the numbers */
-    grid-template-columns: minmax(0, 1fr) auto auto auto 4em 4em 7em 10.5em;
+    /* Stat cells are fixed-width and anchored right so R/I/No./time align
+       into scannable columns across every card; status tags sit between
+       subject and stats. Spacing comes from per-cell margins, not
+       column-gap: a hidden cell's collapsed track would still keep its
+       surrounding gaps, pushing a lone STICKY further from the stats than
+       a trailing LOCKED */
+    grid-template-columns: minmax(0, 1fr) auto auto auto auto auto auto auto;
     grid-template-areas:
       'subject maxed sticky locked replies images id time'
       'preview preview preview preview preview preview preview preview';
-    column-gap: .8em;
     align-items: baseline;
     padding: .5em .8em !important;
     margin-bottom: 6px;
@@ -153,6 +154,17 @@ select#image_size {
     white-space: nowrap;
     color: rgba(var(--sc-textColor-rgb), .6);
     font-variant-numeric: tabular-nums;
+    margin-left: .65rem !important;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images {
+    width: 4.9em;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id {
+    width: 8.5em;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time {
+    width: 12.8em;
   }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies::before { content: 'R: '; }
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images::before { content: 'I: '; }
@@ -191,6 +203,8 @@ select#image_size {
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky,
   :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked {
     font-size: 0 !important;
+    /* rem, not em: the cell's font-size is 0 */
+    margin-left: .65rem !important;
   }
   /* Plain labels, no boxes: padding/borders made pill-to-pill read wider
      than pill-to-stats; bare text keeps every gap in the cluster at the
