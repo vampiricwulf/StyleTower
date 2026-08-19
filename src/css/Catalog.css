@@ -69,3 +69,130 @@ select#image_size {
 :root.oneechan.rounded-corners .theme-catalog {
   --catalog-row-radius: 3px;
 }
+/* Text-mode catalog, restyled. The stock nine-column spreadsheet starves
+   its only flexible column (Preview) inside StyleTower's layouts and
+   buries what a catalog is for: choosing a thread. Each row becomes a
+   reply-style card in the board's own grammar -- subject line with the
+   home page's R:/I: count vernacular, post number and date muted, the
+   preview clamped beneath as post body, and status pills only when a
+   flag is set. Below 700px the site's own stacked grid takes over (it
+   reads the same --catalog-* variables themed above). */
+:root.oneechan .theme-catalog .catalog-controls,
+:root.oneechan .theme-catalog .catalog-text-mode {
+  width: 100% !important;
+}
+@media (min-width: 701px) {
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody {
+    display: block;
+    width: 100%;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table thead {
+    display: none;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr:not(.catalog-row),
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody > tr:not(.catalog-row) td {
+    display: block;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto auto auto auto auto;
+    grid-template-areas:
+      'subject replies images id time maxed sticky locked'
+      'preview preview preview preview preview preview preview preview';
+    column-gap: .8em;
+    align-items: baseline;
+    padding: .5em .8em !important;
+    margin-bottom: 6px;
+    background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp));
+    border: 1px solid var(--sc-brderColor);
+    border-radius: var(--catalog-row-radius);
+    transition: background-color .15s ease-in-out;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-row:hover {
+    background: rgba(var(--sc-hoverColor-rgb), var(--sc-hoverOp));
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-row td {
+    display: block;
+    min-width: 0;
+    background: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject {
+    grid-area: subject;
+    overflow-wrap: anywhere;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject a {
+    color: var(--sc-titleColor) !important;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject a:hover {
+    color: var(--sc-linkHColor) !important;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies { grid-area: replies; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images { grid-area: images; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id { grid-area: id; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time { grid-area: time; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time {
+    font-size: 82%;
+    white-space: nowrap;
+    color: rgba(var(--sc-textColor-rgb), .6);
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies::before { content: 'R: '; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images::before { content: 'I: '; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id::before { content: 'No.'; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time a,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id a {
+    color: rgba(var(--sc-textColor-rgb), .6) !important;
+    text-decoration: none;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time a:hover,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id a:hover {
+    color: var(--sc-linkHColor) !important;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-preview {
+    grid-area: preview;
+    margin-top: .35em !important;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-preview .catalog-preview-content {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-height: none;
+  }
+  /* Status flags: pills only when set (the cell text is hidden and the
+     data-label supplies the wording) */
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed { grid-area: maxed; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky { grid-area: sticky; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked { grid-area: locked; }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed:empty,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky:empty,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked:empty {
+    display: none;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked {
+    font-size: 0 !important;
+    align-self: center;
+  }
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky::before,
+  :root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked::before {
+    content: attr(data-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 1px 6px;
+    border: 1px solid var(--sc-brderColor);
+    border-radius: 3px;
+    color: rgba(var(--sc-textColor-rgb), .75);
+  }
+}
