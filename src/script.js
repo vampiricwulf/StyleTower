@@ -5571,7 +5571,10 @@
                 var cl = document.documentElement.classList,
                     // The home page has its own layout; several board-page
                     // layout features must not engage there
-                    isHome = !!document.body && document.body.classList.contains("homepage-standard-mode");
+                    // The text subdomain's home is the same design under
+                    // homepage-text-mode (identical stylesheet, fewer panels)
+                    isHome = !!document.body && (document.body.classList.contains("homepage-standard-mode") ||
+                        document.body.classList.contains("homepage-text-mode"));
                 cl.add("oneechan");
                 // The text subdomain renders the same design without images;
                 // gives the ported CSS a hook for text-board adjustments

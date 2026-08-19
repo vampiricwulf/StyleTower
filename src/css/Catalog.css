@@ -52,3 +52,20 @@ select#image_size {
   width: 250px !important;
   height: 250px !important;
 }
+/* Text-mode catalog (text boards render a table instead of the card grid):
+   the site's text-catalog.css draws everything from --catalog-* variables
+   declared on .theme-catalog with hardcoded Yotsuba-B defaults -- repoint
+   them at the theme. Rows follow the reply surfaces (Reply Opacity), hover
+   follows the Hover Preview colors, matching the grid catalog's treatment */
+:root.oneechan .theme-catalog {
+  --catalog-header-bg: var(--sc-headerBGColor);
+  --catalog-header-color: var(--sc-headerColor);
+  --catalog-header-border-color: var(--sc-brderColor);
+  --catalog-row-bg: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp));
+  --catalog-row-hover-bg: rgba(var(--sc-hoverColor-rgb), var(--sc-hoverOp));
+  --catalog-row-color: var(--sc-textColor);
+  --catalog-row-border-color: var(--sc-brderColor);
+}
+:root.oneechan.rounded-corners .theme-catalog {
+  --catalog-row-radius: 3px;
+}
