@@ -1109,6 +1109,7 @@
                 "--sc-mainColor-shiftM10:" + t.mainColor.shiftRGB(-10) + ";" +
                 "--sc-mainColor-shiftM5:" + t.mainColor.shiftRGB(-5) + ";" +
                 "--sc-mainColor-shift4:" + t.mainColor.shiftRGB(4) + ";" +
+                "--sc-mainColor-hover:" + t.mainColor.shiftRGB(18, true) + ";" +
                 "--sc-mainColor-shift10:" + t.mainColor.shiftRGB(10) + ";" +
                 "--sc-mainColor-shift15:" + t.mainColor.shiftRGB(15) + ";" +
                 "--sc-brderColor:" + t.brderColor.hex + ";" +
