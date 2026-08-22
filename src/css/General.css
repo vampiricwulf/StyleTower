@@ -519,6 +519,19 @@ video.st-thumb-video {
   max-width: 300px;
   max-height: 300px;
 }
+/* Hover previews and inline clones show the plain thumbnail instead:
+   cloned videos are unmanaged (never observed, never playing) and cost a
+   media fetch per preview */
+.post-hover video.st-thumb-video,
+.inline video.st-thumb-video,
+.inline-cloned-post video.st-thumb-video {
+  display: none !important;
+}
+.post-hover .st-video-thumb img.post-image,
+.inline .st-video-thumb img.post-image,
+.inline-cloned-post .st-video-thumb img.post-image {
+  display: inline-block !important;
+}
 /* Mascots */
 #styletower-mascots {
   position: fixed;

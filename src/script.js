@@ -1454,6 +1454,11 @@
             };
             var scope = root && root.querySelectorAll ? root : document;
             scope.querySelectorAll(".file > a > img.post-image").forEach(function (img) {
+                // Hover previews and inline expansions are clones of posts
+                // that were already processed; the processed markers are JS
+                // properties that cloning strips, so re-processing would
+                // spawn duplicate video players (CSS shows their plain thumb)
+                if (img.closest(".post-hover, .inline, .inline-cloned-post")) return;
                 var href = img.parentNode.href || "";
                 // Video thumbs link to the site player, with the actual file
                 // in the v= parameter
