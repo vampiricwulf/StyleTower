@@ -1453,11 +1453,22 @@
                 webm: "Replace WEBM/MP4", mp4: "Replace WEBM/MP4"
             };
             var scope = root && root.querySelectorAll ? root : document;
+            // Clones (hover previews, inline expansions) keep the video they
+            // copied: re-arm it -- cloning strips the muted/loop property
+            // state, and an unmuted clone would play sound -- and hand it to
+            // the viewport observer so it plays while the preview is visible
+            scope.querySelectorAll(".post-hover video.st-thumb-video, .inline video.st-thumb-video, .inline-cloned-post video.st-thumb-video").forEach(function (v) {
+                if (v._stCloneArmed) return;
+                v._stCloneArmed = true;
+                v.muted = true;
+                v.loop = true;
+                v.playsInline = true;
+                $SS.observeThumbVideo(v);
+            });
             scope.querySelectorAll(".file > a > img.post-image").forEach(function (img) {
-                // Hover previews and inline expansions are clones of posts
-                // that were already processed; the processed markers are JS
-                // properties that cloning strips, so re-processing would
-                // spawn duplicate video players (CSS shows their plain thumb)
+                // Never build a second player inside a clone: the original
+                // was already processed and its processed markers are JS
+                // properties that cloning strips
                 if (img.closest(".post-hover, .inline, .inline-cloned-post")) return;
                 var href = img.parentNode.href || "";
                 // Video thumbs link to the site player, with the actual file
@@ -1487,6 +1498,11 @@
                     // No autoplay: playback is viewport-driven, and the
                     // observer's initial callback starts visible ones
                     video.playsInline = true;
+                    // As attributes too: hover/inline previews clone this
+                    // element, and cloning keeps attributes, not properties
+                    video.setAttribute("muted", "");
+                    video.setAttribute("loop", "");
+                    video.setAttribute("playsinline", "");
                     video.style.width = img.style.width || (img.width ? img.width + "px" : "");
                     video.style.height = img.style.height || (img.height ? img.height + "px" : "");
                     img.parentNode.insertBefore(video, img.nextSibling);
