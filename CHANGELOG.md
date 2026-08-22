@@ -1,3 +1,8 @@
+### v1.0.16
+*2026-08-21*
+
+- Hover previews and inline expansions of posts with a replaced WEBM/MP4 thumbnail show a single playing loop, like the real post. Cloned previews used to get a second player built inside them (showing a playing video next to a stale one) — and the copied video had lost its muted state in cloning, so a preview could even have played audio
+
 ### v1.0.15
 *2026-08-19*
 
