@@ -31,7 +31,6 @@ Open the settings with the **[StyleTower]** link next to the site's **[Options]*
 The following standalone Holotower userscripts are folded into StyleTower and can be toggled under **Options → Misc → Integrations**. If you keep running a standalone copy, disable the matching option here first:
 
 - [Holotower Auto Scroll](https://greasyfork.org/en/scripts/540450-holotower-auto-scroll)
-- [Holotower ImgOps Links](https://greasyfork.org/en/scripts/552932-holotower-imgops-links)
 - [Holotower X/BSKY Sauce](https://greasyfork.org/en/scripts/554505-holotower-x-bsky-sauce)
 - [Holotower Catalog Highlights and Pin](https://greasyfork.org/en/scripts/543156-holotower-catalog-highlights-and-pin)
 

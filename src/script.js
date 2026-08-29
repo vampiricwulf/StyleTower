@@ -262,7 +262,6 @@
         "Watch Thread on Reply": [false, "Automatically adds the thread to the thread watcher when posting a reply."],
         ":: Integrations": ["header", ""],
         "Auto Scroll": [true, "Scroll to new posts only when already at the bottom of the thread. Ported from Holotower Auto Scroll."],
-        "ImgOps Links": [true, "Add imgops links after file info. Ported from Holotower ImgOps Links."],
         "Sauce Links": [true, "Add X/BSKY sauce links to files with matching filenames. Ported from Holotower X/BSKY Sauce."],
         "Catalog Highlights": [true, "Highlight and pin catalog threads via the Pin Settings button in the catalog. Ported from Holotower Catalog Highlights and Pin."],
         "Enable Mascots": [false, "Display a mascot image in the bottom corner of the page. Selected mascots rotate randomly on each page load."],
@@ -2397,10 +2396,9 @@
         /* INTEGRATIONS
            Features folded in from the standalone Holotower userscripts:
            - Holotower X/BSKY Sauce (MIT, KanashiiWolf)
-           - Holotower ImgOps Links (MIT, slopffian)
            - Holotower Auto Scroll (MIT)
            - Holotower Catalog Highlights and Pin (CC0, anonymous)
-           Inline quoting, custom fixes and soundposts live in Holotower TS.
+           Inline quoting, custom fixes, soundposts and imgops links live in Holotower TS.
            Disable the matching option before running a standalone copy alongside. */
         integrations: {
             pageWindow: function () {
@@ -2421,7 +2419,6 @@
             init: function () {
                 var I = $SS.integrations;
                 if ($SS.conf["Auto Scroll"] && $SS.location.reply && !I._autoScroll) { I._autoScroll = true; I.initAutoScroll(); }
-                if ($SS.conf["ImgOps Links"] && !I._imgOps) { I._imgOps = true; I.initImgOps(); }
                 if ($SS.conf["Sauce Links"] && !I._sauce) { I._sauce = true; I.initSauceLinks(); }
                 if ($SS.conf["Catalog Highlights"] && $SS.location.catalog && !I._catalog) { I._catalog = true; I.initCatalogHighlights(); }
             },
@@ -2474,225 +2471,6 @@
                         }
                     }
                 }).observe(getDocBody(), { childList: true, subtree: true });
-            },
-
-            /* imgops links after file info (Holotower ImgOps Links) */
-            initImgOps: function () {
-                var CONFIG = {
-                    VARIANCE_THRESHOLD: 100,
-                    SEEK_INCREMENT: 0.1,
-                    MAX_SEEK_TIME: 5,
-                    JPEG_QUALITY: 0.95,
-                    LITTERBOX_EXPIRY: '1h',
-                    LITTERBOX_API: 'https://litterbox.catbox.moe/resources/internals/api.php',
-                    IMGOPS_URL: 'https://imgops.com/'
-                };
-                var litterboxCache = new WeakMap();
-
-                function updateLinkState(link, text, cursor, color) {
-                    link.textContent = text;
-                    link.style.cursor = cursor || "pointer";
-                    if (color) link.style.color = color;
-                }
-
-                function getFilenameFromUrl(url, newExtension) {
-                    var filename = url.split("/").pop().split("?")[0];
-                    if (newExtension) filename = filename.replace(/\.(webm|mp4)$/i, newExtension);
-                    return filename;
-                }
-
-                function isFrameBlank(canvas, ctx) {
-                    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    var data = imageData.data;
-                    var sumR = 0, sumG = 0, sumB = 0, count = 0, i;
-                    for (i = 0; i < data.length; i += 40) {
-                        sumR += data[i];
-                        sumG += data[i + 1];
-                        sumB += data[i + 2];
-                        count++;
-                    }
-                    var avgR = sumR / count, avgG = sumG / count, avgB = sumB / count;
-                    var varianceSum = 0;
-                    for (i = 0; i < data.length; i += 40) {
-                        var diffR = data[i] - avgR, diffG = data[i + 1] - avgG, diffB = data[i + 2] - avgB;
-                        varianceSum += (diffR * diffR + diffG * diffG + diffB * diffB);
-                    }
-                    return (varianceSum / count) < CONFIG.VARIANCE_THRESHOLD;
-                }
-
-                function extractFirstFrameFromVideo(videoUrl) {
-                    return new Promise(function (resolve, reject) {
-                        var video = document.createElement("video");
-                        video.crossOrigin = "anonymous";
-                        video.preload = "metadata";
-                        var canvas = document.createElement("canvas");
-                        var ctx = canvas.getContext("2d");
-                        var currentSeekTime = 0;
-
-                        video.onloadedmetadata = function () {
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            video.currentTime = currentSeekTime;
-                        };
-                        video.onseeked = function () {
-                            try {
-                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                                var reachedEnd = currentSeekTime > CONFIG.MAX_SEEK_TIME || currentSeekTime > video.duration;
-                                if (!isFrameBlank(canvas, ctx) || reachedEnd) {
-                                    canvas.toBlob(function (blob) {
-                                        if (blob) resolve(blob);
-                                        else reject(new Error("Failed to create blob from canvas"));
-                                    }, "image/jpeg", CONFIG.JPEG_QUALITY);
-                                } else {
-                                    currentSeekTime += CONFIG.SEEK_INCREMENT;
-                                    video.currentTime = currentSeekTime;
-                                }
-                            } catch (error) { reject(error); }
-                        };
-                        video.onerror = function () { reject(new Error("Failed to load video")); };
-                        video.src = videoUrl;
-                    });
-                }
-
-                function getThumbnailUrl(fileInfo) {
-                    var thumbnailImg = fileInfo.closest(".file").querySelector("img.post-image");
-                    if (!thumbnailImg || !thumbnailImg.src) throw new Error("No thumbnail found");
-                    return thumbnailImg.src;
-                }
-
-                function uploadToLitterbox(blob, filename) {
-                    var formData = new FormData();
-                    formData.append("reqtype", "fileupload");
-                    formData.append("time", CONFIG.LITTERBOX_EXPIRY);
-                    formData.append("fileToUpload", blob, filename);
-                    return fetch(CONFIG.LITTERBOX_API, { method: "POST", body: formData })
-                        .then(function (r) { return r.text(); })
-                        .then(function (litterboxUrl) {
-                            if (!litterboxUrl || litterboxUrl.indexOf("http") !== 0)
-                                throw new Error("Invalid response from litterbox");
-                            return litterboxUrl;
-                        });
-                }
-
-                function handleImgOpsClick(fileUrl, imgopsLink, fileInfo, useVideoThumbnail) {
-                    var isVideo = /\.(webm|mp4)$/i.test(fileUrl);
-                    try {
-                        if (!isVideo) {
-                            window.open(CONFIG.IMGOPS_URL + fileUrl, "_blank");
-                            updateLinkState(imgopsLink, "imgops ✓", "pointer", "green");
-                            return;
-                        }
-                        if (useVideoThumbnail) {
-                            var thumbnailUrl = getThumbnailUrl(fileInfo);
-                            window.open(CONFIG.IMGOPS_URL + thumbnailUrl, "_blank");
-                            updateLinkState(imgopsLink, "imgops (thumb) ✓", "pointer", "green");
-                            return;
-                        }
-                    } catch (error) {
-                        updateLinkState(imgopsLink, "imgops (thumb error)", "pointer", "red");
-                        return;
-                    }
-
-                    var cachedUrl = litterboxCache.get(imgopsLink);
-                    var start = Promise.resolve(false);
-                    if (cachedUrl) {
-                        updateLinkState(imgopsLink, "imgops (checking...)", "wait");
-                        start = fetch(cachedUrl, { method: "HEAD" })
-                            .then(function (r) { return r.ok; })
-                            .catch(function () { return false; });
-                    }
-                    start.then(function (cacheValid) {
-                        if (cacheValid) {
-                            window.open(CONFIG.IMGOPS_URL + cachedUrl, "_blank");
-                            updateLinkState(imgopsLink, "imgops ✓", "pointer", "green");
-                            return null;
-                        }
-                        updateLinkState(imgopsLink, "imgops (loading...)", "wait");
-                        return extractFirstFrameFromVideo(fileUrl).then(function (blob) {
-                            return uploadToLitterbox(blob, getFilenameFromUrl(fileUrl, ".jpg"));
-                        }).then(function (litterboxUrl) {
-                            litterboxCache.set(imgopsLink, litterboxUrl);
-                            window.open(CONFIG.IMGOPS_URL + litterboxUrl, "_blank");
-                            updateLinkState(imgopsLink, "imgops ✓", "pointer", "green");
-                        });
-                    }).catch(function (error) {
-                        console.error("Error processing for imgops:", error);
-                        updateLinkState(imgopsLink, "imgops (error)", "pointer", "red");
-                        $SS.notify({ type: "error", content: "Failed to process image for imgops. Please try again.", lifetime: 5 });
-                    });
-                }
-
-                function createImgOpsLink(text, fileUrl, fileInfo, useVideoThumbnail) {
-                    var link = document.createElement("a");
-                    link.href = "javascript:void(0)";
-                    link.textContent = text;
-                    link.className = useVideoThumbnail ? "imgops-link imgops-thumb-link" : "imgops-link";
-                    link.style.cursor = "pointer";
-                    link.addEventListener("click", function (e) {
-                        e.preventDefault();
-                        handleImgOpsClick(fileUrl, link, fileInfo, useVideoThumbnail);
-                    });
-                    return link;
-                }
-
-                function hasImgOpsLinks(span) {
-                    var sibling = span.nextSibling;
-                    while (sibling) {
-                        if (sibling.nodeType === 1 && sibling.classList && sibling.classList.contains("imgops-link"))
-                            return true;
-                        if (sibling.nodeType === 1 && !sibling.classList.contains("imgops-link"))
-                            break;
-                        sibling = sibling.nextSibling;
-                    }
-                    return false;
-                }
-
-                function addImgOpsLinksToFile(span) {
-                    if (hasImgOpsLinks(span)) return;
-                    var fileInfo = span.closest(".fileinfo");
-                    if (!fileInfo) return;
-                    var fileLink = fileInfo.querySelector("a[href*='/src/']");
-                    if (!fileLink) return;
-                    var fileUrl = fileLink.href;
-                    var isVideo = /\.(webm|mp4)$/i.test(fileUrl);
-                    var imgopsLink = createImgOpsLink("imgops", fileUrl, fileInfo, false);
-                    span.parentNode.insertBefore(document.createTextNode(" ["), span.nextSibling);
-                    span.parentNode.insertBefore(imgopsLink, span.nextSibling.nextSibling);
-                    if (isVideo) {
-                        span.parentNode.insertBefore(document.createTextNode(" | "), span.nextSibling.nextSibling.nextSibling);
-                        var thumbLink = createImgOpsLink("imgops (thumb)", fileUrl, fileInfo, true);
-                        span.parentNode.insertBefore(thumbLink, span.nextSibling.nextSibling.nextSibling.nextSibling);
-                        span.parentNode.insertBefore(document.createTextNode("]"), span.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling);
-                    } else {
-                        span.parentNode.insertBefore(document.createTextNode("]"), span.nextSibling.nextSibling.nextSibling);
-                    }
-                }
-
-                function addImgOpsLinks() {
-                    document.querySelectorAll(".fileinfo span.unimportant").forEach(addImgOpsLinksToFile);
-                }
-
-                function mutationHasFileInfo(mutations) {
-                    for (var i = 0; i < mutations.length; i++) {
-                        for (var j = 0; j < mutations[i].addedNodes.length; j++) {
-                            var node = mutations[i].addedNodes[j];
-                            if (node.nodeType !== 1) continue;
-                            if (node.classList && node.classList.contains("fileinfo")) return true;
-                            if (node.querySelector && node.querySelector(".fileinfo")) return true;
-                        }
-                    }
-                    return false;
-                }
-
-                addImgOpsLinks();
-                var observer = new MutationObserver(function (mutations) {
-                    if (mutationHasFileInfo(mutations)) {
-                        observer.disconnect();
-                        addImgOpsLinks();
-                        observer.observe(getDocBody(), { childList: true, subtree: true });
-                    }
-                });
-                observer.observe(getDocBody(), { childList: true, subtree: true });
             },
 
             /* Scroll to new posts only when already at the bottom (Holotower Auto Scroll) */
@@ -3447,7 +3225,6 @@
                                 "Replace Thumbnails": "added",
                                 "QR Button Image": "added",
                                 "Auto Scroll": "added",
-                                "ImgOps Links": "added",
                                 "Sauce Links": "added",
                                 "Catalog Highlights": "added",
                                 "Hide Mascots in Catalog": "added",

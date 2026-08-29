@@ -38,8 +38,8 @@ p.fileinfo {
 }
 /* Space between the filename link and the size/dimensions parenthetical.
    The margin sits on the parenthetical because the filename may or may not be
-   span-wrapped — an anchor selector would catch the appended imgops link and
-   split its brackets instead */
+   span-wrapped — an anchor selector would catch the imgops link Holotower TS
+   appends and split its brackets instead */
 p.fileinfo > .unimportant {
   margin-left: 4px;
 }
