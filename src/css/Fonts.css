@@ -45,13 +45,20 @@ body>.boardlist {
     word-spacing: " + (($SS.conf["Font Size"] < 14) ? -1 : -2) + "px;
   }
 }
-/* Backlinks (and the "#" hash links Holotower TS appends beside them, which
-   stay text even in icon mode) */
+/* Backlinks */
 :root:not(.backlink-icon) p.intro .mentioned a,
-:root:not(.backlink-icon) p.intro .clone-mentioned a,
+:root:not(.backlink-icon) p.intro .clone-mentioned a {
+  font-size: " + $SS.conf["Backlink Font Size"] + "px !important;
+}
+/* The "#" hash links Holotower TS (Hash Navigation) appends after each
+   backlink. TS zeroes the site's 8px .intro a margin so the # hugs its
+   backlink, and the row's 10px .unimportant size leaves the glyph a speck:
+   give it room and a couple of points over the backlink size (it stays
+   text in icon mode, sitting beside the arrow) */
 p.intro .mentioned a.hash-link,
 p.intro .clone-mentioned a.hash-link {
-  font-size: " + $SS.conf["Backlink Font Size"] + "px !important;
+  font-size: " + ((parseInt($SS.conf["Backlink Font Size"], 10) || 10) + 2) + "px !important;
+  margin-left: 4px !important;
 }
 /* Options panels + others -> capped to not break */
 .tab-label,
