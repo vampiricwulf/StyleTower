@@ -1,3 +1,10 @@
+### v1.0.17
+*2026-08-29*
+
+- **Holotower TS 2.6 support**: TS now ships its own ImgOps links, so the ImgOps Links integration (and its option) is gone — it only produced a second set of links. The X/BSKY Sauce integration stays; TS has no equivalent
+- TS's new Hash Navigation "#" links beside backlinks keep their "#" instead of being painted as a second backlink arrow under Backlink Icons, sit 4px off their backlink at two points over the backlink font size (hover and inline clones included), and are left out of Underline QuoteLinks
+- Switching themes, or previewing one in the editor, now fires the site's style-loaded event so Holotower TS re-samples the post number, backlink and file info colors it caches for inline quotes and scroll markers — they used to stay stale until a reload
+
 ### v1.0.16
 *2026-08-21*
 
