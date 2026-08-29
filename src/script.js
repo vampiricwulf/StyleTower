@@ -1183,6 +1183,13 @@
                 (document.head || document.documentElement).appendChild(el);
             }
             el.textContent = css;
+            // Holotower TS samples post/link colors from computed styles and caches
+            // them in its own vars (--ts-link-color etc.); it re-samples on the
+            // site's style-loaded event, so fire it whenever the theme changes
+            clearTimeout($SS._styleLoadedTimer);
+            $SS._styleLoadedTimer = setTimeout(function () {
+                try { window.dispatchEvent(new Event("style-loaded")); } catch (e) {}
+            }, 50);
         },
         getActiveFileInput: function () {
             return document.querySelector("#quick-reply input[type=file]") ||
