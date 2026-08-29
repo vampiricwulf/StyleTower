@@ -1,6 +1,7 @@
-/* Backlinks */
-:root.backlink-icon p.intro .mentioned a,
-:root.backlink-icon p.intro .clone-mentioned a {
+/* Backlinks. Holotower TS (Hash Navigation) appends an a.hash-link "#" after
+   each backlink; it is a sibling link, not a backlink, so it keeps its text */
+:root.backlink-icon p.intro .mentioned a:not(.hash-link),
+:root.backlink-icon p.intro .clone-mentioned a:not(.hash-link) {
   font-size: 0 !important;
   padding: " + (($SS.conf["Font Size"] < 12) ? 5 : 6) + "px !important;
   margin-right: 0 !important;
@@ -10,8 +11,8 @@
   left: 2px;
   background-image: var(--sc-icon-backlink) !important;
 }
-:root.backlink-icon p.intro .mentioned a:hover,
-:root.backlink-icon p.intro .clone-mentioned a:hover {
+:root.backlink-icon p.intro .mentioned a:not(.hash-link):hover,
+:root.backlink-icon p.intro .clone-mentioned a:not(.hash-link):hover {
   opacity: 1 !important;
 }
 /* Expanded (inlined) backlink: swap to the down-arrow icon, as upstream does */
