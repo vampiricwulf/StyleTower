@@ -4006,7 +4006,24 @@
             sliderRow: function (title, name, val, min, max, unit, tip, modeCls) {
                 return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
                     "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
-                    "<span class='mascot-opacity-val'>" + val + unit + "</span></label>";
+                    "<input type=number class='mascot-opacity-num' data-for='" + name + "' value='" + val + "' step=1>" +
+                    "<span class='mascot-opacity-val'>" + unit + "</span></label>";
+            },
+            /* Keeps a slider and its typed field together: the field follows
+               the slider, and a typed value past the slider's range widens it */
+            syncSlider: function (el) {
+                if (!el || !el.classList) return;
+                if (el.type === "range" && el.classList.contains("mascot-opacity")) {
+                    var num = el.parentNode.querySelector(".mascot-opacity-num");
+                    if (num) num.value = el.value;
+                } else if (el.classList.contains("mascot-opacity-num")) {
+                    var range = el.parentNode.querySelector("input[type=range]"),
+                        v = parseInt(el.value, 10);
+                    if (!range || isNaN(v)) return;
+                    if (v > parseInt(range.max, 10)) range.max = v;
+                    if (v < parseInt(range.min, 10)) range.min = v;
+                    range.value = v;
+                }
             },
             refreshNavStatus: function () {
                 var el = document.querySelector("#oneechan-options .st-nav-status");
@@ -4028,7 +4045,7 @@
                         slider("Scale", "nScale", cur.scale, 25, 300, "%", "Size of the buttons relative to the site's 32px.") +
                         slider("Horizontal", "nX", cur.x, 0, maxX, "px", "Distance from the right edge of the window.") +
                         slider("Vertical", "nY", cur.y, 0, maxY, "px", "Distance from the bottom edge of the window.") +
-                        slider("Spacing", "nGap", cur.gap, 0, 64, "px", "Gap between the two buttons.") +
+                        slider("Spacing", "nGap", cur.gap, 0, 300, "px", "Gap between the two buttons (type a larger value for more).") +
                         "<label class='add-mascot-label' title='Swap the order of the two buttons.'><span class='option-title'>Reverse Order:</span><input type=checkbox name=nReverse" + (cur.reverse ? " checked" : "") + "></label>" +
                         "<div id='st-nav-buttons-container'><a class='options-button' name=nDefault title=\"Forget the custom placement and use the site's.\">Use Site Default</a><a class='options-button' name=nSave>Save</a><a class='options-button' name=nCancel>Cancel</a></div>"),
                     node = div.elems[0],
@@ -4043,8 +4060,7 @@
                         var el = node.querySelector("[name=" + n + "]");
                         if (!el) return;
                         el.value = v;
-                        var vv = el.parentNode.querySelector(".mascot-opacity-val");
-                        if (vv) vv.textContent = v + (el.getAttribute("data-unit") || "");
+                        $SS.options.syncSlider(el);
                     },
                     drag = null, dragged = false,
                     onMove = function (e) {
@@ -4099,11 +4115,7 @@
                 }
                 preview();
                 node.addEventListener("input", function (e) {
-                    var t = e.target;
-                    if (t.type === "range") {
-                        var vv = t.parentNode.querySelector(".mascot-opacity-val");
-                        if (vv) vv.textContent = t.value + (t.getAttribute("data-unit") || "");
-                    }
+                    $SS.options.syncSlider(e.target);
                     preview();
                 });
                 node.addEventListener("change", preview);
@@ -4223,14 +4235,13 @@
                 preview();
                 var setField = function (name, val) {
                     var el = node.querySelector("[name=" + name + "]");
-                    if (el) el.value = val;
+                    if (!el) return;
+                    el.value = val;
+                    $SS.options.syncSlider(el);
                 };
                 node.addEventListener("input", function (e) {
                     var t = e.target;
-                    if (t.type === "range") {
-                        var vv = t.parentNode.querySelector(".mascot-opacity-val");
-                        if (vv) vv.textContent = t.value + (t.getAttribute("data-unit") || "%");
-                    }
+                    $SS.options.syncSlider(t);
                     // The simple-mode position sliders and the advanced offset
                     // inputs edit the same values; keep them in sync (the text
                     // inputs are what collect() reads)

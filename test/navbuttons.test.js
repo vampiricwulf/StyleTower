@@ -83,7 +83,7 @@ test("the editor previews live, saves on Save, and shows the buttons above the o
     x.value = "120";
     x.dispatchEvent(new w.Event("input", { bubbles: true }));
     assert.equal(box.style.right, "120px", "live preview");
-    assert.equal(x.parentNode.querySelector(".mascot-opacity-val").textContent, "120px", "readout follows");
+    assert.equal(x.parentNode.querySelector(".mascot-opacity-num").value, "120", "the typed field follows the slider");
     const rev = ed.querySelector("input[name=nReverse]");
     rev.checked = true;
     rev.dispatchEvent(new w.Event("change", { bubbles: true }));
@@ -145,6 +145,7 @@ test("dragging the buttons while the editor is open moves them and updates the s
     assert.equal(box.style.bottom, "135px", "moved up by 100 → 35 + 100 from the bottom");
     assert.equal(ed.querySelector("input[name=nX]").value, "120");
     assert.equal(ed.querySelector("input[name=nY]").value, "135");
+    assert.equal(ed.querySelector(".mascot-opacity-num[data-for=nX]").value, "120", "typed fields follow a drag");
     mouse(w, d, "mouseup", 800, 600);
     const click = new w.MouseEvent("click", { bubbles: true, cancelable: true });
     box.querySelector("#nav-to-top").dispatchEvent(click);
@@ -189,4 +190,29 @@ test("the navigation arrows use a tightly cropped, centered icon so neither orde
     assert.match(scroll, /background-image:\s*var\(--sc-icon-navArrow\)/);
     assert.doesNotMatch(scroll.split("}")[0], /downArrow/);
     assert.match(icons, /a\.inline-active[\s\S]*?var\(--sc-icon-downArrow\)/, "the backlink arrow keeps its icon");
+});
+
+test("each slider has a typed field; typing past the slider's range extends it", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    d.querySelector("#main-section a[name=navPosition]").click();
+    const ed = d.getElementById("st-nav-editor");
+    ["nScale", "nX", "nY", "nGap"].forEach(n => {
+        const num = ed.querySelector(".mascot-opacity-num[data-for=" + n + "]");
+        assert.ok(num, "typed field for " + n);
+        assert.equal(num.type, "number");
+        assert.equal(num.value, ed.querySelector("input[name=" + n + "]").value);
+    });
+    const gap = ed.querySelector("input[name=nGap]");
+    assert.ok(parseInt(gap.max, 10) >= 300, "spacing slider reaches at least 300px, got " + gap.max);
+    const typed = ed.querySelector(".mascot-opacity-num[data-for=nGap]");
+    typed.value = "500";
+    typed.dispatchEvent(new w.Event("input", { bubbles: true }));
+    assert.equal(gap.value, "500", "slider follows the typed value");
+    assert.ok(parseInt(gap.max, 10) >= 500, "slider range extended to hold it");
+    assert.equal(d.getElementById("scroll-buttons").style.getPropertyValue("--st-nav-gap"), "500px", "applied live");
+    ed.querySelector("a[name=nSave]").click();
+    assert.equal(JSON.parse($SS.Config.get("Nav Buttons")).gap, 500);
 });

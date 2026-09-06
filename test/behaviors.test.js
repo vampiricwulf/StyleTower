@@ -118,3 +118,20 @@ test("header: TS's stored fixed-header preference is mirrored onto :root on inde
         site: { "Thread Settings": JSON.stringify({ headerFixed: false }) } });
     assert.ok(!w2.document.documentElement.classList.contains("fixed"));
 });
+
+test("mascot editor sliders have typed fields that stay in sync", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    $SS.options.showMascotEditor(-1);
+    const d = w.document;
+    const num = d.querySelector("#add-mascot .mascot-opacity-num[data-for=mScale]");
+    assert.ok(num, "typed field on the Scale slider");
+    num.value = "150";
+    num.dispatchEvent(new w.Event("input", { bubbles: true }));
+    assert.equal(d.querySelector("#add-mascot input[name=mScale]").value, "150");
+    const range = d.querySelector("#add-mascot input[name=mOpacity]");
+    range.value = "40";
+    range.dispatchEvent(new w.Event("input", { bubbles: true }));
+    assert.equal(d.querySelector("#add-mascot .mascot-opacity-num[data-for=mOpacity]").value, "40");
+});

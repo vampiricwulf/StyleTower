@@ -695,9 +695,19 @@ label.tab-label[data-tower-status='changed']::after {
   flex: 1;
   width: auto;
 }
+#add-mascot .mascot-opacity-num,
+#st-nav-editor .mascot-opacity-num {
+  width: 60px;
+  height: 20px;
+  flex: none;
+  text-align: right;
+  box-sizing: border-box;
+}
 #add-mascot .mascot-opacity-val,
 #st-nav-editor .mascot-opacity-val {
-  width: 38px;
+  width: auto;
+  min-width: 1.4em;
+  text-align: left;
   flex: none;
 }
 #mascot-buttons-container,
