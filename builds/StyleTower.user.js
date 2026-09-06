@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         StyleTower
-// @version      1.0.17
+// @version      1.0.18
 // @namespace    StyleTower
 // @description  Customizable themes for holotower.org.
 // @license      GPL-3.0; https://github.com/vampiricwulf/StyleTower/blob/main/LICENSE
@@ -15,14 +15,8 @@
 // @grant        GM_deleteValue
 // @grant        GM_listValues
 // @grant        GM_openInTab
-// @grant        GM_xmlhttpRequest
-// @grant        GM.getValue
-// @grant        GM.setValue
-// @grant        GM.deleteValue
-// @grant        GM.listValues
-// @grant        GM.openInTab
-// @grant        GM.xmlHttpRequest
 // @run-at       document-body
+// @noframes
 // @updateURL    https://github.com/vampiricwulf/StyleTower/releases/latest/download/StyleTower.meta.js
 // @downloadURL  https://github.com/vampiricwulf/StyleTower/releases/latest/download/StyleTower.user.js
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAA5FBMVEUAAADqC43tAIyAxjjtAIwBruzrCY0ArvBPtkn37wJQtkkAru9QtkkDrukBru4CrupPtkj/8gD/8gBQtklQtkn98QHsBIwCr+sBru0Crur+8gBQtkntAYz98gAAru7tAYz98QHsAoxQtknsAoxPtknrBoxPtkj78QFQtknsBoz37wIAru8Aru/+8gD88QHsA4wBru3rBoz68QH58AL58AL+8gDsAozsAozsAoz88QEBru5QtklQtklQtkn88QHrBoz58ALtAYz+8gABru9Qtkn68QH98QH78AIArvD/8gBQtkntAIxfAaaZAAAASHRSTlMACPgK8k0R8CkQ7N7NDJ4lEPfr3Z+bfTsxFPLBtrOyrKmNiWRZQDUiHBsX6M7Ad25pU0Q5HNDMwp6GhXJmRzEvKN7cwLVoXE9ZFwasAAACE0lEQVRIx8WS2ZKaQBSGG1RAQFHAuI86uDtxXzPj7AvI+79PeqHTQlNduUhlvhu6rP+T858GfAOZsaaV0AE+x38R7787utN8KA1dR9cddwjElNwLwdTJ0zmLhdtLElMT5TXnwnEvEvoXnveMQHhIEZolgXDWecEVLsnkhT6XEs9kjsX35iby+jk9qEwUCR/GzdSl1i2rcB1fHF72LU/BVxGrcYt3WisahvGWA5RJSw4h8mEAIEPzKo9XujR8hLqk/98JI148iRosX/il+gQ1escqG1KyPyKDzVMv+n+4IT2OIUPGhoaa6/fJvD+zUF5qhWmG3gfJvK9WqcAbLs4XWJ4JoBemGBmA+/oxZjUsDLJxI7sAESTPlZY6YcJYkfyS7jOxVuDJqULhBqX4CkA5JEosJICp3XEjpXWQe7Q0Z6ikdC+RR9/gtDJHStWIG7kU4Yjz3aB8ysNDzkgRFtedOxP4y6gdBEG5QgxeeGIdZJL/GWA4Y1ZL3IN8RPlnmCd0t6gHa14EhKc9/bgVlse0kWHR+3izADVaWRjfryQ2D30Hmqq+vFPhPEWYpygDzxso6JTv0izrAZVqLofjPKcgTnkOhKztIIG9FuUzbCBWPC8QRq+8YD8LhEebFxqbfylMd7zwOgICTrwg3uu0TfffiJ7w5oRsKzaK7T7Xbag0dh8wLybz+Dn/WE8ByG++vjZb8P/5DaGCFxaoVX+0AAAAAElFTkSuQmCC
@@ -96,6 +90,7 @@
         ],
         "SS-like Sidebar": [false, "Darkens the sidebar and adds a border like 4chan Style Script."],
         "Minimal Sidebar": [false, "Shrinks the sidebar and moves the banner."],
+        "Nav Buttons": ["", "Scale, position, spacing and order of the site's ↑ ↓ navigation buttons on thread pages. Set Position opens the editor; drag the buttons on the page while it is open.", null, null, true],
         ":: Quick Reply": ["header", ""],
         "Autohide Style": [
             0, "Changes how the quick reply is hidden.", [{
@@ -121,10 +116,10 @@
         "Auto-Convert Images": [false, "Auto-convert WebP images to JPEG, and convert any image exceeding the board's file size or dimensions limit to JPEG."],
         ":: Replies": ["header", ""],
         "Fit Width": [true, "Replies stretch to the width of the page.", null, true],
-        "Fit Post Menu": [false, "Sets the post menu to the right.", "Fit Width", true, true],
+        "Fit Post Menu": [false, "Moves the post menu button to the right edge of each post.", "Fit Width", true, true],
         "Fit Expanded Images": [false, "Expanded images will better fit to the viewport."],
         "Show Reply Header": [true, "Shows reply header background and line border."],
-        "Show File Info": [true, "Hides filename, dimensions and size info."],
+        "Show File Info": [true, "Shows the filename, size and dimensions line under each file."],
         "Underline QuoteLinks": [false, "Underlines quotelinks only."],
         "Indent OP": [true, "Indents the OP instead of touching the screen."],
         "Allow Wrapping Around OP": [false, "Allow for replies to wrap around OP instead of being forced onto their own line."],
@@ -255,7 +250,7 @@
                 value: "cursive"
             }]
         ],
-        "Custom Font": ["", "Enter a custom font name. Please make sure the font name is exact. Overrides the Font Family option if set. "],
+        "Custom Font": ["", "Enter a custom font name. Please make sure the font name is exact. Overrides the Font Family option if set."],
         "Font Size": [13, "Set the font size of text (in pixels). Default: 13px. Menu elements have a 18px (max) and 9px (min) limit to avoid breaking their layouts."],
         "UI Font Size": [11, "Set the font size of certain QR and button elements (in pixels). Default: 11px."],
         "Backlink Font Size": [10, "Set the font size of backlinks (in pixels). Default: 10px."],
@@ -267,7 +262,7 @@
         "Center Notifications": [false, "Center notifications at the top below the header bar.", "Toast Notifications", true, true],
         "Full Border": [false, "Use a full border to make notifications more visible. Border style follows the Highlight Style and Width options.", "Toast Notifications", true, true],
         ":: Theming": ["header", ""],
-        "System Theming": [false, "Use system color scheme detection to automatically select themes. Overrides NSFW/SFW theme selection.", null, true],
+        "System Theming": [false, "Follow the system color scheme: the Dark and Light themes below replace the selected theme.", null, true],
         "Dark Theme": [0, "Theme to use when system is in dark mode.", "System Theming", true, true],
         "Light Theme": [0, "Theme to use when system is in light mode.", "System Theming", true, true],
         "Use StyleTower Icons": [true, "Replace site icons with themed SVG icons. Disable to use the vanilla icons.", null, true],
@@ -279,8 +274,7 @@
         "Highlight Current Board": [true, "Gives the current board link a bottom highlight border."],
         ":: Holotower": ["header", ""],
         ":: General": ["header", ""],
-        "Relative Post Dates": [false, "Display dates like '3 minutes ago'. Tooltip shows the original timestamp."],
-        "Follow Cursor": [true, "Image previews follow the cursor instead of staying in the corner."],
+        "Follow Cursor": [true, "Quote previews sit beside the cursor on the roomier side of the screen and stay inside the viewport, instead of the site's placement with the preview's corner under the cursor."],
         "Catalog Links": [false, "Converts board navigation links to catalog links."],
         "Highlight Posts Quoting You": [true, "Styles the highlight of posts quoting you (posts are marked by the site/Holotower TS)."],
         "Highlight Own Posts": [true, "Styles the highlight of your own posts (posts are marked by the site/Holotower TS)."],
@@ -307,7 +301,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.17",
+        VERSION = "1.0.18",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
@@ -447,14 +441,18 @@
         return this instanceof $lib ?
             this.init(selector, root) : new $lib(selector, root);
     };
-    $.waitFor = function (selector, cb) {
+    /* Runs cb once selector matches. Gives up after timeout ms (default
+       $SS.waitTimeout): an element another script never builds would
+       otherwise keep a document-wide observer polling every mutation */
+    $.waitFor = function (selector, cb, timeout) {
         var el = document.querySelector(selector);
         if (el) { cb(el); return; }
-        var obs = new MutationObserver(function () {
+        var timer, obs = new MutationObserver(function () {
             var el = document.querySelector(selector);
-            if (el) { cb(el); obs.disconnect(); }
+            if (el) { clearTimeout(timer); obs.disconnect(); cb(el); }
         });
         obs.observe(document.documentElement, { childList: true, subtree: true });
+        timer = setTimeout(function () { obs.disconnect(); }, timeout || $SS.waitTimeout);
     };
     $.waitForFn = function (test, cb) {
         var result = test();
@@ -614,8 +612,8 @@
                     case "radio":
                         return el.checked == true;
                     default:
-                        if (/^\d+$/.test(el.value))
-                            return parseInt(el.value);
+                        if (/^-?\d+$/.test(el.value))
+                            return parseInt(el.value, 10);
                         return el.value;
                 }
             }
@@ -703,26 +701,6 @@
 
             return new $lib(selector, this.elems[0]);
         },
-        nextSibling: function (selector) {
-            if (!this.hasSingleEl() ? true : this.elems[0].nextSibling == null)
-                return new $lib(null);
-
-            if (selector != undefined) {
-                var t, m = new $lib(selector, this.elems[0].parentNode),
-                    s = this.elems[0].parentNode.childNodes;
-
-                for (var i = s.length - 1; i >= 0; --i) {
-                    if (s[i] === this.elems[0] && t == undefined) // end and no matching siblings
-                        return new $lib(null);
-                    else if (s[i] === this.elems[0] && t != undefined) // end and matched sibling
-                        return new $lib(t);
-                    else if (m.elems.indexOf(s[i]) !== -1) // this element matches the selector
-                        t = s[i];
-                }
-            }
-
-            return new $lib(this.elems[0].nextSibling);
-        },
 
 
         /* EVENT METHODS */
@@ -773,19 +751,28 @@
 
     /* STYLE SCRIPT CLASSES & METHODS */
     $SS = {
-        browser: {},
+        waitTimeout: 60000,
+        draftDelay: 5000,
+        /* Runs one startup feature; a failure is logged and the rest keeps
+           going, so a site change that breaks one hook cannot take the
+           theme down with it */
+        guard: function (name, fn) {
+            try { return fn(); } catch (e) { console.error("[StyleTower] " + name + " failed:", e); }
+        },
         DOMLoaded: function (reload) {
-            $SS.classes.init();
-            $SS.disableSiteTheme();
-            $SS.displayMascots();
-            $SS.integrations.init();
+            var guard = $SS.guard;
+            guard("classes", $SS.classes.init);
+            guard("disableSiteTheme", $SS.disableSiteTheme);
+            guard("displayMascots", $SS.displayMascots);
+            guard("integrations", $SS.integrations.init);
             // Runs on settings reloads too so Replace Thumbnails applies
             // without a page refresh (idempotent per image)
-            $SS.replaceThumbnails();
+            guard("replaceThumbnails", $SS.replaceThumbnails);
+            guard("navButtons", $SS.initNavButtons);
 
             var div;
             if (reload !== true) {
-                $SS.options.init();
+                guard("options", $SS.options.init);
 
                 document.addEventListener("click", function (e) {
                     var li = e.target.closest("[data-cmd='toggle-you']");
@@ -805,10 +792,14 @@
                     var i, j, MAX, _MAX, nodes, node, inlineSync = false;
 
                     for (i = 0, MAX = mutations.length; i < MAX; ++i) {
+                        // The site's expand-video player comes and goes inside
+                        // a replaced video thumb's file block
+                        $SS.syncVideoThumb(mutations[i].target);
                         // Containers vanish on collapse; watch removals too
                         nodes = mutations[i].removedNodes;
                         for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
                             if (!inlineSync && touchesInline(nodes[j])) inlineSync = true;
+                            if (nodes[j] === $SS._hoverEl) $SS._hoverEl = null;
                         }
 
                         nodes = mutations[i].addedNodes;
@@ -817,6 +808,8 @@
                             node = nodes[j];
                             if (node.nodeType !== 1) continue;
                             if (!inlineSync && touchesInline(node)) inlineSync = true;
+                            // The site's post-hover.js adds one preview at a time
+                            if (node.classList.contains("post-hover")) $SS._hoverEl = node;
                             var canHavePosts = node.nodeName !== "SCRIPT" && node.nodeName !== "STYLE" &&
                                 node.nodeName !== "LINK" && node.nodeName !== "META" && node.nodeName !== "BR";
 
@@ -834,8 +827,8 @@
                                     $SS.moveOmittedSpans(node);
                                     if ($SS.addIndexHideButtons) $SS.addIndexHideButtons(node);
                                     $SS.replaceThumbnails(node);
-                                    $SS.relativeDates(node);
                                     $SS.replacePostMenuBtn(node);
+                                    $SS.integrations.onNodeAdded(node);
                                 }
                             }
                             var pm = node.matches && node.matches(".post-menu") ? node : node.querySelector ? node.querySelector(".post-menu") : null;
@@ -859,8 +852,8 @@
                 // Post hover previews follow the cursor
                 if ($SS.conf["Follow Cursor"]) {
                     document.addEventListener("mousemove", function (e) {
-                        var img = document.querySelector(".post-hover");
-                        if (!img) return;
+                        var img = $SS._hoverEl;
+                        if (!img || !img.isConnected) return;
                         var cw = document.documentElement.clientWidth;
                         var ch = document.documentElement.clientHeight;
                         var h = img.offsetHeight, w = img.offsetWidth;
@@ -881,57 +874,39 @@
 
                 // Auto-convert images on drop
                 if ($SS.conf["Auto-Convert Images"]) {
-                    $SS.initImageConvertOnDrop();
+                    guard("initImageConvertOnDrop", $SS.initImageConvertOnDrop);
                 }
                 // Normalize OP structure (move .files inside .post.op)
-                $SS.moveOPFiles();
-                $SS.tidyFileInfo();
-                $SS.moveOmittedSpans();
+                guard("moveOPFiles", $SS.moveOPFiles);
+                guard("tidyFileInfo", $SS.tidyFileInfo);
+                guard("moveOmittedSpans", $SS.moveOmittedSpans);
                 // One-click post hiding + control row on index pages
                 if (!$SS.location.reply && !$SS.location.catalog && $SS.location.board) {
-                    $SS.initIndexPostHiding();
-                    $SS.initIndexNav();
+                    guard("initIndexPostHiding", $SS.initIndexPostHiding);
+                    guard("initIndexNav", $SS.initIndexNav);
                 }
-                $SS.initCatalogCards();
+                guard("initCatalogCards", $SS.initCatalogCards);
                 // Compact single-line thread footer: pull the updater and thread
                 // stats up next to the [Return]/[Go to top]/[Catalog] links.
                 if ($SS.location.reply) {
+                    // #updater is the site's (auto-reload.js); #thread_stats is TS's
                     $.waitFor("#updater", function (updater) {
                         var links = document.getElementById("thread-links");
                         if (links && links.parentNode && updater.previousElementSibling !== links)
                             links.parentNode.insertBefore(updater, links.nextSibling);
                     });
-                    $.waitFor("#thread_stats", function (stats) {
-                        var ti = document.getElementById("thread-interactions");
-                        if (ti && stats.parentNode !== ti) ti.appendChild(stats);
-                    });
-                }
-                // Re-replace a thumb after the site's inline expansion collapses
-                // it back to the static thumbnail (that swap is src-only, which
-                // the childList observer doesn't see).
-                if ($SS.conf["Replace Thumbnails"]) {
-                    document.addEventListener("click", function (e) {
-                        var a = e.target.closest && e.target.closest(".file > a");
-                        if (!a) return;
-                        setTimeout(function () { $SS.replaceThumbnails(a.closest(".file").parentNode); }, 150);
-                    });
+                    if ($SS.isTS())
+                        $.waitFor("#thread_stats", function (stats) {
+                            var ti = document.getElementById("thread-interactions");
+                            if (ti && stats.parentNode !== ti) ti.appendChild(stats);
+                        });
                 }
                 // Remember QR comments
-                $SS.initRememberComment();
+                guard("initRememberComment", $SS.initRememberComment);
                 // Native QR autohide (focus/hover behavior for Normal & Vertical Tabbed)
-                $SS.initNativeQRAutohide();
+                guard("initNativeQRAutohide", $SS.initNativeQRAutohide);
 
-                // Set maxlength on subject and name inputs (100 char limit)
-                $("input[name=subject], input[name=name]", document).each(function () {
-                    this.setAttribute("maxlength", "100");
-                    this.addEventListener("input", function () {
-                        if (this.value.length >= 100) {
-                            this.style.setProperty("border-color", "red", "important");
-                            var el = this;
-                            setTimeout(function () { el.style.removeProperty("border-color"); }, 600);
-                        }
-                    });
-                });
+                guard("limitNameSubject", function () { $SS.limitNameSubject(document); });
 
                 // Auto-watch thread on post submission
                 if ($SS.conf["Watch Thread on Reply"] && $SS.location.reply) {
@@ -1004,7 +979,7 @@
                 $SS._initDone = true;
             }
         },
-        init: function (reload) {
+        init: function (reload, overrides) {
             if (!reload) {
                 if (/^about:neterror/.test(document.documentURI)) return;
                 $SS.hasGM = typeof GM_deleteValue !== "undefined";
@@ -1046,7 +1021,7 @@
                 }
             }
 
-            $SS.Config.init();
+            $SS.Config.init(overrides);
             $SS.Themes.init();
 
             // Set native site theme to mitigate unloaded CSS flashbang #6
@@ -1077,12 +1052,25 @@
             if ($SS.location.dead)
                 return;
 
-            css = "#expand-all-images,#password,#watch-board,#watch-pin,#watch-thread,.boardlist.bottom,.post-hover input[type=checkbox],.tab-select:not(:checked)+div,:root.hide-banner img.board_image,:root.hide-board-name header div.subtitle,:root.hide-board-name header h1,:root.hide-navlinkbot #thread-links,:root.hide-navlinks #thread-links,:root.hide-navlinks div.banner,:root.hide-navlinktop div.banner,:root.qr-controls #quick-reply a.close-btn,:root.show-file-info p.fileinfo .unimportant,:root.show-form form[name=post]:not(#quick-reply),:root:not(.st-home) footer,:root:not(.st-home) hr:not(#unread-line),[hidden],div.styles,form[name=postcontrols] .post input[type=checkbox],iframe[src='about:blank'],label:has(> a.threading-toggle){display:none}a,input:focus,select,textarea:focus{outline:0!important}.sjis{font-size:16px;line-height:17px;white-space:pre;font-family:IPAMonaPGothic,Mona,'MS PGothic',monospace;overflow:auto;display:block;clear:left}.mu-s{font-weight:700}.mu-i{font-style:italic}.mu-r{color:#c41e3a}.mu-g{color:#00a550}.mu-b{color:#1d8dc4}.files .file>a{float:left;margin-left:13px;margin-right:20px;margin-bottom:10px}.thread>.files .file>a{margin-bottom:0}p.fileinfo{margin-left:13px!important;margin-bottom:2px!important}p.fileinfo>.unimportant{margin-left:4px}.fixed.bottom-header body.active-thread{padding-bottom:0;padding-top:.5em}.fixed.bottom-header body.active-index{padding-bottom:4.5em;padding-top:.5em}.fixed.bottom-header body.active-catalog,.fixed.bottom-header.catalog-mode body{padding-bottom:3em;padding-top:.5em}.fixed.bottom-header body{padding-top:.5em}:root.bottom-header:not(.autohide) body.active-index{padding-bottom:5em!important}.fixed.top-header body.active-index{padding-bottom:2.5em;padding-top:" + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em!important}.fixed.top-header body.active-thread{padding-bottom:0;padding-top:" + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em!important}.fixed.top-header body.active-catalog,.fixed.top-header.catalog-mode body{padding-bottom:.5em;padding-top:" + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em!important}.fixed.top-header.autohide body{padding-top:2em!important}.fixed.top-header body{padding-top:2.4em!important}.boardlist.bottom{margin-bottom:15px}:root:not(.fixed) .boardlist:not(.bottom){margin-top:15px}div.post{margin:4px 0;overflow:hidden}:root:not(.reply-fit-width) form[name=postcontrols] div.post.reply:not([hidden]):not(.iq-hidden-post):not(.hidden-post):not(.hidden){display:table!important}:root:not(.reply-fit-width) form[name=postcontrols] .stub~div.post.reply:not([hidden]){display:none!important}div.thread{margin:0;clear:both;padding-bottom:10px}div.pages{padding:4px}div.pages{float:left}span.spoiler,span.spoiler:not(:hover)>a{color:#000;background:none repeat scroll 0 0 #000}span.spoiler:focus,span.spoiler:hover{color:#fff}hr{clear:both}table{border-spacing:1px;margin-left:auto;margin-right:auto}#post-moderation-fields{float:right}.fixed.bottom-header body.active-index #post-moderation-fields,.fixed.bottom-header body.active-thread #post-moderation-fields{margin-bottom:35px}.fixed.top-header body.active-index #post-moderation-fields,.fixed.top-header body.active-thread #post-moderation-fields{margin-bottom:8px}input[value=Next],input[value=Previous]{padding:4px 13px}div.post img.icon{margin-bottom:-3px}:root.reply-fit-width .inline{display:flow-root!important}select{padding:0 0 2px 2px;margin-right:1px}.theme-catalog .replies>strong{margin-bottom:5px}form[name=post] input[type=file]{height:23px}#quick-reply input[type=file]{margin-right:0!important}:root.left-sidebar #quick-reply,:root.right-sidebar #quick-reply{max-width:300px!important}:root.left-sidebar #quick-reply input[type=text],:root.left-sidebar #quick-reply textarea,:root.right-sidebar #quick-reply input[type=text],:root.right-sidebar #quick-reply textarea{max-width:294px!important}:root.left-sidebar #quick-reply textarea,:root.right-sidebar #quick-reply textarea{min-width:294px!important}form[name=post]:not(#quick-reply){margin-top:1em}:root.normal-qr #quick-reply:not(:hover):not(.focus){width:303px!important}:root.normal-qr #quick-reply:not(:hover):not(.focus) table tr:not(:first-child){display:none!important}:root.normal-qr .qr-transition #quick-reply table tr:not(:first-child){transition:opacity .2s ease-in-out .1s}#quick-reply input[type=file]::-webkit-file-upload-button,#quick-reply input[type=file]::file-selector-button,form[name=post] input[type=file]::-webkit-file-upload-button,form[name=post] input[type=file]::file-selector-button{appearance:none;cursor:pointer;height:23px;padding:0 6px;text-transform:uppercase;margin-right:4px;background:rgb(var(--sc-mainColor-rgb))!important;border-style:solid;border-width:1px;border-color:rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM30))!important;color:var(--sc-textColor)!important;font-family:" + $SS.formatFont($SS.conf["Font Family"]) + ";font-size:" + $SS.conf["UI Font Size"] + "px!important}#quick-reply input[type=file]:hover::-webkit-file-upload-button,#quick-reply input[type=file]:hover::file-selector-button,form[name=post] input[type=file]:hover::-webkit-file-upload-button,form[name=post] input[type=file]:hover::file-selector-button{background:rgb(var(--sc-mainColor-shift10))!important}div.pages{margin-bottom:10px}:root.follow-cursor #image-hover{max-width:calc(100vw - 100px);max-height:calc(100vh - 60px)}body{margin-left:" + $SS.conf["Margin Left"] + "px;margin-right:" + $SS.conf["Margin Right"] + "px;margin-top:0;margin-bottom:0}div.post.reply{padding:0!important;max-width:none!important}div.post.op{display:block}p.intro{margin:0!important;padding:5px 13px!important;display:block!important}span.omitted{margin-left:2px}.thread>span.omitted{display:block;clear:both;margin:2px 0 4px 4px!important;font-style:italic;opacity:.8}div.post.op{margin-left:4px;margin-right:4px}.expanded-image{position:relative}:root.op-background .op{padding:4px 0}:root.force-indent .op{margin-left:-12px}:root.force-wrapping .op::after{clear:both;content:'';display:block}.thread>.post.reply,.threadContainer>.post.reply,.threadingContainer>.post.reply,:root.op-background .thread>.post.op{margin-bottom:" + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : 4) + "px!important}:root.oneechan .post.op.st-inlined:not(.iq-hidden-post),:root.oneechan .post.reply.st-inlined:not(.iq-hidden-post):not(.inline-cloned-post):not(.post-hover){opacity:.45;filter:grayscale(60%);transition:opacity .2s ease,filter .2s ease}:root.oneechan .post.op.st-inlined:not(.iq-hidden-post):hover,:root.oneechan .post.reply.st-inlined:not(.iq-hidden-post):not(.inline-cloned-post):not(.post-hover):hover{opacity:.85;filter:grayscale(20%)}.post+br,.reply+br,.thread>br,.threadContainer>br,.threadingContainer>br{display:none!important}.container~.inline{margin:2px 0 2px 13px!important}:root.bottom-backlinks .container~.inline{margin:0 13px 2px!important}:root.bottom-backlinks .container~.inline:last-of-type:not(.inline .hasInline .inline){margin-bottom:3px!important}.hashlink{padding-left:2px}:root.backlink-icon .post.op a.hashlink{vertical-align:middle}div.body{margin:" + $SS.conf["Margin Post Message"] + "!important}:root.bottom-backlinks .container{padding-left:8px}:root.bottom-backlinks .post:not(:root.op-background .op) .container:not(:empty){padding-bottom:4px}:root.fit-eximg.fit-height .full-image{max-height:calc(100vh - 8rem)!important}:root.reply-fit-width .reply.post:not(.iq-hidden-post):not(.hidden-post):not(.hidden){display:block!important}:root.reply-fit-width .stub~.reply.post{display:none!important}.hasInline .inline>.post.reply:not(.expanded-image):not(.hasInline),:root.reply-fit-width .post.reply{overflow:hidden!important}:root.reply-fit-width .post.expanded-image::after,:root.reply-fit-width .post.reply.hasInline::after{clear:both!important;content:''!important;display:block!important}.threadContainer .hide-reply-button{margin-left:-12px!important}.stub{padding:2px}.stub>a.show-thread-button{margin-right:4px}:root.reply-hide .thread>.post.reply.expanded-image,:root.reply-hide .thread>.post.reply.hasInline{margin-left:12px!important}.threadContainer{margin-left:0!important;padding-left:20px!important}:root.reply-hide .thread>.threadContainer{margin-left:13px!important}:root.post-info .post.reply>p.intro{box-shadow:inset rgba(0,0,0,.05) 0 -1px 2px;padding-top:2px!important}:root.post-info .inline .post.reply,:root.post-info .post.reply.post-hover{padding:0 0 1px!important}p.intro a.post-btn{margin:0 0 0 5px!important}:root.reply-fit-width .post.reply .container{padding-right:5px}:root.reply-fit-width.fit-postmenu p.intro>a.post-btn{float:right!important}:root.reply-fit-width.fit-postmenu p.intro>a.post-btn{margin:2px 20px 0 0}:root.reply-fit-width .post a.post-btn{position:relative;opacity:0}:root.reply-fit-width .post:not(:hover) a.post-btn{transition:opacity .3s ease-out 0s!important}:root.reply-fit-width .post:hover a.post-btn{opacity:1;transition:opacity .3s ease-in .1s!important}pre{padding:5px!important;display:block;max-height:400px;overflow-x:auto;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}input[type=button],input[type=checkbox],input[type=submit]{cursor:pointer}input[type=checkbox]{display:inline-block;height:12px!important;position:relative;width:12px!important;border-radius:2px!important;appearance:none;margin:0 2px -1px 0}input[type=checkbox]:checked::before{content:'✓';position:absolute;top:0;left:0;height:12px;width:11px;font-size:11px;line-height:12px;text-align:center;color:var(--sc-textColor)}.boardlist:not(.bottom){padding:4px 4px 5px!important}:root:not(.fixed) .boardlist:not(.bottom){top:0;right:0;left:0;box-shadow:0 1px 2px rgba(0,0,0,.15);border-bottom:1px solid}:root.autohide body{padding-top:0!important;padding-bottom:0!important}:root:not(.fixed).right-sidebar .boardlist:not(.bottom){right:300px}:root:not(.fixed).left-sidebar .boardlist:not(.bottom){left:300px}.boardlist a{margin-left:2px}h2,h3{margin:auto}.shortcut{vertical-align:baseline!important}a.quick-reply-btn img{display:block}.post-menu{z-index:80}hr{height:2px;border:none!important}:root.reply-fit-width #unread-line{margin:auto;width:100%}#unread-line{margin-top:" + (($SS.conf["Margin Between Replies"] < -2) ? ($SS.conf["Margin Between Replies"] - 1) : -3) + "px!important;margin-bottom:" + (($SS.conf["Margin Between Replies"] < -2) ? -5 : -3) + "px!important;position:relative}:root:not(.autohide) #scroll-marker{pointer-events:none!important}header h1{cursor:default;letter-spacing:-2px;padding-top:.1em}img.board_image{border:0!important;margin:0 auto;max-height:100px!important;max-width:100%}:root.banner-opacity img.board_image{opacity:.5;transition:opacity .3s ease-out 0s}:root.banner-opacity img.board_image:hover{opacity:1}div.pages a[href$='catalog.html']{margin-left:12px}div.pages a[href$='catalog.html'],input[value=Next],input[value=Previous]{font-weight:700;transition:opacity .3s ease-in 0s}div.pages a.selected:hover,div.pages a[href$='catalog.html']:hover,input[value=Next]:hover,input[value=Previous]:hover{opacity:.7}div.pages{margin-left:18px;margin-bottom:15px}:root.reply-fit-width div.pages{margin-left:0}.pages a{padding:5px 10px;margin-left:-1px}div.pages a.selected{padding-top:3px;transition:opacity .3s ease-in 0s}div.banner{font-size:0!important;background:0 0!important;text-align:left;padding:0!important;margin:8px 0!important}div.banner a{font-size:" + $SS.conf["Font Size"] + "px!important;margin-right:5px}#updater{float:left}a.reply.hide-button,a.reply.show-button{color:var(--sc-blinkColor)!important;opacity:.5;text-decoration:none!important}a.reply.show-button{float:none!important;clear:both;display:flex;align-items:center;gap:13px;width:fit-content;margin-top:8px}a.reply.show-button .hide-icon,a.reply.show-button svg.plus{vertical-align:baseline!important;margin:0!important;display:inline-flex;align-items:center}a.reply.hide-button:hover,a.reply.show-button:hover{opacity:1;color:var(--sc-linkHColor)!important}a.hide-thread-link{display:none!important}a.st-index-hide{float:left;padding:2px}:root.st-menu-silent .post-menu{display:none!important}.post.st-index-hidden{opacity:.6}a.st-index-hide:has(+ .post.reply[style*='display: none']){display:none!important}#update_thread{padding-left:0!important}#thread-catalog::before,header div.subtitle a::before{content:'['}#thread-catalog::after,header div.subtitle a::after{content:']'}#thread-interactions{margin-bottom:5px}#st-index-nav{margin:12px 0 6px;clear:both}#st-index-nav>a{margin-right:5px;text-decoration:none}#st-index-nav>a::before{content:'['}#st-index-nav>a::after{content:']'}#st-index-age{opacity:.7;margin:0 8px 0 2px;font-size:" + (($SS.conf["Font Size"] <= 10) ? 9 : $SS.conf["Font Size"] - 2) + "px}#st-index-search{width:180px!important;min-width:0!important}.st-search-hidden{display:none!important}div.pages{font-size:0!important;background:rgb(var(--sc-mainColor-rgb))!important;border:1px solid var(--sc-brderColor)!important;color:var(--sc-textColor)!important;padding:5px 8px!important;margin:0 0 10px!important}:root.rounded-corners div.pages{border-radius:3px}div.pages a,div.pages input[type=submit]{font-size:" + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px!important;padding:2px 6px!important}div.pages form{display:inline!important}div.pages input[type=submit]{background:0 0!important;border:none!important;color:var(--sc-linkColor)!important;cursor:pointer;text-transform:none!important}div.pages input[type=submit]:hover{color:var(--sc-linkHColor)!important}div.pages a.selected{background:rgba(var(--sc-mainColor-shiftM16),.8)!important;color:var(--sc-textColor)!important;text-decoration:none!important}:root.rounded-corners div.pages a.selected{border-radius:2px}.post-hover{z-index:75!important}:root.thumb-opacity .file>a img:not(.full-image){opacity:.5;transition:opacity .3s ease-out 0s}:root.thumb-opacity .file>a img:not(.full-image):hover{opacity:1}select{appearance:none}form[name=postcontrols]{overflow-wrap:break-word;word-break:break-word;margin-bottom:15px}.st-video-thumb img.post-image{display:none!important}video.st-thumb-video{display:block;cursor:pointer;max-width:300px;max-height:300px}#styletower-mascots{position:fixed;bottom:0;z-index:-1;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}#styletower-mascots.mascots-right{right:10px}#styletower-mascots.mascots-left{left:10px}:root.right-sidebar #styletower-mascots.mascots-right{right:3px}:root.left-sidebar #styletower-mascots.mascots-left{left:3px}#styletower-mascots img{max-width:300px;display:block}:root.mascot-overlap #styletower-mascots{z-index:5}:root.mascot-dim #styletower-mascots{opacity:.35;transition:opacity .25s ease;pointer-events:auto}:root.mascot-dim #styletower-mascots:hover{opacity:1}.pln,.post-menu,body,div.pages a.selected,form table th,form[name=post] table td,header,input,select,span.omitted,textarea{color:var(--sc-textColor)!important}.com,p.intro span.name{color:var(--sc-nameColor)!important}p.intro a.capcode,p.intro span.capcode{color:purple!important}.tag,p.intro span.trip{color:var(--sc-tripColor)!important}:root .atn,:root .options-button,:root .typ,a:not(span.spoiler>a),a:visited,span.spoiler:hover>a:not(:hover){color:var(--sc-linkColor)!important}#import-link>.options-button:hover,.lit,:root a:hover,:root div.post p.intro a.post_no:hover{color:var(--sc-linkHColor)!important}.boardlist{color:var(--sc-headerColor)!important}.boardlist a{color:var(--sc-headerLColor)!important}.boardlist a:hover{color:var(--sc-headerLHColor)!important}.boardlist{background-color:var(--sc-headerBGColor);border-bottom-color:var(--sc-brderColor)}.atv,.str,.theme-catalog .replies .quote,div.body span.quote,span.spoiler:hover .quote{color:var(--sc-quoteColor)!important}.kwd,.option.header .option-title,.tab-label,span.subject{color:var(--sc-titleColor)!important}.option.header{font-size:140%}header h1{color:var(--sc-boardColor)!important;text-shadow:none!important}:root p.intro .clone-mentioned a,:root p.intro .mentioned a,a.post-btn{color:var(--sc-blinkColor)!important}:root.backlink-shadow p.intro .clone-mentioned a,:root.backlink-shadow p.intro .mentioned a{text-shadow:1px 1px 5px}:root div.body a.quotelink,:root div.body a[onclick*=citeReply],:root div.body a[onclick*=highlightReply]{color:var(--sc-qlColor)!important}pre{background:none repeat scroll 0 0 rgba(var(--sc-codeBackground))!important;border:1px solid rgba(var(--sc-codeBorder))!important}.pun,::placeholder{color:rgba(var(--sc-textColor-rgb),.4)!important}body{background:var(--sc-bgImg) var(--sc-bgColor)!important}.reply,:root.op-background .post.op{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important}#alert_div,#header-bar.dialog,#options_div,#pin-settings,#quick-reply .handle,.watch-menu,form table th,form[name=post] table td{background:rgb(var(--sc-mainColor-rgb))!important}.post-menu ul{background:rgb(var(--sc-mainColor-rgb))!important;border:1px solid var(--sc-brderColor)!important}.post-menu,.post-menu li{color:var(--sc-textColor)!important}.post-menu li:hover{background:rgb(var(--sc-mainColor-shift15))!important}#add-mascot,#add-theme,#oneechan-options,.tab-label{background:rgb(var(--sc-mainColor-rgb))!important}#add-mascot,#add-theme{color:var(--sc-textColor)!important}:root:not(.header-gradient) .boardlist{background:rgba(var(--sc-headerBGColor-rgb),var(--sc-navOp))!important}:root.header-gradient .boardlist{background:linear-gradient(rgb(var(--sc-headerBGColor-shift15)),rgba(var(--sc-headerBGColor-rgb),var(--sc-navOp)))!important}:root.header-shadow .boardlist{box-shadow:none!important}#link-quick-reply,#quick-reply input[type=submit],.options-button,button.outline,div.pages a.selected,form[name=post] input[type=submit],input[value=Next],input[value=Previous],label[for=q-spoiler-image]{background:linear-gradient(rgb(var(--sc-mainColor-shift15)),rgb(var(--sc-mainColor-rgb)))!important}#quick-reply input[type=submit]:hover,.import-input:hover+.options-button,.options-button:hover,button.outline:hover,div.pages a.selected:hover,form[name=post] input[type=submit]:hover,input[value=Next]:hover,input[value=Previous]:hover{background:rgb(var(--sc-mainColor-shift15))}#link-quick-reply:hover,:root.vertical-qr #quick-reply .handle{background:rgb(var(--sc-mainColor-rgb))}#quick-reply input,input[type=text],select,textarea{background:var(--sc-inputColor)!important;transition:background .2s,color .2s,border-color .2s!important}input[type=checkbox]{background:rgb(var(--sc-inputColor-shift25))!important}#quick-reply input:hover,input[type=checkbox]:hover,input[type=text]:hover,select:hover,textarea:hover{background:rgb(var(--sc-inputColor-hover))!important}hr:not(#unread-line){background-image:linear-gradient(to left,rgba(var(--sc-brderColor-rgb),0),rgb(var(--sc-brderColor-rgb)),rgba(var(--sc-brderColor-rgb),0))}#unread-line{background-image:linear-gradient(to left,rgba(var(--sc-unreadColor-rgb),0),rgb(var(--sc-unreadColor-rgb)),rgba(var(--sc-unreadColor-rgb),0))}div.post.reply[style*='box-shadow: 0 3px red'],div.post.reply[style*='box-shadow: 0px 3px red'],div.post.reply[style*='box-shadow: red 0px 3px']{box-shadow:0 3px rgb(var(--sc-unreadColor-rgb))!important}.post-hover{background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))!important}.inline{background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))!important}:root.post-info .reply>p.intro{background:rgba(var(--sc-mainColor-shiftM16),.2);border-bottom:1px solid rgb(var(--sc-mainColor-shift4))}.reply,:root.op-background .post.op{border-width:0 1px 1px 0;border-style:solid}:root.borders-all .reply,:root.borders-all.op-background .post.op{border-width:1px!important}:root.borders-none .reply,:root.borders-none.op-background .post.op{border:0!important}.post-menu ul,img.thread-image{border-radius:0!important}:root.rounded-corners #add-theme,:root.rounded-corners #alert_div,:root.rounded-corners #link-quick-reply,:root.rounded-corners #oneechan-options,:root.rounded-corners #options_div,:root.rounded-corners #pin-settings,:root.rounded-corners #quick-reply .handle,:root.rounded-corners #quick-reply input[type=submit],:root.rounded-corners #thread_stats,:root.rounded-corners .color-picker-btn,:root.rounded-corners .options-button,:root.rounded-corners .post-hover,:root.rounded-corners .post-menu ul,:root.rounded-corners .preview-border,:root.rounded-corners .reply,:root.rounded-corners .watch-menu,:root.rounded-corners button.outline,:root.rounded-corners div.pages a.selected,:root.rounded-corners img.board_image,:root.rounded-corners img.post-image,:root.rounded-corners img.thread-image,:root.rounded-corners input,:root.rounded-corners input[value=Next],:root.rounded-corners input[value=Previous],:root.rounded-corners label.tab-label,:root.rounded-corners label[for=q-spoiler-image],:root.rounded-corners select,:root.rounded-corners textarea,:root.rounded-corners.op-background .post.op{border-radius:3px!important}:root.post-info.rounded-corners .reply>p.intro,:root.rounded-corners #quick-reply,:root.rounded-corners:root.vertical-qr #quick-reply .handle{border-radius:3px 3px 0 0!important}#alert_div,#header-bar.dialog,#options_div,#pin-settings,#quick-reply,#quick-reply select,.post-hover,.reply,:root.op-background .post.op,:root.vertical-qr #quick-reply .handle,fieldset,select{border-color:var(--sc-brderColor)!important}#quick-reply,#quick-reply select,.watch-menu,:root.vertical-qr #quick-reply .handle,form table th,form[name=post] table td,input,label[for=q-spoiler-image],select,textarea{border:1px solid var(--sc-inputbColor)!important}#link-quick-reply,.options-button,button.outline,div.pages a.selected,input[value=Next],input[value=Previous]{border-style:solid;border-width:1px;border-color:rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM30))!important}button.outline{color:var(--sc-textColor)!important;cursor:pointer}#quick-reply input:focus,input[type=text]:focus,select:focus,textarea:focus{border:1px solid var(--sc-linkColor)!important}.boardlist{border:none!important}img.thread-image{box-shadow:0 0 5px rgba(0,0,0,.25)}#quick-reply,.watch-menu{box-shadow:1px 1px 3px rgba(0,0,0,.1)!important}div.ban{background:rgb(var(--sc-mainColor-rgb))!important;border:1px solid var(--sc-brderColor)!important}div.ban h2{background:var(--sc-headerBGColor)!important;color:var(--sc-headerColor)!important}.ban-reason-table td,.ban-reason-table th{border-color:var(--sc-brderColor)!important}.ban-reason-table th{background-color:var(--sc-headerBGColor)!important;color:var(--sc-headerColor)!important}:root.alt-spoiler span.spoiler,:root.alt-spoiler span.spoiler:not(:hover)>a{color:#fff;background:none repeat scroll 0 0 #fff}:root.alt-spoiler span.spoiler:focus,:root.alt-spoiler span.spoiler:hover{color:#000}#link-quick-reply,.boardlist,::placeholder,button,form,header h1,input,select,span,textarea{font-family:inherit!important;font-size:inherit!important}body{font-family:" + ($SS.conf["Custom Font"] ? "'" + $SS.conf["Custom Font"] + "'" : $SS.formatFont($SS.conf["Font Family"])) + "!important;font-size:" + $SS.conf["Font Size"] + "px!important}.post-menu{font-size:" + $SS.conf["Font Size"] + "px!important}.theme-catalog .replies>strong,p.fileinfo,span.omitted{font-size:82%!important}header h1{font-weight:400!important;font-size:" + (($SS.conf["Font Size"] < 13) ? 22 : 26) + "px!important}pre span{font-family:monospace!important;font-size:medium!important}body>.boardlist{font-size:" + ($SS.conf["Font Size"] - 1) + "px!important}@media (min-width:1280px) and (max-width:1920px){.boardlist{word-spacing:" + (($SS.conf["Font Size"] < 14) ? -1 : -2) + "px}}:root:not(.backlink-icon) p.intro .clone-mentioned a,:root:not(.backlink-icon) p.intro .mentioned a{font-size:" + $SS.conf["Backlink Font Size"] + "px!important}p.intro .clone-mentioned a.hash-link,p.intro .mentioned a.hash-link{font-size:" + ((parseInt($SS.conf["Backlink Font Size"], 10) || 10) + 2) + "px!important;margin-left:4px!important}#alert_div,#link-quick-reply,#oneechan-options,#options_div,.options-button,.tab-label,.theme-preview,a.options-button{font-size:" + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px!important}#quick-reply .handle,#quick-reply .handle::before,#quick-reply input[type=submit],#quick-reply label,button.outline,select:not(#oneechan-options select,#add-theme select){font-size:" + $SS.conf["UI Font Size"] + "px!important}#quick-reply input[type=submit],#quick-reply label{text-transform:uppercase}#quick-reply label{overflow:hidden;padding-bottom:2px}:root.underline-disabled a{text-decoration:none!important}#thread-interactions a{text-decoration:underline}:root.underline-quotes div.body a.quotelink,:root.underline-quotes div.body a[onclick*=citeReply],:root.underline-quotes div.body a[onclick*=highlightReply],:root.underline-quotes p.intro .clone-mentioned a:not(.hash-link),:root.underline-quotes p.intro .mentioned a:not(.hash-link){text-decoration:underline!important}#oneechan-version a,a.options-button{text-decoration:none!important}.option.header .option-title,.tab-label.selected,span.name,span.subject{font-weight:" + ($SS.conf["Bitmap Font"] ? "normal" : "bold") + "!important}.tab-label:not(.selected):not(:hover){font-weight:400;opacity:.85}form table th{font-weight:700}span.omitted{font-style:" + ($SS.conf["Bitmap Font"] ? 'none' : 'italic') + "}"+$SS.theme.customCSS+" "+($SS.conf["Sidebar Position"] !== 3 ? " :root.left-sidebar body{padding-left:306px}:root.right-sidebar body{padding-right:306px}:root.left-sidebar:not(.mini-sidebar) header,:root.left-sidebar:not(.mini-sidebar) img.board_image,:root.right-sidebar:not(.mini-sidebar) header,:root.right-sidebar:not(.mini-sidebar) img.board_image{position:fixed;margin:0}:root.left-sidebar:not(.mini-sidebar) header,:root.left-sidebar:not(.mini-sidebar) img.board_image{left:2px}:root.right-sidebar:not(.mini-sidebar) header,:root.right-sidebar:not(.mini-sidebar) img.board_image{right:2px}:root.left-sidebar:not(.mini-sidebar) img.board_image,:root.right-sidebar:not(.mini-sidebar) img.board_image{top:24px}:root.left-sidebar:not(.mini-sidebar) header,:root.right-sidebar:not(.mini-sidebar) header{top:128px;width:302px}:root.right-sidebar:not(.mini-sidebar) a.quick-reply-btn{top:230px!important}:root.left-sidebar #quick-reply{left:0!important;right:auto!important}:root.right-sidebar #quick-reply{right:0!important;left:auto!important}:root.ss-sidebar body::before{background:var(--sc-sidebar-bg);border-left:2px solid rgba(var(--sc-mainColor-rgb),.9);box-shadow:inset var(--sc-brderColor) 1px 0 0,inset var(--sc-brderColor) -1px 0 0;content:'';height:100%;width:306px;box-sizing:border-box;position:fixed;top:0;right:0;pointer-events:none}:root.ss-sidebar.left-sidebar body::before{border-right:2px solid rgba(var(--sc-mainColor-rgb),.9);border-left:none!important;left:0;right:auto!important}:root.vertical-qr:root.left-sidebar #quick-reply{transform:translateX(-100%);left:0!important;right:auto!important}:root.vertical-qr:root.left-sidebar #quick-reply th{transform:rotate(90deg);transform-origin:bottom left;right:auto;left:100%}:root.mini-sidebar:root.left-sidebar body{padding-left:32px!important}:root.mini-sidebar:root.right-sidebar body{padding-right:32px!important}:root.mini-sidebar header div.subtitle{display:none}:root.mini-sidebar:root.ss-sidebar body::before{width:31px!important}:root.mini-sidebar header h1{top:72px!important;letter-spacing:-1.4px;position:fixed;margin:0;padding-top:.05em}:root.mini-sidebar:root.right-sidebar header h1{right:32px;transform-origin:top right;transform:rotate(-90deg)}:root.mini-sidebar:root.left-sidebar header h1{left:32px;transform-origin:top left;transform:rotate(90deg)}" : "")+" #quick-reply{box-shadow:none!important;border-radius:0!important;margin:0!important}#quick-reply .close-btn{padding:2px 3px 2px 4px!important}#quick-reply input[type=checkbox]{margin:0 4px 1px;vertical-align:baseline;position:relative;top:3px}#quick-reply input[type=submit]{height:25px!important;margin:0!important}form[name=post]:not(#quick-reply) input[type=submit]{height:22px!important}#quick-reply select{margin:1px 0!important}#quick-reply input[type=text]{min-width:0!important}#quick-reply .st-submit-row input[type=submit]{width:100%!important;margin-top:1px!important}:root.expand-inputs form[name=post] input[type=text]{width:100%;box-sizing:border-box}#quick-reply textarea{min-height:25px!important}:root.left-sidebar #quick-reply textarea,:root.right-sidebar #quick-reply textarea{max-width:302px!important}:root.qr-background #quick-reply,:root.qr-background #quick-reply table{background:0 0!important;border:none}:root.qr-opacity #quick-reply{opacity:.9}:root.vertical-qr #quick-reply .close-btn{display:none}:root.vertical-qr #quick-reply textarea{resize:vertical!important;z-index:1}:root.vertical-qr #quick-reply{top:auto!important;position:fixed;right:0!important;left:auto!important;bottom:0!important;transform:translateX(100%);max-width:300px!important}:root.vertical-qr #quick-reply.focus,:root.vertical-qr #quick-reply:hover{transform:translateX(0)!important}:root.qr-transition.vertical-qr #quick-reply{transition:transform .3s ease-in-out .1s!important}:root.vertical-qr #quick-reply th{display:block;position:absolute;bottom:140px;right:100%;width:max-content;min-width:105px;padding:2px 2px 4px 4px;text-align:center;cursor:default;transform:rotate(-90deg);transform-origin:bottom right;white-space:nowrap}:root.vertical-qr #quick-reply th .handle{float:none;display:inline;width:auto}:root.vertical-qr #quick-reply.focus th,:root.vertical-qr #quick-reply:hover th{opacity:0!important;transition:opacity .42s linear}:root.fade-qr #quick-reply:not(.focus):not(:hover){opacity:.2!important;transition:opacity .2s ease-in-out 1s!important}form[name=post] .cf-turnstile{margin:1px auto}#quick-reply th .handle{text-transform:uppercase}.dropzone{color:var(--sc-textColor)!important;background:var(--sc-inputColor)!important;border:1px dashed var(--sc-inputbColor)!important}.dropzone .file-hint{color:rgba(var(--sc-textColor-rgb),.5)!important}.dropzone.dragover .file-hint,.dropzone:hover .file-hint{color:var(--sc-textColor)!important}.dropzone.dragover{background:rgb(var(--sc-inputColor-hover))!important;border-color:var(--sc-linkColor)!important}:root.rounded-corners .dropzone{border-radius:3px!important}.upload-filename-wrapper{gap:2px;align-items:center}#upload_filename input[name=filename]{box-sizing:border-box}#quick-reply #emote-menu{background:var(--sc-inputColor)!important;border:1px solid var(--sc-inputbColor)!important;box-sizing:border-box!important;transition:background .2s}#quick-reply td:has(> #emote-menu){position:relative}#quick-reply td:has(> #emote-menu) input[name=subject]{display:block;width:100%!important;max-width:calc(100% - 26px)!important;box-sizing:border-box}#quick-reply td:has(> #emote-menu) #emote-menu{float:none!important;position:absolute!important;top:0!important;right:0!important;bottom:0!important;height:auto!important;width:22px!important;margin:0!important}#quick-reply #emote-menu:hover{background:rgb(var(--sc-inputColor-hover))!important}:root.rounded-corners #quick-reply #emote-menu{border-radius:3px}#quick-reply #emote-list{background:var(--sc-inputColor)!important;border:1px solid var(--sc-inputbColor)!important;box-sizing:border-box}:root.rounded-corners #quick-reply #emote-list{border-radius:3px}#quick-reply #emote-list>img:hover{background:rgb(var(--sc-inputColor-shift25))}:root.backlink-icon p.intro .clone-mentioned a:not(.hash-link),:root.backlink-icon p.intro .mentioned a:not(.hash-link){font-size:0!important;padding:" + (($SS.conf["Font Size"] < 12) ? 5 : 6) + "px!important;margin-right:0!important;opacity:.6!important;position:relative;bottom:5px;left:2px;background-image:var(--sc-icon-backlink)!important}:root.backlink-icon p.intro .clone-mentioned a:not(.hash-link):hover,:root.backlink-icon p.intro .mentioned a:not(.hash-link):hover{opacity:1!important}:root.backlink-icon p.intro .clone-mentioned a.inline-active,:root.backlink-icon p.intro .mentioned a.inline-active{background-image:var(--sc-icon-downArrow)!important;opacity:1!important}:root.use-sc-icons p.intro i.fa.fa-lock,:root.use-sc-icons p.intro i.fa.fa-thumb-tack{color:transparent!important;font-size:0!important;background-color:transparent!important;background-position:center!important;background-repeat:no-repeat;display:inline-block;height:0!important;padding-top:16px!important;text-indent:-9999px!important;vertical-align:bottom;width:16px!important}:root.use-sc-icons p.intro i.fa.fa-lock{background-image:var(--sc-icon-threadClosed)!important}:root.use-sc-icons p.intro i.fa.fa-thumb-tack{background-image:var(--sc-icon-threadPinned)!important}#StyleTowerLink{float:right;margin-left:4px}:root.use-sc-icons #StyleTowerLink{font-size:0!important}:root.use-sc-icons #StyleTowerLink a,:root.use-sc-icons .boardlist>a[title=Options]{font-size:0!important;display:inline-block;width:15px;height:15px;background-position:center;background-repeat:no-repeat;background-size:contain;vertical-align:text-bottom;opacity:.8}:root.use-sc-icons #StyleTowerLink a{background-image:var(--sc-icon-menu)}:root.use-sc-icons .boardlist>a[title=Options]{background-image:var(--sc-icon-options)}:root.use-sc-icons #StyleTowerLink a:hover,:root.use-sc-icons .boardlist>a[title=Options]:hover{opacity:1}:root.use-sc-icons #scroll-buttons img{display:none}:root.use-sc-icons #scroll-buttons a::before{content:'';display:block;width:32px;height:32px;background-image:var(--sc-icon-downArrow);background-position:center;background-repeat:no-repeat;background-size:contain;opacity:.7}:root.use-sc-icons #scroll-buttons a:hover::before{opacity:1}:root.use-sc-icons #scroll-buttons a#nav-to-top::before{transform:rotate(180deg)}:root.hl-border .post.reply,:root.op-background.hl-border .post.op{border-left:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}:root.hl-border-down .post.reply,:root.op-background.hl-border-down .post.op{border-bottom:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}:root.hl-outline .post.reply,:root.op-background.hl-outline .post.op{outline:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")}.post-hover{outline:2px solid rgba(var(--sc-hoverOutColor-rgb),var(--sc-hoverOutOp))!important}:root.oneechan.highlight-you .hasQuoteYou.post.op,:root.oneechan.highlight-you .hasQuoteYou.post.reply,:root.oneechan.highlight-you .quoting-you.post.op,:root.oneechan.highlight-you .quoting-you.post.reply{border-left:" + $SS.conf["Width Decoration"] + "px solid rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}:root.oneechan.highlight-own .post.op.you,:root.oneechan.highlight-own .post.reply.you,:root.oneechan.highlight-own .yourPost.post.op,:root.oneechan.highlight-own .yourPost.post.reply{border-left:" + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}.reply.highlighted,.reply:target{background:rgba(var(--sc-replybgHLColor-rgb),.8)!important}.reply.highlighted,.reply:target{outline:1px solid rgba(var(--sc-replyslctColor-rgb),.8)!important}:root.oneechan div.body a.inline-active,:root.oneechan p.intro .clone-mentioned a.inline-active,:root.oneechan p.intro .mentioned a.inline-active{color:var(--sc-linkHColor)!important;font-weight:700!important;text-decoration:underline dotted!important;opacity:.85}:root.oneechan div.body a.inline-active:hover,:root.oneechan p.intro .clone-mentioned a.inline-active:hover,:root.oneechan p.intro .mentioned a.inline-active:hover{opacity:1}.theme-catalog div.thread .replies{margin-left:5px;margin-right:5px}.theme-catalog #Grid div.thread{margin:3px 3px 0 0;border-color:rgba(var(--sc-brderColor-rgb),.6)!important;transition:background-color .15s ease-in-out,border-color .15s ease-in-out}.theme-catalog .replies>strong{color:rgba(var(--sc-textColor-rgb),.6)!important;font-weight:400!important}:root.oneechan .theme-catalog #Grid div.thread{cursor:pointer}select#image_size,select#sort_by{margin-top:4px}.theme-catalog div.threads{padding:10px 0!important}:root.catalog-justify .theme-catalog .replies{text-align:justify!important;text-align-last:center;hyphens:auto}.theme-catalog div.thread:hover{background:rgb(var(--sc-mainColor-hover))!important;border-color:var(--sc-linkColor)!important}:root.oneechan .theme-catalog #Grid div.thread:hover{background:rgb(var(--sc-mainColor-hover))!important;border-color:var(--sc-linkColor)!important}:root.catalog-background .theme-catalog #Grid div.thread{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important}:root.rounded-corners.catalog-background .theme-catalog #Grid div.thread{border-radius:3px!important}:root.catalog-background .theme-catalog .replies{margin:0 5px 5px 5px}:root.catalog-background .theme-catalog img.thread-image{margin-top:8px}:root.catalog-thumbsize .theme-catalog img.thread-image{width:150px!important;height:150px!important;max-width:none!important;max-height:none!important}:root.catalog-thumbsize .theme-catalog div.grid-size-large img.thread-image{width:250px!important;height:250px!important}:root.oneechan .theme-catalog{--catalog-header-bg:var(--sc-headerBGColor);--catalog-header-color:var(--sc-headerColor);--catalog-header-border-color:var(--sc-brderColor);--catalog-row-bg:rgba(var(--sc-mainColor-rgb), var(--sc-replyOp));--catalog-row-hover-bg:rgba(var(--sc-hoverColor-rgb), var(--sc-hoverOp));--catalog-row-color:var(--sc-textColor);--catalog-row-border-color:var(--sc-brderColor)}:root.oneechan.rounded-corners .theme-catalog{--catalog-row-radius:3px}:root.oneechan .theme-catalog .catalog-controls,:root.oneechan .theme-catalog .catalog-text-mode{width:100%!important}@media (min-width:701px){:root.oneechan .theme-catalog .catalog-text-mode .catalog-table,:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody{display:block;width:100%}:root.oneechan .theme-catalog .catalog-text-mode .catalog-table thead{display:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody>tr:not(.catalog-row):not([hidden]),:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody>tr:not(.catalog-row):not([hidden]) td{display:block}:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody>tr[hidden]{display:none!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto auto auto auto;grid-template-areas:'subject maxed sticky locked replies images id time' 'preview preview preview preview preview preview preview preview';align-items:baseline;padding:.5em .8em!important;margin-bottom:6px;background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp));border:1px solid var(--sc-brderColor);border-radius:var(--catalog-row-radius);transition:background-color .15s ease-in-out}:root.oneechan .theme-catalog .catalog-text-mode .catalog-row:hover{background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))}:root.oneechan .theme-catalog .catalog-text-mode .catalog-row td{display:block;min-width:0;background:0 0!important;border:0!important;padding:0!important;text-align:left!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject{grid-area:subject;overflow-wrap:anywhere}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject a{color:var(--sc-titleColor)!important;font-weight:700;text-decoration:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject a:hover{color:var(--sc-linkHColor)!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies{grid-area:replies}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images{grid-area:images}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id{grid-area:id}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time{grid-area:time}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time{font-size:82%;white-space:nowrap;color:rgba(var(--sc-textColor-rgb),.6);font-variant-numeric:tabular-nums;margin-left:.65rem!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies{width:4.9em}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id{width:8.5em}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time{width:12.8em}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies::before{content:'R: '}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images::before{content:'I: '}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id::before{content:'No.'}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id a,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time a{color:rgba(var(--sc-textColor-rgb),.6)!important;text-decoration:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id a:hover,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time a:hover{color:var(--sc-linkHColor)!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-preview{grid-area:preview;margin-top:.35em!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-preview .catalog-preview-content{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-height:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed{grid-area:maxed}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky{grid-area:sticky}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked{grid-area:locked}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked:empty,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed:empty,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky:empty{display:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky{font-size:0!important;margin-left:.65rem!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked::before,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky::before{content:attr(data-label);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(var(--sc-textColor-rgb),.6)}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before{content:'MAXED'}}:root.st-home body{background:var(--sc-bgColor)!important;color:var(--sc-textColor)!important}:root.st-home .page a{color:var(--sc-linkColor)}:root.st-home .page a:hover{color:var(--sc-linkHColor)}:root.st-home #page{background:var(--sc-bgColor)!important;border-color:var(--sc-brderColor)!important;box-shadow:0 0 0 4px rgba(0,0,0,.3)!important}:root.st-home #layout,:root.st-home .main-column{background:var(--sc-bgColor)!important}:root.st-home .left-column{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .sub-panel{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-inputbColor)!important}:root.st-home .right-panel{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .poll-results,:root.st-home .thread-list li,:root.st-home .window-mods .info-list li{border-color:rgba(var(--sc-brderColor-rgb),.5)!important}:root.st-home .featured-frame{background:var(--sc-inputColor)!important}:root.st-home .poll-button{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-inputbColor)!important;color:var(--sc-textColor)!important}:root.st-home .poll-button.secondary,:root.st-home .poll-button:hover{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home #top-banner{background:rgba(var(--sc-headerBGColor-rgb),var(--sc-navOp))!important;border-bottom-color:var(--sc-brderColor)!important}:root.st-home .top-tagline{color:var(--sc-headerColor)}:root.st-home .top-tagline-subtext{color:var(--sc-headerColor);opacity:.7}:root.st-home a.top-nav-link{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-linkColor)!important}:root.st-home a.top-nav-link:hover{background:rgb(var(--sc-mainColor-shift15))!important;color:var(--sc-linkHColor)!important}:root.st-home .side-panel{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home a.menu-button{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-textColor)!important}:root.st-home a.menu-button:hover{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home .side-logo-copy{background-color:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .side-logo-copy-title{color:var(--sc-boardColor)!important}:root.st-home .skyline-copy-text-mode{background-color:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .friend-badge{background-color:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-linkColor)!important}:root.st-home .friend-badge:hover{background-color:rgb(var(--sc-mainColor-shift15))!important;color:var(--sc-linkHColor)!important}:root.st-home .friend-name,:root.st-home .panel-heading,:root.st-home .side-heading,:root.st-home .skyline-friends-title,:root.st-home .skyline-title{color:var(--sc-titleColor)!important}:root.st-home .skyline-subtitle{color:var(--sc-textColor)!important;opacity:.8}:root.st-home .skyline{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .skyline-right{border-color:var(--sc-brderColor)!important}:root.st-home .ticker{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .window{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important;box-shadow:2px 2px 0 rgba(0,0,0,.35)!important}:root.st-home .window-titlebar{background:rgb(var(--sc-headerBGColor-rgb))!important;color:var(--sc-headerColor)!important}:root.st-home .thread-title{color:var(--sc-linkColor)}:root.st-home .thread-meta,:root.st-home .thread-stats{opacity:.7}:root.st-home .featured-frame{border-color:var(--sc-brderColor)!important}:root.st-home .music-player{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important}:root.st-home .music-display{background:var(--sc-inputColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-label{color:var(--sc-textColor);opacity:.7}:root.st-home .music-button{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-inputbColor)!important;color:var(--sc-textColor)!important}:root.st-home .music-button:hover{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home .music-seek{background:var(--sc-inputColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-seek::-webkit-slider-runnable-track{background:var(--sc-inputColor)!important}:root.st-home .music-seek::-webkit-slider-thumb{background:var(--sc-textColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-seek::-moz-range-track{background:var(--sc-inputColor)!important}:root.st-home .music-seek::-moz-range-thumb{background:var(--sc-textColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-playlist li.active{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home #footer{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-textColor)!important}#styletower-notifications{position:fixed;top:38px;right:10px;z-index:65;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:6px;pointer-events:none}:root.bottom-header #styletower-notifications{top:auto;bottom:10px}.styletower-notification{pointer-events:auto;cursor:pointer;padding:7px 10px;border:1px solid;border-left-width:3px;border-radius:3px;box-shadow:rgba(0,0,0,.25) 0 2px 8px;opacity:0;transform:translateY(-4px);transition:opacity .15s ease,transform .15s ease;overflow-wrap:anywhere;font-size:12px;line-height:1.35;min-height:10px}.styletower-notification.visible{opacity:1;transform:translateY(0)}.styletower-notification.closing{opacity:0;transform:translateY(-4px)}.styletower-notification-text{pointer-events:none}.styletower-notification-text a{pointer-events:auto}#styletower-notifications .styletower-notification{color:var(--sc-textColor)!important;background:rgb(var(--sc-mainColor-rgb))!important;border-color:rgb(var(--sc-brderColor-rgb))!important;border-left-color:var(--sc-linkColor)!important}#styletower-notifications .styletower-notification-info{border-left-color:#6f8fb3!important}#styletower-notifications .styletower-notification-warning{border-left-color:#c7a85a!important}#styletower-notifications .styletower-notification-error{border-left-color:#c06b6b!important}#styletower-notifications .styletower-notification-success{border-left-color:var(--sc-quoteColor)!important}:root.ts-notifs #notification_container{position:fixed;top:38px;right:10px;left:auto;z-index:65;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:6px}:root.ts-notifs #notification_container .message_notification{margin:0!important;padding:0!important;background:0 0!important;border:none!important;width:auto!important}:root.ts-notifs #notification_container .notification_div{cursor:pointer;padding:7px 10px!important;border:1px solid rgb(var(--sc-brderColor-rgb))!important;border-left:3px solid var(--sc-linkColor)!important;border-radius:3px;box-shadow:rgba(0,0,0,.25) 0 2px 8px;overflow-wrap:anywhere;font-size:12px;line-height:1.35;min-height:10px;color:var(--sc-textColor)!important;background:rgb(var(--sc-mainColor-rgb))!important}:root.ts-notifs #notification_container .notification_div a.notification_close{float:right;margin-left:6px;color:var(--sc-linkColor)!important}:root.ts-notifs #notification_container .notification_div .alert_message{display:inline;margin:0!important;padding:0!important}"+($SS.conf["Center Notifications"] ? "#styletower-notifications{right:auto;left:50%;transform:translateX(-50%);width:min(500px,calc(100vw - 20px))}.ts-notifs #notification_container{right:auto!important;top:30px!important;left:50%!important;transform:translateX(-50%)!important;width:min(480px,calc(100vw - 20px))!important}" : "")+" "+($SS.conf["Full Border"] ? "#styletower-notifications .styletower-notification,.ts-notifs #notification_container .notification_div{border:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + "!important}#styletower-notifications .styletower-notification-info{border-color:#6f8fb3!important}#styletower-notifications .styletower-notification-warning{border-color:#c7a85a!important}#styletower-notifications .styletower-notification-error{border-color:#c06b6b!important}#styletower-notifications .styletower-notification-success{border-color:var(--sc-quoteColor)!important}" : "")+" "+($SS.conf["Style Scrollbars"] ? ":root{scrollbar-color:var(--sc-titleColor) var(--sc-bgColor)}#emote-list,.field{scrollbar-color:var(--sc-textColor) var(--sc-inputColor)}" : "")+" "+($SS.conf["Style Scrollbars"] && $SS.conf["Thin Scrollbars"] ? "*{scrollbar-width:thin}" : "")+" #add-theme,#oneechan-options{border:0!important;position:fixed;margin:auto}#oneechan-options{min-width:30em;max-width:45%;text-align:left!important;height:65vh;max-height:100em;top:0;bottom:0;left:0;right:0;box-shadow:rgba(0,0,0,.6) 0 0 10px!important;padding:.4em .4em 2.7em .4em}#options-container:not(.yui-skin-sam){padding:3px;box-shadow:inset rgba(0,0,0,.3) 0 0 5px;border-radius:5px}#options-container:not(.yui-skin-sam),.options-section{height:100%}.options-section{overflow-y:auto;overflow-x:hidden}#main-section .option,#mascot-section .option,#misc-section .option{display:block;border-top:1px solid rgba(0,0,0,.1);height:1.7em;padding:0 .45em}#main-section .option[hidden],#mascot-section .option[hidden],#misc-section .option[hidden]{display:none!important}#main-section>.option:nth-of-type(2n),#mascot-section>.option:nth-of-type(2n),#misc-section>.option:nth-of-type(2n){background:var(--sc-mainColor-shiftM5)!important}#main-section .buttons-container+.option,#mascot-section .buttons-container+.option{border-top:none!important}.option-title{line-height:1.7em}#main-section .option:first-child,#mascot-section .option:first-child,#misc-section .option:first-child{border-top:0!important}#main-section .option:last-child,#mascot-section .option:last-child,#misc-section .option:last-child{border-bottom:0!important}#main-section input,#main-section select,#mascot-section .option>input,#misc-section input,#misc-section select{float:right!important}#main-section input[type=checkbox],#mascot-section .option>input[type=checkbox],#misc-section input[type=checkbox]{float:left!important;margin-right:5px!important}input[name='Font Family']::-webkit-calendar-picker-indicator,input[name='Font Family']::-webkit-list-button{display:none!important}.suboption::before{border-bottom:1px solid rgba(0,0,0,.1);border-left:1px solid rgba(0,0,0,.1);content:'';display:inline-block;margin-right:2px;height:50%;width:6px}.suboption{padding-left:16px!important}.option.header{cursor:auto!important}.option.header.has-subsections .option-title::after{content:' ▾';font-size:.7em}.theme-preview{cursor:default}.theme-preview blockquote{margin:12px 40px!important}#themes-section .reply{padding:2px!important;position:relative;text-align:left;width:99.4%;border-radius:0!important}.theme-buttons-container{bottom:4px;right:2px;margin:0;opacity:0;position:absolute;z-index:3}.theme-preview:hover .theme-buttons-container{opacity:1}.theme-buttons-container>a{display:inline-block;margin:0 2px;padding:2px 5px;text-align:center;width:50px;border-radius:3px}.theme-preview .sfw-label{bottom:-5px;font-size:32px!important;margin:0!important;opacity:0;position:absolute;right:300px}.theme-preview.nsfw.selected .both,.theme-preview.nsfw:not(.selected) .sfw-label,.theme-preview.selected:not(.nsfw) .sfw-label{transition:opacity .3s,right .3s}.theme-preview.nsfw .notsafe,.theme-preview.selected .safe,.theme-preview.selected.nsfw .both{opacity:1;right:3px;z-index:1}.theme-preview.selected.nsfw .sfw-label:not(.both){opacity:0!important;right:300px!important;z-index:0!important}.theme-preview-post{flex-shrink:0;margin-bottom:8px;background:var(--sc-mainColor);font-size:11px;line-height:1.4;cursor:default;text-align:left;border-bottom:1px solid var(--sc-brderColor);padding-bottom:12px;box-shadow:0 9px 15px -12px rgba(0,0,0,.25)}.theme-preview-post .preview-border{display:block;border:1px solid var(--sc-brderColor);padding:6px;cursor:pointer}.theme-preview-post .preview-border:hover{outline:1px dashed var(--sc-linkColor)}.theme-preview-post [data-color]{cursor:pointer;transition:outline .1s}.theme-preview-post [data-color]:hover{outline:1px dashed var(--sc-linkColor)}.preview-name{color:var(--sc-nameColor);font-weight:700}.preview-trip{color:var(--sc-tripColor)}.preview-subject{color:var(--sc-titleColor);font-weight:700}.preview-quote{color:var(--sc-quoteColor)}.preview-backlink{color:var(--sc-blinkColor)}.preview-date{color:var(--sc-textColor);font-size:10px}.preview-postnum .preview-link{color:var(--sc-linkColor)}.preview-link{text-decoration:underline;cursor:pointer}.theme-preview-post .theme-preview-hover{display:block;margin:8px 4px 8px 14px;padding:6px;background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp));outline:2px solid rgba(var(--sc-hoverOutColor-rgb),var(--sc-hoverOutOp));cursor:pointer;font-size:11px}.theme-body{flex:1 1 auto;min-height:0;overflow-y:auto}.side-switch{position:absolute;top:4px;right:8px;cursor:pointer;font-size:16px;opacity:.5;z-index:1}.side-switch:hover{opacity:1}#add-theme{padding:20px!important;position:fixed;top:0;right:0;left:auto;max-height:100vh;height:calc(100vh - 2.2em);max-width:45vw;overflow:hidden;text-align:left!important;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;margin:2em .2em!important;box-shadow:-2px 0 12px rgba(0,0,0,.3)!important}#add-theme.left{right:auto;left:0;box-shadow:2px 0 12px rgba(0,0,0,.3)}#add-theme.left .side-switch{right:auto;left:8px}#add-theme .option-title{float:left;padding-left:5px;min-width:120px}#add-theme .theme-fields>label{line-height:22px;display:flex;justify-content:space-between;align-items:center;width:100%;padding:2px 4px;box-sizing:border-box;border:1px solid transparent}#add-theme .theme-fields>label:nth-child(2n){background:rgba(var(--sc-mainColor-shiftM16),.35)}#add-theme .theme-fields>label.picked{outline:1px dashed var(--sc-linkColor);outline-offset:-2px}#add-theme .option-title{flex-shrink:0;padding-right:8px}#add-theme .theme-fields>label>input[type=text],#add-theme .theme-fields>label>select{width:auto;max-width:55%;appearance:auto;text-align:left}#add-theme .theme-body{flex:0 1 auto;min-height:0;max-height:calc(85vh - 90px);overflow-y:auto;scrollbar-width:none}#add-theme .theme-body::-webkit-scrollbar{display:none}#add-theme .theme-body>label#customCSS{width:100%;display:flex;flex-direction:column;min-height:0;text-align:left}#add-theme .theme-body>label#customCSS>textarea{width:100%;max-width:100%;min-height:5em;height:clamp(4em,24vh,34vh);max-height:48vh;flex:0 1 auto;box-sizing:border-box;resize:vertical;overflow-y:auto;font-family:monospace}#add-theme .theme-fields>label>input[type=text],#add-theme .theme-fields>label>select{width:auto;max-width:100%;appearance:auto}.color-picker-wrap{display:inline-flex;align-items:center;vertical-align:middle;gap:2px;margin-top:3px}#add-theme .color-hex{width:60px;height:20px;text-align:center;border:1px solid var(--sc-inputbColor)!important;border-radius:2px;outline:0;box-sizing:content-box;font-family:monospace;font-size:11px;background:0 0}.color-picker-btn{width:24px;height:24px;padding:0;border:1px solid var(--sc-inputbColor)!important;cursor:pointer;box-sizing:border-box;background:0 0}.color-picker-btn::-webkit-color-swatch-wrapper{padding:0}.color-picker-btn::-webkit-color-swatch{border:none}:root.rounded-corners #add-theme .color-hex,:root.rounded-corners .color-picker-btn{border-radius:3px!important}#add-theme>div{margin-top:.6em;text-align:left}#add-theme>.theme-buttons{flex:0 0 auto;margin-top:0;text-align:right;border-top:1px solid var(--sc-brderColor);padding-top:6px;box-shadow:0 -10px 12px -12px rgba(0,0,0,.25)}#options-tabs{list-style:none;margin:0;padding:0;position:absolute;top:-24px;left:-1px}.tab-item{float:left;margin:0;padding:0}.tab-label{display:block;height:16px;margin:0 1px;padding:5px;text-align:center;width:75px;transition:all .1s ease-in-out}#overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99!important;background-color:rgba(0,0,0,.3)!important}#overlay2{background:rgba(0,0,0,.1)!important;position:fixed;top:0;left:0;height:100%;width:100%;text-align:center;z-index:125!important}#overlay2::before{content:'';display:inline-block;height:100%;vertical-align:middle}#overlay.previewing{display:none}#overlay.previewing~#overlay2{background-color:rgba(0,0,0,0)!important}.buttons-container{bottom:3px;left:5px;right:5px;display:flex;justify-content:space-between;align-items:center;position:absolute;z-index:100;margin:0}.btn-center{text-align:center;flex:1}.btn-right{margin-left:auto}.options-button{display:inline-block;line-height:1.4em;margin:0 .15em;min-width:3em;padding:.15em .75em;text-align:center;cursor:pointer}.options-button-small{padding:.15em .4em;min-width:2.3em}#import-link{line-height:1.7em;overflow:hidden;position:relative;float:left;height:1.85em!important;margin-top:-.15em;padding-top:.15em}#import-settings{position:relative;overflow:hidden;vertical-align:bottom}#import-settings>.import-input{left:0}.import-input{position:absolute;opacity:0;cursor:pointer}label.option>input[type=checkbox]{margin:.3em .15em 0!important}.option>input[type=text],span.option>select{width:125px}#oneechan-options input[type=text],#oneechan-options select{max-height:1.55em;margin-top:0!important;padding:0 .25em!important}#oneechan-options textarea{background:0 0!important;border:0!important;height:100%!important;width:100%!important;resize:none}#oneechan-version{opacity:.7;font-size:x-small!important}.link-delim{opacity:.4}[data-tower-status]>.option-title::after,label.tab-label[data-tower-status]::after{display:inline-block;margin-left:6px;padding:0 5px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:.04em;line-height:14px;vertical-align:middle;white-space:nowrap}[data-tower-status=added]>.option-title::after,label.tab-label[data-tower-status=added]::after{content:'Tower';color:#fff;background:#3fb950}[data-tower-status=changed]>.option-title::after,label.tab-label[data-tower-status=changed]::after{content:'changed';color:#1a1a1a;background:#d29922}#mascot-section .option.mascot-gallery-wrap{height:auto!important;padding:4px 6px!important;overflow:visible}#mascot-section .option.mascot-gallery-wrap::before{display:none!important}.mascot-controls{display:flex;align-items:center;gap:4px;margin:2px 0 6px}.mascot-hint{opacity:.6;font-size:x-small;margin-left:6px}.mascot-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;padding:2px 0 6px}.mascot-empty{opacity:.6;font-style:italic;padding:8px 2px}.mascot-tile{position:relative;border:1px solid var(--sc-inputbColor);padding:4px 4px 2px;cursor:pointer;text-align:center;opacity:.5}.mascot-tile.selected{opacity:1;border-color:var(--sc-linkColor);box-shadow:0 0 3px var(--sc-linkColor)}:root.rounded-corners .mascot-tile{border-radius:3px}.mascot-tile img{max-width:100%;height:96px;object-fit:contain;display:block;margin:0 auto;pointer-events:none}.mascot-tile-name{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:2px}.mascot-tile-btns{position:absolute;top:2px;right:2px;display:none}.mascot-tile:hover .mascot-tile-btns{display:block}.mascot-tile-btns a{display:inline-block;min-width:16px;padding:0 3px;cursor:pointer;background:rgb(var(--sc-mainColor-rgb));border:1px solid var(--sc-inputbColor);margin-left:2px;text-decoration:none!important}.mascot-tile-btns a:hover{border-color:var(--sc-linkColor)}#add-mascot{display:inline-block;vertical-align:middle;text-align:left;padding:8px 10px;min-width:340px;max-width:440px;max-height:92vh;overflow-y:auto;border:0!important;box-shadow:rgba(0,0,0,.6) 0 0 10px!important}#add-mascot:not(.advanced) .adv-only{display:none!important}#add-mascot.advanced .simple-only{display:none!important}#add-mascot .mascot-mode-row{border-bottom:1px solid rgba(128,128,128,.35);padding-bottom:4px;margin-bottom:6px!important}#add-mascot .mascot-mode-row .option-title{font-weight:700}#add-mascot select.mascot-input{height:auto!important;flex:none;width:auto!important}#add-mascot .mascot-filter-head{border-bottom:1px solid rgba(128,128,128,.35);margin-top:8px!important;opacity:.8}#add-mascot .mascot-filter-head .option-title{width:auto;font-weight:700}:root.rounded-corners #add-mascot{border-radius:3px!important}#add-mascot .add-mascot-label{display:flex;align-items:center;gap:6px;margin:4px 0}#add-mascot .add-mascot-label>.option-title{width:125px;flex:none}#add-mascot .mascot-input{flex:1;min-width:0;height:20px!important;width:auto!important;float:none!important}#add-mascot .mascot-clip-inputs{display:flex;flex:1;gap:3px}#add-mascot .mascot-clip{width:34px!important;flex:1;text-align:center}#add-mascot input[type=range].mascot-opacity{flex:1;width:auto}#add-mascot .mascot-opacity-val{width:38px;flex:none}#mascot-buttons-container{text-align:right;margin-top:8px}input[type=range].mascot-opacity{width:64px;float:none!important;margin:0!important;padding:0!important;height:20px;appearance:none;background:0 0}input[type=range].mascot-opacity::-webkit-slider-runnable-track{height:4px;background:rgba(0,0,0,.2);border-radius:2px}input[type=range].mascot-opacity::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--sc-textColor);margin-top:-4px;cursor:pointer}input[type=range].mascot-opacity::-moz-range-track{height:4px;background:rgba(0,0,0,.2);border-radius:2px;border:none}input[type=range].mascot-opacity::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--sc-textColor);border:none;cursor:pointer}.mascot-opacity-val{width:30px;font-size:11px;text-align:right;line-height:20px;margin-right:.3em}:root.rounded-corners .mascot-input,:root.rounded-corners .mascot-opacity-val{border-radius:3px!important}:root.rounded-corners input[type=range],:root.rounded-corners input[type=range]::-moz-range-track,:root.rounded-corners input[type=range]::-webkit-slider-runnable-track{border-radius:3px!important}:root.rounded-corners input[type=range]::-moz-range-thumb,:root.rounded-corners input[type=range]::-webkit-slider-thumb{border-radius:50%!important}#oneechan-options input[type=range].mascot-opacity{float:right!important}#oneechan-options .mascot-opacity-val{float:right;margin-right:.8em}";
+            css = "#expand-all-images,#password,#watch-board,#watch-pin,#watch-thread,.boardlist.bottom,.post-hover input[type=checkbox],.tab-select:not(:checked)+div,:root.hide-banner img.board_image,:root.hide-board-name header div.subtitle,:root.hide-board-name header h1,:root.hide-navlinkbot #thread-links,:root.hide-navlinks #thread-links,:root.hide-navlinks div.banner,:root.hide-navlinktop div.banner,:root.qr-controls #quick-reply a.close-btn,:root.show-file-info p.fileinfo .unimportant,:root.show-form form[name=post]:not(#quick-reply),:root:not(.st-home) footer,:root:not(.st-home) hr,[hidden],div.styles,form[name=postcontrols] .post input[type=checkbox],iframe[src='about:blank'],label:has(> a.threading-toggle){display:none}a,input:focus,select,textarea:focus{outline:0!important}.sjis{font-size:16px;line-height:17px;white-space:pre;font-family:IPAMonaPGothic,Mona,'MS PGothic',monospace;overflow:auto;display:block;clear:left}.files .file>a{float:left;margin-left:13px;margin-right:20px;margin-bottom:10px}.thread>.files .file>a{margin-bottom:0}p.fileinfo{margin-left:13px!important;margin-bottom:2px!important}p.fileinfo>.unimportant{margin-left:4px}.fixed.top-header body.active-index{padding-bottom:2.5em;padding-top:" + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em!important}.fixed.top-header body.active-thread{padding-bottom:0;padding-top:" + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em!important}.fixed.top-header body.active-catalog{padding-bottom:.5em;padding-top:" + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em!important}.fixed.top-header body{padding-top:2.4em!important}.boardlist.bottom{margin-bottom:15px}:root:not(.fixed) .boardlist:not(.bottom){margin-top:15px}div.post{margin:4px 0;overflow:hidden}:root:not(.reply-fit-width) form[name=postcontrols] div.post.reply:not([hidden]):not(.iq-hidden-post):not(.hidden-post):not(.hidden){display:table!important}div.thread{margin:0;clear:both;padding-bottom:10px}div.pages{float:left}span.spoiler,span.spoiler:not(:hover)>a{color:#000;background:none repeat scroll 0 0 #000}span.spoiler:focus,span.spoiler:hover{color:#fff}hr{clear:both}table{border-spacing:1px;margin-left:auto;margin-right:auto}#post-moderation-fields{float:right}.fixed.top-header body.active-index #post-moderation-fields,.fixed.top-header body.active-thread #post-moderation-fields{margin-bottom:8px}input[value=Next],input[value=Previous]{padding:4px 13px}div.post img.icon{margin-bottom:-3px}select{padding:0 0 2px 2px;margin-right:1px}.theme-catalog .replies>strong{margin-bottom:5px}form[name=post] input[type=file]{height:23px}#quick-reply input[type=file]{margin-right:0!important}:root.left-sidebar #quick-reply,:root.right-sidebar #quick-reply{max-width:300px!important}:root.left-sidebar #quick-reply input[type=text],:root.left-sidebar #quick-reply textarea,:root.right-sidebar #quick-reply input[type=text],:root.right-sidebar #quick-reply textarea{max-width:294px!important}:root.left-sidebar #quick-reply textarea,:root.right-sidebar #quick-reply textarea{min-width:294px!important}form[name=post]:not(#quick-reply){margin-top:1em}:root.normal-qr #quick-reply:not(:hover):not(.focus){width:303px!important}:root.normal-qr #quick-reply:not(:hover):not(.focus) table tr:not(:first-child){display:none!important}:root.normal-qr .qr-transition #quick-reply table tr:not(:first-child){transition:opacity .2s ease-in-out .1s}#quick-reply input[type=file]::-webkit-file-upload-button,#quick-reply input[type=file]::file-selector-button,form[name=post] input[type=file]::-webkit-file-upload-button,form[name=post] input[type=file]::file-selector-button{appearance:none;cursor:pointer;height:23px;padding:0 6px;text-transform:uppercase;margin-right:4px;background:rgb(var(--sc-mainColor-rgb))!important;border-style:solid;border-width:1px;border-color:rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM30))!important;color:var(--sc-textColor)!important;font-family:" + $SS.formatFont($SS.conf["Font Family"]) + ";font-size:" + $SS.conf["UI Font Size"] + "px!important}#quick-reply input[type=file]:hover::-webkit-file-upload-button,#quick-reply input[type=file]:hover::file-selector-button,form[name=post] input[type=file]:hover::-webkit-file-upload-button,form[name=post] input[type=file]:hover::file-selector-button{background:rgb(var(--sc-mainColor-shift10))!important}:root.follow-cursor #chx_hoverImage{max-width:calc(100vw - 100px);max-height:calc(100vh - 60px)}body{margin-left:" + $SS.conf["Margin Left"] + "px;margin-right:" + $SS.conf["Margin Right"] + "px;margin-top:0;margin-bottom:0}div.post.reply{padding:0!important;max-width:none!important}p.intro{margin:0!important;padding:5px 13px!important;display:block!important}span.omitted{margin-left:2px}.thread>span.omitted{display:block;clear:both;margin:2px 0 4px 4px!important;font-style:italic;opacity:.8}div.post.op{display:block;margin-left:4px;margin-right:4px}:root.op-background .op{padding:4px 0}:root.force-indent .op{margin-left:-12px}:root.force-wrapping .op::after{clear:both;content:'';display:block}.thread>.post.reply,.threadingContainer>.post.reply,:root.op-background .thread>.post.op{margin-bottom:" + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : 4) + "px!important}:root.oneechan .post.op.st-inlined:not(.iq-hidden-post),:root.oneechan .post.reply.st-inlined:not(.iq-hidden-post):not(.inline-cloned-post):not(.post-hover){opacity:.45;filter:grayscale(60%);transition:opacity .2s ease,filter .2s ease}:root.oneechan .post.op.st-inlined:not(.iq-hidden-post):hover,:root.oneechan .post.reply.st-inlined:not(.iq-hidden-post):not(.inline-cloned-post):not(.post-hover):hover{opacity:.85;filter:grayscale(20%)}.post+br,.reply+br,.thread>br,.threadingContainer>br{display:none!important}div.body{margin:" + $SS.conf["Margin Post Message"] + "!important}:root.fit-eximg .full-image{max-height:calc(100vh - 8rem)!important;max-width:100%!important;width:auto!important;height:auto!important}:root.reply-fit-width .reply.post:not(.iq-hidden-post):not(.hidden-post):not(.hidden){display:block!important}:root.reply-fit-width .post.reply{overflow:hidden!important}:root.post-info .post.reply>p.intro{box-shadow:inset rgba(0,0,0,.05) 0 -1px 2px;padding-top:2px!important}:root.post-info .post.reply.post-hover{padding:0 0 1px!important}p.intro a.post-btn{margin:0 0 0 5px!important}:root.reply-fit-width.fit-postmenu p.intro>a.post-btn{float:right!important;margin:2px 20px 0 0!important}:root.reply-fit-width .post a.post-btn{position:relative;opacity:0}:root.reply-fit-width .post:not(:hover) a.post-btn{transition:opacity .3s ease-out 0s!important}:root.reply-fit-width .post:hover a.post-btn{opacity:1;transition:opacity .3s ease-in .1s!important}pre{padding:5px!important;display:block;max-height:400px;overflow-x:auto;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}input[type=button],input[type=checkbox],input[type=submit]{cursor:pointer}input[type=checkbox]{display:inline-block;height:12px!important;position:relative;width:12px!important;border-radius:2px!important;appearance:none;margin:0 2px -1px 0}input[type=checkbox]:checked::before{content:'✓';position:absolute;top:0;left:0;height:12px;width:11px;font-size:11px;line-height:12px;text-align:center;color:var(--sc-textColor)}.boardlist:not(.bottom){padding:4px 4px 5px!important}:root:not(.fixed) .boardlist:not(.bottom){top:0;right:0;left:0;box-shadow:0 1px 2px rgba(0,0,0,.15)}:root.autohide body,:root.autohide.fixed.top-header body{padding-top:0!important;padding-bottom:0!important}:root:not(.fixed).right-sidebar .boardlist:not(.bottom){right:300px}:root:not(.fixed).left-sidebar .boardlist:not(.bottom){left:300px}.boardlist a{margin-left:2px}h2,h3{margin:auto}a.quick-reply-btn img{display:block}.post-menu{z-index:80}hr{height:2px;border:none!important}header h1{cursor:default;letter-spacing:-2px;padding-top:.1em}img.board_image{border:0!important;margin:0 auto;max-height:100px!important;max-width:100%}:root.banner-opacity img.board_image{opacity:.5;transition:opacity .3s ease-out 0s}:root.banner-opacity img.board_image:hover{opacity:1}div.pages a[href$='catalog.html']{margin-left:12px}div.pages a[href$='catalog.html'],input[value=Next],input[value=Previous]{font-weight:700;transition:opacity .3s ease-in 0s}div.pages a.selected:hover,div.pages a[href$='catalog.html']:hover,input[value=Next]:hover,input[value=Previous]:hover{opacity:.7}.pages a{padding:5px 10px;margin-left:-1px}div.banner{font-size:0!important;background:0 0!important;text-align:left;padding:0!important;margin:8px 0!important}div.banner a{font-size:" + $SS.conf["Font Size"] + "px!important;margin-right:5px}#updater{float:left}a.reply.hide-button,a.reply.show-button{color:var(--sc-blinkColor)!important;opacity:.5;text-decoration:none!important}a.reply.show-button{float:none!important;clear:both;display:flex;align-items:center;gap:13px;width:fit-content;margin-top:8px}a.reply.show-button .hide-icon,a.reply.show-button svg.plus{vertical-align:baseline!important;margin:0!important;display:inline-flex;align-items:center}a.reply.hide-button:hover,a.reply.show-button:hover{opacity:1;color:var(--sc-linkHColor)!important}a.hide-thread-link{display:none!important}a.st-index-hide{float:left;padding:2px}:root.st-menu-silent .post-menu{display:none!important}.post.st-index-hidden{opacity:.6}a.st-index-hide:has(+ .post.reply[style*='display: none']){display:none!important}#update_thread{padding-left:0!important}#thread-catalog::before,header div.subtitle a::before{content:'['}#thread-catalog::after,header div.subtitle a::after{content:']'}#thread-interactions{margin-bottom:5px}#st-index-nav{margin:12px 0 6px;clear:both}#st-index-nav>a{margin-right:5px;text-decoration:none}#st-index-nav>a::before{content:'['}#st-index-nav>a::after{content:']'}#st-index-age{opacity:.7;margin:0 8px 0 2px;font-size:" + (($SS.conf["Font Size"] <= 10) ? 9 : $SS.conf["Font Size"] - 2) + "px}#st-index-search{width:180px!important;min-width:0!important}.st-search-hidden{display:none!important}div.pages{font-size:0!important;background:rgb(var(--sc-mainColor-rgb))!important;border:1px solid var(--sc-brderColor)!important;color:var(--sc-textColor)!important;padding:5px 8px!important;margin:0 0 10px!important}:root.rounded-corners div.pages{border-radius:3px}div.pages a,div.pages input[type=submit]{font-size:" + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px!important;padding:2px 6px!important}div.pages form{display:inline!important}div.pages input[type=submit]{background:0 0!important;border:none!important;color:var(--sc-linkColor)!important;cursor:pointer;text-transform:none!important}div.pages input[type=submit]:hover{color:var(--sc-linkHColor)!important}div.pages a.selected{background:rgba(var(--sc-mainColor-shiftM16),.8)!important;color:var(--sc-textColor)!important;text-decoration:none!important;transition:opacity .3s ease-in 0s}:root.rounded-corners div.pages a.selected{border-radius:2px}.post-hover{z-index:75!important}:root.thumb-opacity .file>a img:not(.full-image){opacity:.5;transition:opacity .3s ease-out 0s}:root.thumb-opacity .file>a img:not(.full-image):hover{opacity:1}select{appearance:none}form[name=postcontrols]{overflow-wrap:break-word;word-break:break-word;margin-bottom:15px}.st-video-thumb img.post-image{display:none!important}video.st-thumb-video{display:block;cursor:pointer;max-width:300px;max-height:300px}#scroll-buttons.st-nav-custom{gap:var(--st-nav-gap,0)}#scroll-buttons.st-nav-reversed>a#nav-to-top{order:1}#scroll-buttons.st-nav-editing{z-index:130!important;cursor:move;outline:2px dashed var(--sc-linkColor);outline-offset:4px}#scroll-buttons.st-nav-editing a{cursor:move}#styletower-mascots{position:fixed;bottom:0;z-index:-1;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}#styletower-mascots.mascots-right{right:10px}#styletower-mascots.mascots-left{left:10px}:root.right-sidebar #styletower-mascots.mascots-right{right:3px}:root.left-sidebar #styletower-mascots.mascots-left{left:3px}#styletower-mascots img{max-width:300px;display:block}:root.mascot-overlap #styletower-mascots{z-index:5}:root.mascot-dim #styletower-mascots{opacity:.35;transition:opacity .25s ease;pointer-events:auto}:root.mascot-dim #styletower-mascots:hover{opacity:1}.post-menu,body,div.pages a.selected,form table th,form[name=post] table td,header,input,select,span.omitted,textarea{color:var(--sc-textColor)!important}p.intro span.name{color:var(--sc-nameColor)!important}p.intro a.capcode,p.intro span.capcode{color:purple!important}p.intro span.trip{color:var(--sc-tripColor)!important}:root .options-button,a:not(span.spoiler>a),a:visited,span.spoiler:hover>a:not(:hover){color:var(--sc-linkColor)!important}#import-link>.options-button:hover,:root a:hover,:root div.post p.intro a.post_no:hover{color:var(--sc-linkHColor)!important}.boardlist{color:var(--sc-headerColor)!important;border:none!important}.boardlist a{color:var(--sc-headerLColor)!important}.boardlist a:hover{color:var(--sc-headerLHColor)!important}.theme-catalog .replies .quote,div.body span.quote,span.spoiler:hover .quote{color:var(--sc-quoteColor)!important}.option.header .option-title,.tab-label,span.subject{color:var(--sc-titleColor)!important}.option.header{font-size:140%}header h1{color:var(--sc-boardColor)!important;text-shadow:none!important}:root p.intro .clone-mentioned a,:root p.intro .mentioned a,a.post-btn{color:var(--sc-blinkColor)!important}:root.backlink-shadow p.intro .clone-mentioned a,:root.backlink-shadow p.intro .mentioned a{text-shadow:1px 1px 5px}:root div.body a.quotelink,:root div.body a[onclick*=citeReply],:root div.body a[onclick*=highlightReply]{color:var(--sc-qlColor)!important}pre{background:none repeat scroll 0 0 rgba(var(--sc-codeBackground))!important;border:1px solid rgba(var(--sc-codeBorder))!important}::placeholder{color:rgba(var(--sc-textColor-rgb),.4)!important}body{background:var(--sc-bgImg) var(--sc-bgColor)!important}.reply,:root.op-background .post.op{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-width:0 1px 1px 0;border-style:solid}#alert_div,#header-bar.dialog,#options_div,#pin-settings,#quick-reply .handle,.watch-menu,form table th,form[name=post] table td{background:rgb(var(--sc-mainColor-rgb))!important}.post-menu ul{background:rgb(var(--sc-mainColor-rgb))!important;border:1px solid var(--sc-brderColor)!important}.post-menu,.post-menu li{color:var(--sc-textColor)!important}.post-menu li:hover{background:rgb(var(--sc-mainColor-shift15))!important}#add-mascot,#add-theme,#oneechan-options,#st-nav-editor,.tab-label{background:rgb(var(--sc-mainColor-rgb))!important}#add-mascot,#add-theme,#st-nav-editor{color:var(--sc-textColor)!important}:root:not(.header-gradient) .boardlist{background:rgba(var(--sc-headerBGColor-rgb),var(--sc-navOp))!important}:root.header-gradient .boardlist{background:linear-gradient(rgb(var(--sc-headerBGColor-shift15)),rgba(var(--sc-headerBGColor-rgb),var(--sc-navOp)))!important}:root.header-shadow .boardlist{box-shadow:none!important}#link-quick-reply,#quick-reply input[type=submit],.options-button,button.outline,div.pages a.selected,form[name=post] input[type=submit],input[value=Next],input[value=Previous]{background:linear-gradient(rgb(var(--sc-mainColor-shift15)),rgb(var(--sc-mainColor-rgb)))!important}#quick-reply input[type=submit]:hover,.import-input:hover+.options-button,.options-button:hover,button.outline:hover,div.pages a.selected:hover,form[name=post] input[type=submit]:hover,input[value=Next]:hover,input[value=Previous]:hover{background:rgb(var(--sc-mainColor-shift15))}#link-quick-reply:hover,:root.vertical-qr #quick-reply .handle{background:rgb(var(--sc-mainColor-rgb))}#quick-reply input,input[type=text],select,textarea{background:var(--sc-inputColor)!important;transition:background .2s,color .2s,border-color .2s!important}input[type=checkbox]{background:rgb(var(--sc-inputColor-shift25))!important}#quick-reply input:hover,input[type=checkbox]:hover,input[type=text]:hover,select:hover,textarea:hover{background:rgb(var(--sc-inputColor-hover))!important}hr{background-image:linear-gradient(to left,rgba(var(--sc-brderColor-rgb),0),rgb(var(--sc-brderColor-rgb)),rgba(var(--sc-brderColor-rgb),0))}div.post.reply[style*='box-shadow: 0 3px red'],div.post.reply[style*='box-shadow: 0px 3px red'],div.post.reply[style*='box-shadow: red 0px 3px']{box-shadow:0 3px rgb(var(--sc-unreadColor-rgb))!important}.post-hover{background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))!important}:root.post-info .reply>p.intro{background:rgba(var(--sc-mainColor-shiftM16),.2);border-bottom:1px solid rgb(var(--sc-mainColor-shift4))}:root.borders-all .reply,:root.borders-all.op-background .post.op{border-width:1px!important}:root.borders-none .reply,:root.borders-none.op-background .post.op{border:0!important}.post-menu ul,img.thread-image{border-radius:0!important}:root.rounded-corners #add-theme,:root.rounded-corners #alert_div,:root.rounded-corners #link-quick-reply,:root.rounded-corners #oneechan-options,:root.rounded-corners #options_div,:root.rounded-corners #pin-settings,:root.rounded-corners #quick-reply .handle,:root.rounded-corners #quick-reply input[type=submit],:root.rounded-corners #thread_stats,:root.rounded-corners .color-picker-btn,:root.rounded-corners .options-button,:root.rounded-corners .post-hover,:root.rounded-corners .post-menu ul,:root.rounded-corners .preview-border,:root.rounded-corners .reply,:root.rounded-corners .watch-menu,:root.rounded-corners button.outline,:root.rounded-corners div.pages a.selected,:root.rounded-corners img.board_image,:root.rounded-corners img.post-image,:root.rounded-corners img.thread-image,:root.rounded-corners input,:root.rounded-corners input[value=Next],:root.rounded-corners input[value=Previous],:root.rounded-corners label.tab-label,:root.rounded-corners select,:root.rounded-corners textarea,:root.rounded-corners.op-background .post.op{border-radius:3px!important}:root.post-info.rounded-corners .reply>p.intro,:root.rounded-corners #quick-reply,:root.rounded-corners:root.vertical-qr #quick-reply .handle{border-radius:3px 3px 0 0!important}#alert_div,#header-bar.dialog,#options_div,#pin-settings,#quick-reply,#quick-reply select,.post-hover,.reply,:root.op-background .post.op,:root.vertical-qr #quick-reply .handle,fieldset,select{border-color:var(--sc-brderColor)!important}#quick-reply,#quick-reply select,.watch-menu,:root.vertical-qr #quick-reply .handle,form table th,form[name=post] table td,input,select,textarea{border:1px solid var(--sc-inputbColor)!important}#link-quick-reply,.options-button,button.outline,div.pages a.selected,input[value=Next],input[value=Previous]{border-style:solid;border-width:1px;border-color:rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM15)) rgb(var(--sc-mainColor-shiftM30))!important}button.outline{color:var(--sc-textColor)!important;cursor:pointer}#quick-reply input:focus,input[type=text]:focus,select:focus,textarea:focus{border:1px solid var(--sc-linkColor)!important}img.thread-image{box-shadow:0 0 5px rgba(0,0,0,.25)}#quick-reply,.watch-menu{box-shadow:1px 1px 3px rgba(0,0,0,.1)!important}div.ban{background:rgb(var(--sc-mainColor-rgb))!important;border:1px solid var(--sc-brderColor)!important}div.ban h2{background:var(--sc-headerBGColor)!important;color:var(--sc-headerColor)!important}.ban-reason-table td,.ban-reason-table th{border-color:var(--sc-brderColor)!important}.ban-reason-table th{background-color:var(--sc-headerBGColor)!important;color:var(--sc-headerColor)!important}:root.alt-spoiler span.spoiler,:root.alt-spoiler span.spoiler:not(:hover)>a{color:#fff;background:none repeat scroll 0 0 #fff}:root.alt-spoiler span.spoiler:focus,:root.alt-spoiler span.spoiler:hover{color:#000}#link-quick-reply,.boardlist,::placeholder,button,form,header h1,input,select,span,textarea{font-family:inherit!important;font-size:inherit!important}body{font-family:" + ($SS.conf["Custom Font"] ? $SS.cssQuote($SS.conf["Custom Font"]) : $SS.formatFont($SS.conf["Font Family"])) + "!important;font-size:" + $SS.conf["Font Size"] + "px!important}.post-menu{font-size:" + $SS.conf["Font Size"] + "px!important}.theme-catalog .replies>strong,p.fileinfo,span.omitted{font-size:82%!important}header h1{font-weight:400!important;font-size:" + (($SS.conf["Font Size"] < 13) ? 22 : 26) + "px!important}pre span{font-family:monospace!important;font-size:medium!important}body>.boardlist{font-size:" + ($SS.conf["Font Size"] - 1) + "px!important}@media (min-width:1280px) and (max-width:1920px){.boardlist{word-spacing:" + (($SS.conf["Font Size"] < 14) ? -1 : -2) + "px}}:root:not(.backlink-icon) p.intro .clone-mentioned a,:root:not(.backlink-icon) p.intro .mentioned a{font-size:" + $SS.conf["Backlink Font Size"] + "px!important}p.intro .clone-mentioned a.hash-link,p.intro .mentioned a.hash-link{font-size:" + ((parseInt($SS.conf["Backlink Font Size"], 10) || 10) + 2) + "px!important;margin-left:4px!important}#alert_div,#link-quick-reply,#oneechan-options,#options_div,.options-button,.tab-label,.theme-preview,a.options-button{font-size:" + (($SS.conf["Font Size"] >= 18) ? 18 : ($SS.conf["Font Size"] <= 9 ? 9 : $SS.conf["Font Size"])) + "px!important}#quick-reply .handle,#quick-reply .handle::before,#quick-reply input[type=submit],#quick-reply label,button.outline,select:not(#oneechan-options select,#add-theme select){font-size:" + $SS.conf["UI Font Size"] + "px!important}#quick-reply input[type=submit],#quick-reply label{text-transform:uppercase}#quick-reply label{overflow:hidden;padding-bottom:2px}:root.underline-disabled a{text-decoration:none!important}#thread-interactions a{text-decoration:underline}:root.underline-quotes div.body a.quotelink,:root.underline-quotes div.body a[onclick*=citeReply],:root.underline-quotes div.body a[onclick*=highlightReply],:root.underline-quotes p.intro .clone-mentioned a:not(.hash-link),:root.underline-quotes p.intro .mentioned a:not(.hash-link){text-decoration:underline!important}#oneechan-version a,a.options-button{text-decoration:none!important}.option.header .option-title,.tab-label.selected,span.name,span.subject{font-weight:" + ($SS.conf["Bitmap Font"] ? "normal" : "bold") + "!important}.tab-label:not(.selected):not(:hover){font-weight:400;opacity:.85}form table th{font-weight:700}span.omitted{font-style:" + ($SS.conf["Bitmap Font"] ? 'none' : 'italic') + "}"+($SS.conf["Sidebar Position"] !== 3 ? " :root.left-sidebar body{padding-left:306px}:root.right-sidebar body{padding-right:306px}:root.left-sidebar:not(.mini-sidebar) header,:root.left-sidebar:not(.mini-sidebar) img.board_image,:root.right-sidebar:not(.mini-sidebar) header,:root.right-sidebar:not(.mini-sidebar) img.board_image{position:fixed;margin:0}:root.left-sidebar:not(.mini-sidebar) header,:root.left-sidebar:not(.mini-sidebar) img.board_image{left:2px}:root.right-sidebar:not(.mini-sidebar) header,:root.right-sidebar:not(.mini-sidebar) img.board_image{right:2px}:root.left-sidebar:not(.mini-sidebar) img.board_image,:root.right-sidebar:not(.mini-sidebar) img.board_image{top:24px}:root.left-sidebar:not(.mini-sidebar) header,:root.right-sidebar:not(.mini-sidebar) header{top:128px;width:302px}:root.right-sidebar:not(.mini-sidebar) a.quick-reply-btn{top:230px!important}:root.left-sidebar #quick-reply{left:0!important;right:auto!important}:root.right-sidebar #quick-reply{right:0!important;left:auto!important}:root.ss-sidebar body::before{background:var(--sc-sidebar-bg);border-left:2px solid rgba(var(--sc-mainColor-rgb),.9);box-shadow:inset var(--sc-brderColor) 1px 0 0,inset var(--sc-brderColor) -1px 0 0;content:'';height:100%;width:306px;box-sizing:border-box;position:fixed;top:0;right:0;pointer-events:none}:root.ss-sidebar.left-sidebar body::before{border-right:2px solid rgba(var(--sc-mainColor-rgb),.9);border-left:none!important;left:0;right:auto!important}:root.vertical-qr:root.left-sidebar #quick-reply{transform:translateX(-100%);left:0!important;right:auto!important}:root.vertical-qr:root.left-sidebar #quick-reply th{transform:rotate(90deg);transform-origin:bottom left;right:auto;left:100%}:root.mini-sidebar:root.left-sidebar body{padding-left:32px!important}:root.mini-sidebar:root.right-sidebar body{padding-right:32px!important}:root.mini-sidebar header div.subtitle{display:none}:root.mini-sidebar:root.ss-sidebar body::before{width:31px!important}:root.mini-sidebar header h1{top:72px!important;letter-spacing:-1.4px;position:fixed;margin:0;padding-top:.05em}:root.mini-sidebar:root.right-sidebar header h1{right:32px;transform-origin:top right;transform:rotate(-90deg)}:root.mini-sidebar:root.left-sidebar header h1{left:32px;transform-origin:top left;transform:rotate(90deg)}" : "")+" #quick-reply{box-shadow:none!important;border-radius:0!important;margin:0!important}#quick-reply .close-btn{padding:2px 3px 2px 4px!important}#quick-reply input[type=checkbox]{margin:0 4px 1px;vertical-align:baseline;position:relative;top:3px}#quick-reply input[type=submit]{height:25px!important;margin:0!important}form[name=post]:not(#quick-reply) input[type=submit]{height:22px!important}#quick-reply select{margin:1px 0!important}#quick-reply input[type=text]{min-width:0!important}#quick-reply .st-submit-row input[type=submit]{width:100%!important;margin-top:1px!important}:root.expand-inputs form[name=post] input[type=text]{width:100%;box-sizing:border-box}#quick-reply textarea{min-height:25px!important}:root.left-sidebar #quick-reply textarea,:root.right-sidebar #quick-reply textarea{max-width:302px!important}:root.qr-background #quick-reply,:root.qr-background #quick-reply table{background:0 0!important;border:none}:root.qr-opacity #quick-reply{opacity:.9}:root.vertical-qr #quick-reply .close-btn{display:none}:root.vertical-qr #quick-reply textarea{resize:vertical!important;z-index:1}:root.vertical-qr #quick-reply{top:auto!important;position:fixed;right:0!important;left:auto!important;bottom:0!important;transform:translateX(100%);max-width:300px!important}:root.vertical-qr #quick-reply.focus,:root.vertical-qr #quick-reply:hover{transform:translateX(0)!important}:root.qr-transition.vertical-qr #quick-reply{transition:transform .3s ease-in-out .1s!important}:root.vertical-qr #quick-reply th{display:block;position:absolute;bottom:140px;right:100%;width:max-content;min-width:105px;padding:2px 2px 4px 4px;text-align:center;cursor:default;transform:rotate(-90deg);transform-origin:bottom right;white-space:nowrap}:root.vertical-qr #quick-reply th .handle{float:none;display:inline;width:auto}:root.vertical-qr #quick-reply.focus th,:root.vertical-qr #quick-reply:hover th{opacity:0!important;transition:opacity .42s linear}:root.fade-qr #quick-reply:not(.focus):not(:hover){opacity:.2!important;transition:opacity .2s ease-in-out 1s!important}form[name=post] .cf-turnstile{margin:1px auto}#quick-reply th .handle{text-transform:uppercase}.dropzone{color:var(--sc-textColor)!important;background:var(--sc-inputColor)!important;border:1px dashed var(--sc-inputbColor)!important}.dropzone .file-hint{color:rgba(var(--sc-textColor-rgb),.5)!important}.dropzone.dragover .file-hint,.dropzone:hover .file-hint{color:var(--sc-textColor)!important}.dropzone.dragover{background:rgb(var(--sc-inputColor-hover))!important;border-color:var(--sc-linkColor)!important}:root.rounded-corners .dropzone{border-radius:3px!important}.upload-filename-wrapper{gap:2px;align-items:center}#upload_filename input[name=filename]{box-sizing:border-box}#quick-reply #emote-menu{background:var(--sc-inputColor)!important;border:1px solid var(--sc-inputbColor)!important;box-sizing:border-box!important;transition:background .2s}#quick-reply td:has(> #emote-menu){position:relative}#quick-reply td:has(> #emote-menu) input[name=subject]{display:block;width:100%!important;max-width:calc(100% - 26px)!important;box-sizing:border-box}#quick-reply td:has(> #emote-menu) #emote-menu{float:none!important;position:absolute!important;top:0!important;right:0!important;bottom:0!important;height:auto!important;width:22px!important;margin:0!important}#quick-reply #emote-menu:hover{background:rgb(var(--sc-inputColor-hover))!important}:root.rounded-corners #quick-reply #emote-menu{border-radius:3px}#quick-reply #emote-list{background:var(--sc-inputColor)!important;border:1px solid var(--sc-inputbColor)!important;box-sizing:border-box}:root.rounded-corners #quick-reply #emote-list{border-radius:3px}#quick-reply #emote-list>img:hover{background:rgb(var(--sc-inputColor-shift25))}:root.backlink-icon p.intro .clone-mentioned a:not(.hash-link),:root.backlink-icon p.intro .mentioned a:not(.hash-link){font-size:0!important;padding:" + (($SS.conf["Font Size"] < 12) ? 5 : 6) + "px!important;margin-right:0!important;opacity:.6!important;position:relative;bottom:5px;left:2px;background-image:var(--sc-icon-backlink)!important}:root.backlink-icon p.intro .clone-mentioned a:not(.hash-link):hover,:root.backlink-icon p.intro .mentioned a:not(.hash-link):hover{opacity:1!important}:root.backlink-icon p.intro .clone-mentioned a.inline-active,:root.backlink-icon p.intro .mentioned a.inline-active{background-image:var(--sc-icon-downArrow)!important;opacity:1!important}:root.use-sc-icons p.intro i.fa.fa-lock,:root.use-sc-icons p.intro i.fa.fa-thumb-tack{color:transparent!important;font-size:0!important;background-color:transparent!important;background-position:center!important;background-repeat:no-repeat;display:inline-block;height:0!important;padding-top:16px!important;text-indent:-9999px!important;vertical-align:bottom;width:16px!important}:root.use-sc-icons p.intro i.fa.fa-lock{background-image:var(--sc-icon-threadClosed)!important}:root.use-sc-icons p.intro i.fa.fa-thumb-tack{background-image:var(--sc-icon-threadPinned)!important}#StyleTowerLink{float:right;margin-left:4px}:root.use-sc-icons #StyleTowerLink{font-size:0!important}:root.use-sc-icons #StyleTowerLink a,:root.use-sc-icons .boardlist>a[title=Options]{font-size:0!important;display:inline-block;width:15px;height:15px;background-position:center;background-repeat:no-repeat;background-size:contain;vertical-align:text-bottom;opacity:.8}:root.use-sc-icons #StyleTowerLink a{background-image:var(--sc-icon-menu)}:root.use-sc-icons .boardlist>a[title=Options]{background-image:var(--sc-icon-options)}:root.use-sc-icons #StyleTowerLink a:hover,:root.use-sc-icons .boardlist>a[title=Options]:hover{opacity:1}:root.use-sc-icons #scroll-buttons img{display:none}:root.use-sc-icons #scroll-buttons a::before{content:'';display:block;width:32px;height:32px;background-image:var(--sc-icon-navArrow);background-position:center;background-repeat:no-repeat;background-size:contain;opacity:.7}:root.use-sc-icons #scroll-buttons a:hover::before{opacity:1}:root.use-sc-icons #scroll-buttons a#nav-to-top::before{transform:rotate(180deg)}:root.hl-border .post.reply,:root.op-background.hl-border .post.op{border-left:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}:root.hl-border-down .post.reply,:root.op-background.hl-border-down .post.op{border-bottom:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}:root.hl-outline .post.reply,:root.op-background.hl-outline .post.op{outline:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + " rgba(var(--sc-postHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")}.post-hover{outline:2px solid rgba(var(--sc-hoverOutColor-rgb),var(--sc-hoverOutOp))!important}:root.oneechan.highlight-you .hasQuoteYou.post.op,:root.oneechan.highlight-you .hasQuoteYou.post.reply,:root.oneechan.highlight-you .quoting-you.post.op,:root.oneechan.highlight-you .quoting-you.post.reply{border-left:" + $SS.conf["Width Decoration"] + "px solid rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}:root.oneechan.highlight-own .post.op.you,:root.oneechan.highlight-own .post.reply.you,:root.oneechan.highlight-own .yourPost.post.op,:root.oneechan.highlight-own .yourPost.post.reply{border-left:" + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ")!important}.reply.highlighted,.reply:target{background:rgba(var(--sc-replybgHLColor-rgb),.8)!important;outline:1px solid rgba(var(--sc-replyslctColor-rgb),.8)!important}:root.oneechan div.body a.inline-active,:root.oneechan p.intro .clone-mentioned a.inline-active,:root.oneechan p.intro .mentioned a.inline-active{color:var(--sc-linkHColor)!important;font-weight:700!important;text-decoration:underline dotted!important;opacity:.85}:root.oneechan div.body a.inline-active:hover,:root.oneechan p.intro .clone-mentioned a.inline-active:hover,:root.oneechan p.intro .mentioned a.inline-active:hover{opacity:1}.theme-catalog div.thread .replies{margin-left:5px;margin-right:5px}.theme-catalog #Grid div.thread{margin:3px 3px 0 0;border-color:rgba(var(--sc-brderColor-rgb),.6)!important;transition:background-color .15s ease-in-out,border-color .15s ease-in-out}.theme-catalog .replies>strong{color:rgba(var(--sc-textColor-rgb),.6)!important;font-weight:400!important}:root.oneechan .theme-catalog #Grid div.thread{cursor:pointer}select#image_size,select#sort_by{margin-top:4px}.theme-catalog div.threads{padding:10px 0!important}:root.catalog-justify .theme-catalog .replies{text-align:justify!important;text-align-last:center;hyphens:auto}.theme-catalog div.thread:hover{background:rgb(var(--sc-mainColor-hover))!important;border-color:var(--sc-linkColor)!important}:root.oneechan .theme-catalog #Grid div.thread:hover{background:rgb(var(--sc-mainColor-hover))!important;border-color:var(--sc-linkColor)!important}:root.catalog-background .theme-catalog #Grid div.thread{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important}:root.rounded-corners.catalog-background .theme-catalog #Grid div.thread{border-radius:3px!important}:root.catalog-background .theme-catalog .replies{margin:0 5px 5px 5px}:root.catalog-background .theme-catalog img.thread-image{margin-top:8px}:root.catalog-thumbsize .theme-catalog img.thread-image{width:150px!important;height:150px!important;max-width:none!important;max-height:none!important}:root.catalog-thumbsize .theme-catalog div.grid-size-large img.thread-image{width:250px!important;height:250px!important}:root.oneechan .theme-catalog{--catalog-header-bg:var(--sc-headerBGColor);--catalog-header-color:var(--sc-headerColor);--catalog-header-border-color:var(--sc-brderColor);--catalog-row-bg:rgba(var(--sc-mainColor-rgb), var(--sc-replyOp));--catalog-row-hover-bg:rgba(var(--sc-hoverColor-rgb), var(--sc-hoverOp));--catalog-row-color:var(--sc-textColor);--catalog-row-border-color:var(--sc-brderColor)}:root.oneechan.rounded-corners .theme-catalog{--catalog-row-radius:3px}:root.oneechan .theme-catalog .catalog-controls,:root.oneechan .theme-catalog .catalog-text-mode{width:100%!important}@media (min-width:701px){:root.oneechan .theme-catalog .catalog-text-mode .catalog-table,:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody{display:block;width:100%}:root.oneechan .theme-catalog .catalog-text-mode .catalog-table thead{display:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody>tr:not(.catalog-row):not([hidden]),:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody>tr:not(.catalog-row):not([hidden]) td{display:block}:root.oneechan .theme-catalog .catalog-text-mode .catalog-table tbody>tr[hidden]{display:none!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto auto auto auto;grid-template-areas:'subject maxed sticky locked replies images id time' 'preview preview preview preview preview preview preview preview';align-items:baseline;padding:.5em .8em!important;margin-bottom:6px;background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp));border:1px solid var(--sc-brderColor);border-radius:var(--catalog-row-radius);transition:background-color .15s ease-in-out}:root.oneechan .theme-catalog .catalog-text-mode .catalog-row:hover{background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp))}:root.oneechan .theme-catalog .catalog-text-mode .catalog-row td{display:block;min-width:0;background:0 0!important;border:0!important;padding:0!important;text-align:left!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject{grid-area:subject;overflow-wrap:anywhere}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject a{color:var(--sc-titleColor)!important;font-weight:700;text-decoration:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-subject a:hover{color:var(--sc-linkHColor)!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies{grid-area:replies}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images{grid-area:images}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id{grid-area:id;width:8.5em}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time{grid-area:time;width:12.8em}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time{font-size:82%;white-space:nowrap;color:rgba(var(--sc-textColor-rgb),.6);font-variant-numeric:tabular-nums;margin-left:.65rem!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies{width:4.9em}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-replies::before{content:'R: '}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-images::before{content:'I: '}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id::before{content:'No.'}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id a,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time a{color:rgba(var(--sc-textColor-rgb),.6)!important;text-decoration:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-id a:hover,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-time a:hover{color:var(--sc-linkHColor)!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-preview{grid-area:preview;margin-top:.35em!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-preview .catalog-preview-content{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-height:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed{grid-area:maxed}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky{grid-area:sticky}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked{grid-area:locked}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked:empty,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed:empty,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky:empty{display:none}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky{font-size:0!important;margin-left:.65rem!important}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-locked::before,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before,:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-sticky::before{content:attr(data-label);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(var(--sc-textColor-rgb),.6)}:root.oneechan .theme-catalog .catalog-text-mode .catalog-cell-maxed::before{content:'MAXED'}}:root.st-home body{background:var(--sc-bgColor)!important;color:var(--sc-textColor)!important}:root.st-home #page a{color:var(--sc-linkColor)}:root.st-home #page a:hover{color:var(--sc-linkHColor)}:root.st-home #page{background:var(--sc-bgColor)!important;border-color:var(--sc-brderColor)!important;box-shadow:0 0 0 4px rgba(0,0,0,.3)!important}:root.st-home #layout,:root.st-home .main-column{background:var(--sc-bgColor)!important}:root.st-home .left-column{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .poll-results,:root.st-home .thread-list li,:root.st-home .window-mods .info-list li{border-color:rgba(var(--sc-brderColor-rgb),.5)!important}:root.st-home .featured-frame{background:var(--sc-inputColor)!important;border-color:var(--sc-brderColor)!important}:root.st-home .poll-button{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-inputbColor)!important;color:var(--sc-textColor)!important}:root.st-home .poll-button.secondary,:root.st-home .poll-button:hover{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home #top-banner{background:rgba(var(--sc-headerBGColor-rgb),var(--sc-navOp))!important;border-bottom-color:var(--sc-brderColor)!important}:root.st-home .top-tagline{color:var(--sc-headerColor)}:root.st-home .top-tagline-subtext{color:var(--sc-headerColor);opacity:.7}:root.st-home a.top-nav-link{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-linkColor)!important}:root.st-home a.top-nav-link:hover{background:rgb(var(--sc-mainColor-shift15))!important;color:var(--sc-linkHColor)!important}:root.st-home .side-panel{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home a.menu-button{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-textColor)!important}:root.st-home a.menu-button:hover{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home .side-logo-copy{background-color:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .side-logo-copy-title{color:var(--sc-boardColor)!important}:root.st-home .skyline-copy-text-mode{background-color:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .friend-badge{background-color:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-linkColor)!important}:root.st-home .friend-badge:hover{background-color:rgb(var(--sc-mainColor-shift15))!important;color:var(--sc-linkHColor)!important}:root.st-home .friend-name,:root.st-home .panel-heading,:root.st-home .side-heading,:root.st-home .skyline-friends-title,:root.st-home .skyline-title{color:var(--sc-titleColor)!important}:root.st-home .skyline-subtitle{color:var(--sc-textColor)!important;opacity:.8}:root.st-home .skyline{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .skyline-right{border-color:var(--sc-brderColor)!important}:root.st-home .ticker{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important}:root.st-home .window{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important;box-shadow:2px 2px 0 rgba(0,0,0,.35)!important}:root.st-home .window-titlebar{background:rgb(var(--sc-headerBGColor-rgb))!important;color:var(--sc-headerColor)!important}:root.st-home .thread-title{color:var(--sc-linkColor)}:root.st-home .thread-meta,:root.st-home .thread-stats{opacity:.7}:root.st-home .music-player{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-brderColor)!important}:root.st-home .music-display{background:var(--sc-inputColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-label{color:var(--sc-textColor);opacity:.7}:root.st-home .music-button{background:rgb(var(--sc-mainColor-rgb))!important;border-color:var(--sc-inputbColor)!important;color:var(--sc-textColor)!important}:root.st-home .music-button:hover{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home .music-seek{background:var(--sc-inputColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-seek::-webkit-slider-runnable-track{background:var(--sc-inputColor)!important}:root.st-home .music-seek::-webkit-slider-thumb{background:var(--sc-textColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-seek::-moz-range-track{background:var(--sc-inputColor)!important}:root.st-home .music-seek::-moz-range-thumb{background:var(--sc-textColor)!important;border-color:var(--sc-inputbColor)!important}:root.st-home .music-playlist li.active{background:rgb(var(--sc-mainColor-shift15))!important}:root.st-home #footer{background:rgba(var(--sc-mainColor-rgb),var(--sc-replyOp))!important;border-color:var(--sc-brderColor)!important;color:var(--sc-textColor)!important}#styletower-notifications{position:fixed;top:38px;right:10px;z-index:65;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:6px;pointer-events:none}.styletower-notification{pointer-events:auto;cursor:pointer;padding:7px 10px;border:1px solid;border-left-width:3px;border-radius:3px;box-shadow:rgba(0,0,0,.25) 0 2px 8px;opacity:0;transform:translateY(-4px);transition:opacity .15s ease,transform .15s ease;overflow-wrap:anywhere;font-size:12px;line-height:1.35;min-height:10px}.styletower-notification.visible{opacity:1;transform:translateY(0)}.styletower-notification.closing{opacity:0;transform:translateY(-4px)}.styletower-notification-text{pointer-events:none}.styletower-notification-text a{pointer-events:auto}#styletower-notifications .styletower-notification{color:var(--sc-textColor)!important;background:rgb(var(--sc-mainColor-rgb))!important;border-color:rgb(var(--sc-brderColor-rgb))!important;border-left-color:var(--sc-linkColor)!important}#styletower-notifications .styletower-notification-info{border-left-color:#6f8fb3!important}#styletower-notifications .styletower-notification-warning{border-left-color:#c7a85a!important}#styletower-notifications .styletower-notification-error{border-left-color:#c06b6b!important}#styletower-notifications .styletower-notification-success{border-left-color:var(--sc-quoteColor)!important}:root.ts-notifs #notification_container{position:fixed;top:38px;right:10px;left:auto;z-index:65;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:6px}:root.ts-notifs #notification_container .message_notification{margin:0!important;padding:0!important;background:0 0!important;border:none!important;width:auto!important}:root.ts-notifs #notification_container .notification_div{cursor:pointer;padding:7px 10px!important;border:1px solid rgb(var(--sc-brderColor-rgb))!important;border-left:3px solid var(--sc-linkColor)!important;border-radius:3px;box-shadow:rgba(0,0,0,.25) 0 2px 8px;overflow-wrap:anywhere;font-size:12px;line-height:1.35;min-height:10px;color:var(--sc-textColor)!important;background:rgb(var(--sc-mainColor-rgb))!important}:root.ts-notifs #notification_container .notification_div a.notification_close{float:right;margin-left:6px;color:var(--sc-linkColor)!important}:root.ts-notifs #notification_container .notification_div .alert_message{display:inline;margin:0!important;padding:0!important}"+($SS.conf["Center Notifications"] ? "#styletower-notifications{right:auto;left:50%;transform:translateX(-50%);width:min(500px,calc(100vw - 20px))}.ts-notifs #notification_container{right:auto!important;top:30px!important;left:50%!important;transform:translateX(-50%)!important;width:min(480px,calc(100vw - 20px))!important}" : "")+" "+($SS.conf["Full Border"] ? "#styletower-notifications .styletower-notification,.ts-notifs #notification_container .notification_div{border:" + $SS.conf["Width Decoration"] + "px " + $SS.conf["Highlight Style"] + "!important}#styletower-notifications .styletower-notification-info{border-color:#6f8fb3!important}#styletower-notifications .styletower-notification-warning{border-color:#c7a85a!important}#styletower-notifications .styletower-notification-error{border-color:#c06b6b!important}#styletower-notifications .styletower-notification-success{border-color:var(--sc-quoteColor)!important}" : "")+" "+($SS.conf["Style Scrollbars"] ? ":root{scrollbar-color:var(--sc-titleColor) var(--sc-bgColor)}#emote-list,.field{scrollbar-color:var(--sc-textColor) var(--sc-inputColor)}" : "")+" "+($SS.conf["Style Scrollbars"] && $SS.conf["Thin Scrollbars"] ? "*{scrollbar-width:thin}" : "")+" #add-theme,#oneechan-options{border:0!important;position:fixed;margin:auto}#oneechan-options{min-width:30em;max-width:45%;text-align:left!important;height:65vh;max-height:100em;top:0;bottom:0;left:0;right:0;box-shadow:rgba(0,0,0,.6) 0 0 10px!important;padding:.4em .4em 2.7em .4em}#options-container{padding:3px;box-shadow:inset rgba(0,0,0,.3) 0 0 5px;border-radius:5px}#options-container,.options-section{height:100%}.options-section{overflow-y:auto;overflow-x:hidden}#main-section .option,#mascot-section .option,#misc-section .option{display:block;border-top:1px solid rgba(0,0,0,.1);height:1.7em;padding:0 .45em}#main-section .option[hidden],#mascot-section .option[hidden],#misc-section .option[hidden]{display:none!important}#main-section>.option:nth-of-type(2n),#mascot-section>.option:nth-of-type(2n),#misc-section>.option:nth-of-type(2n){background:var(--sc-mainColor-shiftM5)!important}#main-section .buttons-container+.option,#mascot-section .buttons-container+.option{border-top:none!important}.option-title{line-height:1.7em}#main-section .option:first-child,#mascot-section .option:first-child,#misc-section .option:first-child{border-top:0!important}#main-section .option:last-child,#mascot-section .option:last-child,#misc-section .option:last-child{border-bottom:0!important}#main-section input,#main-section select,#mascot-section .option>input,#misc-section input,#misc-section select{float:right!important}#main-section input[type=checkbox],#mascot-section .option>input[type=checkbox],#misc-section input[type=checkbox]{float:left!important;margin-right:5px!important}.suboption::before{border-bottom:1px solid rgba(0,0,0,.1);border-left:1px solid rgba(0,0,0,.1);content:'';display:inline-block;margin-right:2px;height:50%;width:6px}.suboption{padding-left:16px!important}.option.header{cursor:auto!important}.option.header.has-subsections .option-title::after{content:' ▾';font-size:.7em}.theme-preview{cursor:default}.theme-preview a.pv-link{color:var(--pv-link)!important}.theme-preview a.pv-link:hover{color:var(--pv-linkh)!important}.theme-preview blockquote{margin:12px 40px!important}#themes-section .reply{padding:2px!important;position:relative;text-align:left;width:99.4%;border-radius:0!important}.theme-buttons-container{bottom:4px;right:2px;margin:0;opacity:0;position:absolute;z-index:3}.theme-preview:hover .theme-buttons-container{opacity:1}.theme-buttons-container>a{display:inline-block;margin:0 2px;padding:2px 5px;text-align:center;width:50px;border-radius:3px}.theme-preview .selected-label{bottom:-5px;font-size:32px!important;margin:0!important;opacity:0;position:absolute;right:300px;transition:opacity .3s,right .3s}.theme-preview.selected .selected-label{opacity:1;right:3px;z-index:1}.theme-preview-post{flex-shrink:0;margin-bottom:8px;background:var(--sc-mainColor);font-size:11px;line-height:1.4;cursor:default;text-align:left;border-bottom:1px solid var(--sc-brderColor);padding-bottom:12px;box-shadow:0 9px 15px -12px rgba(0,0,0,.25)}.theme-preview-post .preview-border{display:block;border:1px solid var(--sc-brderColor);padding:6px;cursor:pointer}.theme-preview-post .preview-border:hover{outline:1px dashed var(--sc-linkColor)}.theme-preview-post [data-color]{cursor:pointer;transition:outline .1s}.theme-preview-post [data-color]:hover{outline:1px dashed var(--sc-linkColor)}.preview-name{color:var(--sc-nameColor);font-weight:700}.preview-trip{color:var(--sc-tripColor)}.preview-subject{color:var(--sc-titleColor);font-weight:700}.preview-quote{color:var(--sc-quoteColor)}.preview-backlink{color:var(--sc-blinkColor)}.preview-date{color:var(--sc-textColor);font-size:10px}.preview-postnum .preview-link{color:var(--sc-linkColor)}.preview-link{text-decoration:underline;cursor:pointer}.theme-preview-post .theme-preview-hover{display:block;margin:8px 4px 8px 14px;padding:6px;background:rgba(var(--sc-hoverColor-rgb),var(--sc-hoverOp));outline:2px solid rgba(var(--sc-hoverOutColor-rgb),var(--sc-hoverOutOp));cursor:pointer;font-size:11px}.theme-body{flex:1 1 auto;min-height:0;overflow-y:auto}.side-switch{position:absolute;top:4px;right:8px;cursor:pointer;font-size:16px;opacity:.5;z-index:1}.side-switch:hover{opacity:1}#add-theme{padding:20px!important;position:fixed;top:0;right:0;left:auto;max-height:100vh;height:calc(100vh - 2.2em);max-width:45vw;overflow:hidden;text-align:left!important;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;margin:2em .2em!important;box-shadow:-2px 0 12px rgba(0,0,0,.3)!important}#add-theme.left{right:auto;left:0;box-shadow:2px 0 12px rgba(0,0,0,.3)}#add-theme.left .side-switch{right:auto;left:8px}#add-theme .option-title{float:left;flex-shrink:0;padding-left:5px;padding-right:8px;min-width:120px}#add-theme .theme-fields>label{line-height:22px;display:flex;justify-content:space-between;align-items:center;width:100%;padding:2px 4px;box-sizing:border-box;border:1px solid transparent}#add-theme .theme-fields>label:nth-child(2n){background:rgba(var(--sc-mainColor-shiftM16),.35)}#add-theme .theme-fields>label.picked{outline:1px dashed var(--sc-linkColor);outline-offset:-2px}#add-theme .theme-fields>label>input[type=text],#add-theme .theme-fields>label>select{width:auto;max-width:100%;appearance:auto;text-align:left}#add-theme .theme-body{flex:0 1 auto;min-height:0;max-height:calc(85vh - 90px);overflow-y:auto;scrollbar-width:none}#add-theme .theme-body::-webkit-scrollbar{display:none}#add-theme .theme-body>label#customCSS{width:100%;display:flex;flex-direction:column;min-height:0;text-align:left}#add-theme .theme-body>label#customCSS>textarea{width:100%;max-width:100%;min-height:5em;height:clamp(4em,24vh,34vh);max-height:48vh;flex:0 1 auto;box-sizing:border-box;resize:vertical;overflow-y:auto;font-family:monospace}.color-picker-wrap{display:inline-flex;align-items:center;vertical-align:middle;gap:2px;margin-top:3px}#add-theme .color-hex{width:60px;height:20px;text-align:center;border:1px solid var(--sc-inputbColor)!important;border-radius:2px;outline:0;box-sizing:content-box;font-family:monospace;font-size:11px;background:0 0}.color-picker-btn{width:24px;height:24px;padding:0;border:1px solid var(--sc-inputbColor)!important;cursor:pointer;box-sizing:border-box;background:0 0}.color-picker-btn::-webkit-color-swatch-wrapper{padding:0}.color-picker-btn::-webkit-color-swatch{border:none}:root.rounded-corners #add-theme .color-hex,:root.rounded-corners .color-picker-btn{border-radius:3px!important}#add-theme>div{margin-top:.6em;text-align:left}#add-theme>.theme-buttons{flex:0 0 auto;margin-top:0;text-align:right;border-top:1px solid var(--sc-brderColor);padding-top:6px;box-shadow:0 -10px 12px -12px rgba(0,0,0,.25)}#options-tabs{list-style:none;margin:0;padding:0;position:absolute;top:-24px;left:-1px}.tab-item{float:left;margin:0;padding:0}.tab-label{display:block;height:16px;margin:0 1px;padding:5px;text-align:center;width:75px;transition:all .1s ease-in-out}#overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99!important;background-color:rgba(0,0,0,.3)!important}#overlay2{background:rgba(0,0,0,.1)!important;position:fixed;top:0;left:0;height:100%;width:100%;text-align:center;z-index:125!important}#overlay2::before{content:'';display:inline-block;height:100%;vertical-align:middle}#overlay.previewing{display:none}#overlay.previewing~#overlay2{background-color:rgba(0,0,0,0)!important}.buttons-container{bottom:3px;left:5px;right:5px;display:flex;justify-content:space-between;align-items:center;position:absolute;z-index:100;margin:0}.btn-center{text-align:center;flex:1}.btn-right{margin-left:auto}.options-button{display:inline-block;line-height:1.4em;margin:0 .15em;min-width:3em;padding:.15em .75em;text-align:center;cursor:pointer}#import-link{line-height:1.7em;overflow:hidden;position:relative;float:left;height:1.85em!important;margin-top:-.15em;padding-top:.15em}#import-settings{position:relative;overflow:hidden;vertical-align:bottom}#import-settings>.import-input{left:0}.import-input{position:absolute;opacity:0;cursor:pointer}label.option>input[type=checkbox]{margin:.3em .15em 0!important}.option>input[type=text],span.option>select{width:125px}#oneechan-options input[type=text],#oneechan-options select{max-height:1.55em;margin-top:0!important;padding:0 .25em!important}#oneechan-options textarea{background:0 0!important;border:0!important;height:100%!important;width:100%!important;resize:none}#oneechan-version{opacity:.7;font-size:x-small!important}.link-delim{opacity:.4}[data-tower-status]>.option-title::after,label.tab-label[data-tower-status]::after{display:inline-block;margin-left:6px;padding:0 5px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:.04em;line-height:14px;vertical-align:middle;white-space:nowrap}[data-tower-status=added]>.option-title::after,label.tab-label[data-tower-status=added]::after{content:'Tower';color:#fff;background:#3fb950}[data-tower-status=changed]>.option-title::after,label.tab-label[data-tower-status=changed]::after{content:'changed';color:#1a1a1a;background:#d29922}#mascot-section .option.mascot-gallery-wrap{height:auto!important;padding:4px 6px!important;overflow:visible}#mascot-section .option.mascot-gallery-wrap::before{display:none!important}.mascot-controls{display:flex;align-items:center;gap:4px;margin:2px 0 6px}.mascot-hint{opacity:.6;font-size:x-small;margin-left:6px}.mascot-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;padding:2px 0 6px}.mascot-empty{opacity:.6;font-style:italic;padding:8px 2px}.mascot-tile{position:relative;border:1px solid var(--sc-inputbColor);padding:4px 4px 2px;cursor:pointer;text-align:center;opacity:.5}.mascot-tile.selected{opacity:1;border-color:var(--sc-linkColor);box-shadow:0 0 3px var(--sc-linkColor)}:root.rounded-corners .mascot-tile{border-radius:3px}.mascot-tile img{max-width:100%;height:96px;object-fit:contain;display:block;margin:0 auto;pointer-events:none}.mascot-tile-name{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:2px}.mascot-tile-btns{position:absolute;top:2px;right:2px;display:none}.mascot-tile:hover .mascot-tile-btns{display:block}.mascot-tile-btns a{display:inline-block;min-width:16px;padding:0 3px;cursor:pointer;background:rgb(var(--sc-mainColor-rgb));border:1px solid var(--sc-inputbColor);margin-left:2px;text-decoration:none!important}.mascot-tile-btns a:hover{border-color:var(--sc-linkColor)}.option>a.options-button{float:right;margin-top:.15em}.st-nav-status{float:right;opacity:.6;margin-right:.6em;line-height:1.7em}#st-nav-editor .mascot-hint{display:block;margin:0 0 6px}#add-mascot,#st-nav-editor{display:inline-block;vertical-align:middle;text-align:left;padding:8px 10px;min-width:340px;max-width:440px;max-height:92vh;overflow-y:auto;border:0!important;box-shadow:rgba(0,0,0,.6) 0 0 10px!important}#add-mascot:not(.advanced) .adv-only{display:none!important}#add-mascot.advanced .simple-only{display:none!important}#add-mascot .mascot-mode-row{border-bottom:1px solid rgba(128,128,128,.35);padding-bottom:4px;margin-bottom:6px!important}#add-mascot .mascot-mode-row .option-title{font-weight:700}#add-mascot select.mascot-input{height:auto!important;flex:none;width:auto!important}#add-mascot .mascot-filter-head,#st-nav-editor .mascot-filter-head{border-bottom:1px solid rgba(128,128,128,.35);margin-top:8px!important;opacity:.8}#add-mascot .mascot-filter-head .option-title,#st-nav-editor .mascot-filter-head .option-title{width:auto;font-weight:700}:root.rounded-corners #add-mascot,:root.rounded-corners #st-nav-editor{border-radius:3px!important}#add-mascot .add-mascot-label,#st-nav-editor .add-mascot-label{display:flex;align-items:center;gap:6px;margin:4px 0}#add-mascot .add-mascot-label>.option-title,#st-nav-editor .add-mascot-label>.option-title{width:125px;flex:none}#add-mascot .mascot-input{flex:1;min-width:0;height:20px!important;width:auto!important;float:none!important}#add-mascot .mascot-clip-inputs{display:flex;flex:1;gap:3px}#add-mascot .mascot-clip{width:34px!important;flex:1;text-align:center}#add-mascot input[type=range].mascot-opacity,#st-nav-editor input[type=range].mascot-opacity{flex:1;width:auto}#add-mascot .mascot-opacity-num,#st-nav-editor .mascot-opacity-num{width:60px;height:20px;flex:none;text-align:right;box-sizing:border-box}#add-mascot .mascot-opacity-val,#st-nav-editor .mascot-opacity-val{width:auto;min-width:1.4em;text-align:left;flex:none}#mascot-buttons-container,#st-nav-buttons-container{text-align:right;margin-top:8px}input[type=range].mascot-opacity{width:64px;float:none!important;margin:0!important;padding:0!important;height:20px;appearance:none;background:0 0}input[type=range].mascot-opacity::-webkit-slider-runnable-track{height:4px;background:rgba(0,0,0,.2);border-radius:2px}input[type=range].mascot-opacity::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--sc-textColor);margin-top:-4px;cursor:pointer}input[type=range].mascot-opacity::-moz-range-track{height:4px;background:rgba(0,0,0,.2);border-radius:2px;border:none}input[type=range].mascot-opacity::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--sc-textColor);border:none;cursor:pointer}.mascot-opacity-val{width:30px;font-size:11px;text-align:right;line-height:20px;margin-right:.3em}:root.rounded-corners .mascot-input,:root.rounded-corners .mascot-opacity-val{border-radius:3px!important}:root.rounded-corners input[type=range],:root.rounded-corners input[type=range]::-moz-range-track,:root.rounded-corners input[type=range]::-webkit-slider-runnable-track{border-radius:3px!important}:root.rounded-corners input[type=range]::-moz-range-thumb,:root.rounded-corners input[type=range]::-webkit-slider-thumb{border-radius:50%!important}#oneechan-options input[type=range].mascot-opacity{float:right!important}#oneechan-options .mascot-opacity-val{float:right;margin-right:.8em}";
 
             if (reload)
                 $("#ch4SS").text(css);
             else
                 $(getDocHead()).append($("<style type='text/css' id=ch4SS>").text(css));
+
+            // The theme's custom CSS gets its own element: a syntax slip in
+            // it (an unclosed brace) must not swallow the rest of our
+            // stylesheet, and sitting after it lets the theme's rules win ties
+            var custom = document.getElementById("sc-custom-css");
+            if (!custom) {
+                custom = document.createElement("style");
+                custom.id = "sc-custom-css";
+                var main = document.getElementById("ch4SS");
+                if (main && main.parentNode) main.parentNode.insertBefore(custom, main.nextSibling);
+                else (document.head || document.documentElement).appendChild(custom);
+            }
+            custom.textContent = ($SS.theme && $SS.theme.customCSS) || "";
 
             $SS.disableSiteTheme();
         },
@@ -1113,25 +1101,19 @@
                 "--sc-nameColor:" + t.nameColor.hex + ";" +
                 "--sc-tripColor:" + t.tripColor.hex + ";" +
                 "--sc-linkColor:" + t.linkColor.hex + ";" +
-                "--sc-linkColor-rgb:" + t.linkColor.rgb + ";" +
                 "--sc-linkHColor:" + t.linkHColor.hex + ";" +
-                "--sc-linkHColor-rgb:" + t.linkHColor.rgb + ";" +
                 "--sc-headerColor:" + t.headerColor.hex + ";" +
                 "--sc-headerLColor:" + t.headerLColor.hex + ";" +
                 "--sc-headerLHColor:" + t.headerLHColor.hex + ";" +
                 "--sc-quoteColor:" + t.quoteColor.hex + ";" +
-                "--sc-quoteColor-rgb:" + t.quoteColor.rgb + ";" +
                 "--sc-titleColor:" + t.titleColor.hex + ";" +
                 "--sc-boardColor:" + t.boardColor.hex + ";" +
                 "--sc-blinkColor:" + t.blinkColor.hex + ";" +
                 "--sc-qlColor:" + t.qlColor.hex + ";" +
                 "--sc-bgColor:" + t.bgColor.hex + ";" +
-                "--sc-bgColor-rgb:" + t.bgColor.rgb + ";" +
                 "--sc-mainColor:" + t.mainColor.hex + ";" +
                 "--sc-mainColor-rgb:" + t.mainColor.rgb + ";" +
                 "--sc-mainColor-shiftM30:" + t.mainColor.shiftRGB(-30) + ";" +
-                "--sc-mainColor-shiftM25:" + t.mainColor.shiftRGB(-25) + ";" +
-                "--sc-mainColor-shiftM18:" + t.mainColor.shiftRGB(-18) + ";" +
                 "--sc-mainColor-shiftM16:" + t.mainColor.shiftRGB(-16) + ";" +
                 "--sc-mainColor-shiftM15:" + t.mainColor.shiftRGB(-15) + ";" +
                 "--sc-mainColor-shiftM10:" + t.mainColor.shiftRGB(-10) + ";" +
@@ -1143,7 +1125,6 @@
                 "--sc-brderColor:" + t.brderColor.hex + ";" +
                 "--sc-brderColor-rgb:" + t.brderColor.rgb + ";" +
                 "--sc-inputColor:" + t.inputColor.hex + ";" +
-                "--sc-inputColor-rgb:" + t.inputColor.rgb + ";" +
                 "--sc-inputColor-shift25:" + t.inputColor.shiftRGB(25) + ";" +
                 "--sc-inputColor-hover:" + t.inputColor.hover + ";" +
                 "--sc-inputbColor:" + t.inputbColor.hex + ";" +
@@ -1157,7 +1138,6 @@
                 "--sc-hoverOutColor-rgb:" + hoverOutRGB + ";" +
                 "--sc-hoverOutOp:" + t.hoverOutOp + ";" +
                 "--sc-postHLColor-rgb:" + t.postHLColor.rgb + ";" +
-                "--sc-quotesYouHLColor:" + t.quotesYouHLColor.hex + ";" +
                 "--sc-quotesYouHLColor-rgb:" + t.quotesYouHLColor.rgb + ";" +
                 "--sc-ownPostHLColor-rgb:" + t.ownPostHLColor.rgb + ";" +
                 "--sc-replybgHLColor-rgb:" + t.replybgHLColor.rgb + ";" +
@@ -1168,13 +1148,11 @@
                 "--sc-navOp:" + t.navOp + ";" +
                 "--sc-sidebar-bg:rgba(" + t.mainColor.shiftRGB(-18) + "," + sidebarBgOpacity + ");" +
                 "--sc-bgImg:" + t.bgImg.get() + ";" +
-                "--sc-icon-star:url(\"data:image/svg+xml," + t.icons.star + "\");" +
                 "--sc-icon-backlink:url(\"data:image/svg+xml," + t.icons.backlink + "\");" +
                 "--sc-icon-downArrow:url(\"data:image/svg+xml," + t.icons.downArrow + "\");" +
+                "--sc-icon-navArrow:url(\"data:image/svg+xml," + t.icons.navArrow + "\");" +
                 "--sc-icon-threadClosed:url(\"data:image/svg+xml," + t.icons.threadClosed + "\");" +
                 "--sc-icon-threadPinned:url(\"data:image/svg+xml," + t.icons.threadPinned + "\");" +
-                "--sc-icon-threadArchived:url(\"data:image/svg+xml," + t.icons.threadArchived + "\");" +
-                "--sc-icon-msg:url(\"data:image/svg+xml," + t.icons.msg + "\");" +
                 "--sc-icon-menu:url(\"data:image/svg+xml," + t.icons.menuIcon.replace("currentColor", "rgb(" + t.headerLColor.rgb + ")") + "\");" +
                 "--sc-icon-options:url(\"data:image/svg+xml," + t.icons.options + "\");" +
                 // Styling hooks exposed by Holotower TS
@@ -1219,6 +1197,73 @@
             $SS._styleLoadedTimer = setTimeout(function () {
                 try { window.dispatchEvent(new Event("style-loaded")); } catch (e) {}
             }, 50);
+        },
+        /* 100-character cap on the name/subject fields, flashing the border
+           when it is hit (the QR is a fresh clone each time it opens) */
+        limitNameSubject: function (root) {
+            $("input[name=subject], input[name=name]", root).each(function () {
+                if (this._stLimited) return;
+                this._stLimited = true;
+                this.setAttribute("maxlength", "100");
+                this.addEventListener("input", function () {
+                    if (this.value.length >= 100) {
+                        this.style.setProperty("border-color", "red", "important");
+                        var el = this;
+                        setTimeout(function () { el.style.removeProperty("border-color"); }, 600);
+                    }
+                });
+            });
+        },
+        /* The site's ↑ ↓ navigation buttons (navbuttons.js builds
+           #scroll-buttons on thread pages, fixed at right:20px bottom:35px
+           as a flex row): a stored Nav Buttons setting overrides scale,
+           offsets, spacing and order */
+        navButtonDefaults: { scale: 100, x: 20, y: 35, gap: 0, reverse: false },
+        navButtonSettings: function () {
+            var raw = $SS.conf["Nav Buttons"], s;
+            if (!raw) return null;
+            try { s = JSON.parse(raw); } catch (e) { return null; }
+            if (!s || typeof s !== "object") return null;
+            var d = $SS.navButtonDefaults,
+                num = function (v, f) { var n = parseInt(v, 10); return isNaN(n) ? f : n; };
+            return { scale: num(s.scale, d.scale), x: num(s.x, d.x), y: num(s.y, d.y), gap: num(s.gap, d.gap), reverse: s.reverse === true };
+        },
+        applyNavButtons: function (s) {
+            var box = document.getElementById("scroll-buttons");
+            if (!box) return;
+            if (s === undefined) s = $SS.navButtonSettings();
+            var d = $SS.navButtonDefaults;
+            if (!s) {
+                // Back to what navbuttons.js set inline
+                box.classList.remove("st-nav-custom");
+                box.style.right = d.x + "px";
+                box.style.bottom = d.y + "px";
+                box.style.left = "";
+                box.style.top = "";
+                box.style.transform = "";
+                box.style.transformOrigin = "";
+                box.classList.remove("st-nav-reversed");
+                box.style.removeProperty("--st-nav-gap");
+                return;
+            }
+            box.classList.add("st-nav-custom");
+            box.style.right = s.x + "px";
+            box.style.bottom = s.y + "px";
+            box.style.left = "auto";
+            box.style.top = "auto";
+            box.style.transform = s.scale !== 100 ? "scale(" + (s.scale / 100) + ")" : "";
+            box.style.transformOrigin = "bottom right";
+            // Swap the two buttons with CSS order: reversing the flex axis
+            // also changes how the row packs and spaces its items
+            box.classList.toggle("st-nav-reversed", s.reverse);
+            box.style.setProperty("--st-nav-gap", s.gap + "px");
+        },
+        initNavButtons: function () {
+            if (!$SS.location.reply) return;
+            if (document.getElementById("scroll-buttons")) { $SS.applyNavButtons(); return; }
+            if ($SS._navWait) return;
+            $SS._navWait = true;
+            $.waitFor("#scroll-buttons", function () { $SS.applyNavButtons(); });
         },
         getActiveFileInput: function () {
             return document.querySelector("#quick-reply input[type=file]") ||
@@ -1492,7 +1537,7 @@
             // copied: re-arm it -- cloning strips the muted/loop property
             // state, and an unmuted clone would play sound -- and hand it to
             // the viewport observer so it plays while the preview is visible
-            scope.querySelectorAll(".post-hover video.st-thumb-video, .inline video.st-thumb-video, .inline-cloned-post video.st-thumb-video").forEach(function (v) {
+            scope.querySelectorAll(".post-hover video.st-thumb-video, .inline-cloned-post video.st-thumb-video").forEach(function (v) {
                 if (v._stCloneArmed) return;
                 v._stCloneArmed = true;
                 v.muted = true;
@@ -1504,7 +1549,7 @@
                 // Never build a second player inside a clone: the original
                 // was already processed and its processed markers are JS
                 // properties that cloning strips
-                if (img.closest(".post-hover, .inline, .inline-cloned-post")) return;
+                if (img.closest(".post-hover, .inline-cloned-post")) return;
                 var href = img.parentNode.href || "";
                 // Video thumbs link to the site player, with the actual file
                 // in the v= parameter
@@ -1524,7 +1569,8 @@
                     // st-video-thumb class) and forward clicks to it
                     if (img._scVideoThumb) return;
                     img._scVideoThumb = true;
-                    var file = img.closest(".file");
+                    // div.file: the player link itself carries class="file"
+                    var file = img.closest("div.file");
                     var video = document.createElement("video");
                     video.className = "st-thumb-video";
                     video.src = href;
@@ -1538,6 +1584,9 @@
                     video.setAttribute("muted", "");
                     video.setAttribute("loop", "");
                     video.setAttribute("playsinline", "");
+                    // Playback is viewport-driven, so nothing loads until then
+                    video.preload = "none";
+                    video.setAttribute("preload", "none");
                     video.style.width = img.style.width || (img.width ? img.width + "px" : "");
                     video.style.height = img.style.height || (img.height ? img.height + "px" : "");
                     img.parentNode.insertBefore(video, img.nextSibling);
@@ -1548,35 +1597,52 @@
                         e.stopPropagation();
                         img.click();
                     });
-                    // While the site's expanded player is open, hide the
-                    // looping thumb; bring it back on collapse
-                    new MutationObserver(function () {
-                        var expanded = false, sib = img.parentNode.querySelectorAll("div > video");
-                        sib.forEach(function (v) {
-                            if (v !== video && v.parentNode.style.display !== "none") expanded = true;
-                        });
-                        video.style.display = expanded ? "none" : "";
-                        if (expanded) { try { video.pause(); } catch (er) {} }
-                        else if (video._stInView !== false) { try { video.play(); } catch (er) {} }
-                    }).observe(img.parentNode, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+                    // Player open/close is tracked by the shared observers
+                    // (syncVideoThumb) rather than one observer per thumb
+                    $SS.watchThumbAttributes();
                     return;
                 }
-                var apply = function () {
-                    if (!img.classList.contains("full-image") && img.src !== href)
-                        img.src = href;
-                };
-                apply();
+                img._scFullSrc = href;
+                $SS.assertThumbSrc(img);
                 // A lazy loader may overwrite the src with a placeholder and
-                // later its cached static thumb; re-assert the full source
-                // whenever the src changes away from it.
-                if (!img._scGifObserved) {
-                    img._scGifObserved = true;
-                    new MutationObserver(function () {
-                        if (!img.classList.contains("full-image") && img.src !== href)
-                            setTimeout(apply, 60);
-                    }).observe(img, { attributes: true, attributeFilter: ["src"] });
+                // later its cached static thumb; the shared attribute observer
+                // re-asserts the full source whenever it changes away from it
+                $SS.watchThumbAttributes();
+            });
+        },
+        assertThumbSrc: function (img) {
+            if (img._scFullSrc && !img.classList.contains("full-image") && img.src !== img._scFullSrc)
+                img.src = img._scFullSrc;
+        },
+        /* Shows the looping stand-in only while the site's expanded player
+           (a div > video it drops beside the thumb) is absent or hidden */
+        syncVideoThumb: function (el) {
+            var file = el && el.closest ? el.closest("div.file.st-video-thumb") : null;
+            if (!file) return;
+            var video = file.querySelector("video.st-thumb-video");
+            if (!video) return;
+            var expanded = false;
+            file.querySelectorAll("div > video").forEach(function (v) {
+                if (v !== video && v.parentNode.style.display !== "none") expanded = true;
+            });
+            video.style.display = expanded ? "none" : "";
+            if (expanded) { try { video.pause(); } catch (er) {} }
+            else if (video._stInView !== false) { try { video.play(); } catch (er) {} }
+        },
+        /* One attribute observer for every replaced thumb: src rewrites by
+           the lazy loader, and style toggles on the expanded player wrapper */
+        watchThumbAttributes: function () {
+            if ($SS._thumbAttrObserver) return;
+            $SS._thumbAttrObserver = new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var t = mutations[i].target;
+                    if (mutations[i].attributeName === "src") {
+                        if (t._scFullSrc) setTimeout($SS.assertThumbSrc, 60, t);
+                    } else
+                        $SS.syncVideoThumb(t);
                 }
             });
+            $SS._thumbAttrObserver.observe(getDocBody(), { attributes: true, attributeFilter: ["src", "style"], subtree: true });
         },
         /* Playing videos hold a display wake lock and decode continuously,
            so thumbnail videos only play while actually in the viewport: a
@@ -1610,6 +1676,25 @@
                     content: msg,
                     lifetime: 5
                 });
+            }
+
+            // Hands a file to the input and replays the events the site's
+            // listeners missed while ours held the original change
+            function pass(file, input) {
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                    input.dispatchEvent(new Event("change", { bubbles: true }));
+                } catch (err) { console.warn("Failed to hand the file back:", err); }
+                input._scConverting = false;
+            }
+
+            // Only raster images go through the canvas; videos, PDFs and
+            // files with no MIME type are the site's business
+            function isConvertible(file) {
+                return /^image\//.test(file.type) && file.type !== "image/gif" && file.type !== "image/svg+xml";
             }
 
             function convertToJPEG(file, baseName, qrInput) {
@@ -1657,11 +1742,15 @@
                     }
 
                     tryQuality(0);
-                }).catch(function (err) { console.warn("Image conversion failed:", err); });
+                }).catch(function (err) {
+                    console.warn("Image conversion failed:", err);
+                    // The selection was cleared for the conversion: put the
+                    // original back rather than lose the upload
+                    pass(file, qrInput);
+                });
             }
 
             function shouldConvert(file) {
-                if (file.type === "image/gif") return false;
                 if (file.type === "image/jpeg" || file.type === "image/png") return file.size > MAX_BYTES;
                 return true;
             }
@@ -1688,27 +1777,16 @@
                 var maxDim = $SS.maxImageDim;
 
                 createImageBitmap(file).then(function (bitmap) {
-                    if (bitmap.width > maxDim || bitmap.height > maxDim) {
-                        bitmap.close();
+                    var tooBig = bitmap.width > maxDim || bitmap.height > maxDim;
+                    bitmap.close();
+                    if (tooBig) {
                         clearSelectedFile(input);
                         convertToJPEG(file, baseName, input);
-                    } else {
-                        bitmap.close();
-                        var dt = new DataTransfer();
-                        dt.items.add(file);
-                        input.files = dt.files;
-                        input.dispatchEvent(new Event("input", { bubbles: true }));
-                        input.dispatchEvent(new Event("change", { bubbles: true }));
-                        input._scConverting = false;
-                    }
+                    } else
+                        pass(file, input);
                 }).catch(function (err) {
                     console.warn("Image dimension check failed:", err);
-                    var dt = new DataTransfer();
-                    dt.items.add(file);
-                    input.files = dt.files;
-                    input.dispatchEvent(new Event("input", { bubbles: true }));
-                    input.dispatchEvent(new Event("change", { bubbles: true }));
-                    input._scConverting = false;
+                    pass(file, input);
                 });
             }
 
@@ -1719,7 +1797,7 @@
                 if (input.type !== "file") return;
                 if (!input.closest("#quick-reply, form[name='post']")) return;
                 var file = input.files && input.files[0];
-                if (!file || file.type === "image/gif") return;
+                if (!file || !isConvertible(file)) return;
 
                 e.stopImmediatePropagation();
                 input._scConverting = true;
@@ -1734,7 +1812,7 @@
                 if (!files || !files.length) return;
 
                 var file = files[0];
-                if (file.type === "image/gif") return;
+                if (!isConvertible(file)) return;
 
                 // Find the active file input (quick reply or main form)
                 var qrInput = findQRFileInput();
@@ -1846,7 +1924,11 @@
             return NAMESPACE + "RememberComment:";
         },
         getRememberCommentKey: function () {
-            return $SS.getRememberCommentPrefix() + location.pathname;
+            // /board/res/N.html and /board/res/N+50.html are the same thread
+            var thread = $SS.getThreadId(),
+                where = thread ? $SS.location.board + "/res/" + thread :
+                    location.pathname.replace(/index\.html$/, "");
+            return $SS.getRememberCommentPrefix() + where;
         },
         getRememberCommentExpiry: function () {
             return 24 * 60 * 60 * 1000;
@@ -1922,7 +2004,6 @@
             var storageKey = $SS.getRememberCommentKey();
             var saveTimer = null;
             var savedDraft;
-            var suppressRemember = false;
 
             if (!commentField) return;
 
@@ -1933,21 +2014,16 @@
             }
 
             function queueSave() {
-                if (suppressRemember) {
-                    suppressRemember = false;
-                }
-
                 clearTimeout(saveTimer);
                 saveTimer = setTimeout(function () {
                     if (commentField.value.trim())
                         $SS.saveRememberedComment(storageKey, commentField.value);
                     else
                         $SS.clearRememberedComment();
-                }, 5000);
+                }, $SS.draftDelay);
             }
 
             function clearSavedComment() {
-                suppressRemember = true;
                 clearTimeout(saveTimer);
                 $SS.clearRememberedComment();
             }
@@ -2026,10 +2102,6 @@
                 if (qr && !qr.contains(e.relatedTarget)) qr.classList.remove("focus");
             });
         },
-        getThreadTitle: function () {
-            var el = document.querySelector(".post.op .subject");
-            return (el && el.textContent.trim()) || document.title.replace(/\s*-\s*\/[^\/]*\/\s*$/, '') || "Untitled";
-        },
         localJSON: {
             get: function (key) {
                 try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
@@ -2064,33 +2136,6 @@
                     $SS.localJSON.set("watch_js", watchData);
                 }
             } catch (e) {}
-        },
-        relativeDates: function (root) {
-            if (!$SS.conf["Relative Post Dates"]) return;
-            var now = Date.now();
-            (root && root.querySelectorAll ? root : document).querySelectorAll("p.intro time[datetime]").forEach(function (dt) {
-                if (!dt._relativeDateSet) {
-                    var utc = Date.parse(dt.getAttribute("datetime"));
-                    if (isNaN(utc)) return;
-                    dt._relativeDateSet = true;
-                    dt.title = dt.textContent;
-                    var seconds = Math.floor((now - utc) / 1000);
-                    var minutes = Math.floor(seconds / 60);
-                    var hours = Math.floor(minutes / 60);
-                    var days = Math.floor(hours / 24);
-                    var weeks = Math.floor(days / 7);
-                    var months = Math.floor(days / 30);
-                    var text;
-                    if (seconds < 60) text = "just now";
-                    else if (minutes < 60) text = minutes + " min ago";
-                    else if (hours < 24) text = hours + " hr ago";
-                    else if (days < 7) text = days + " day" + (days > 1 ? "s" : "") + " ago";
-                    else if (weeks < 5) text = weeks + " week" + (weeks > 1 ? "s" : "") + " ago";
-                    else if (months < 12) text = months + " month" + (months > 1 ? "s" : "") + " ago";
-                    else text = Math.floor(days / 365) + " year" + (Math.floor(days / 365) > 1 ? "s" : "") + " ago";
-                    dt.textContent = text;
-                }
-            });
         },
         replacePostMenuBtn: function (root) {
             root = root || document;
@@ -2328,24 +2373,33 @@
                     type = 'warning';
                 } else {
                     msg = fileOnly ? "File deleted." : "Post deleted.";
+                    $SS.removeDeletedPost(postId, fileOnly, board);
                 }
                 $SS.notify({ type: type, content: msg, lifetime: 5 });
             };
             xhr.send(formData);
         },
+        /* Reflects a successful deletion without a reload: the file block
+           goes, or the whole post; an OP takes its thread with it, so head
+           back to the index */
+        removeDeletedPost: function (postId, fileOnly, board) {
+            var post = document.getElementById("reply_" + postId) || document.getElementById("op_" + postId);
+            if (!post) return;
+            if (fileOnly) {
+                post.querySelectorAll(".files").forEach(function (f) { f.remove(); });
+                return;
+            }
+            if (post.classList.contains("op")) {
+                location.href = "/" + (board || $SS.location.board) + "/";
+                return;
+            }
+            if (post._stHideBtn && post._stHideBtn.parentNode) post._stHideBtn.remove();
+            post.remove();
+        },
         QRDialogCreationHandler: function (e) {
             var qr = e.target;
 
-            $("input[name=subject], input[name=name]", qr).each(function () {
-                this.setAttribute("maxlength", "100");
-                this.addEventListener("input", function () {
-                    if (this.value.length >= 100) {
-                        this.style.setProperty("border-color", "red", "important");
-                        var el = this;
-                        setTimeout(function () { el.style.removeProperty("border-color"); }, 600);
-                    }
-                });
-            });
+            $SS.limitNameSubject(qr);
             if ($SS.conf["Watch Thread on Reply"] && $SS.location.reply) {
                 $SS.handleFormNode(qr);
             }
@@ -2392,8 +2446,8 @@
             if (!qr.isConnected) return;
             var mainRand = document.querySelector("form[name='post']:not(#quick-reply) input[name=randfn]");
             if (!mainRand) {
-                // TS may not be done yet (or absent); retry briefly
-                if (attempts > 0) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
+                // TS may not be done yet; retry briefly (never without TS)
+                if (attempts > 0 && $SS.isTS()) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
                 return;
             }
             var qrSpoiler = qr.querySelector("input[name=spoiler]");
@@ -2458,6 +2512,13 @@
                 if ($SS.conf["Sauce Links"] && !I._sauce) { I._sauce = true; I.initSauceLinks(); }
                 if ($SS.conf["Catalog Highlights"] && $SS.location.catalog && !I._catalog) { I._catalog = true; I.initCatalogHighlights(); }
             },
+            /* Called by the main DOM observer for each added element; the
+               integrations hook in here instead of observing on their own */
+            onNodeAdded: function (node) {
+                var I = $SS.integrations;
+                if (I._sauceSweep) I._sauceSweep(node);
+                if (I._autoScrollNode) I._autoScrollNode(node);
+            },
 
             /* X/BSKY sauce links on file info (Holotower X/BSKY Sauce) */
             initSauceLinks: function () {
@@ -2499,14 +2560,8 @@
                 }
 
                 sweep(document);
-                new MutationObserver(function (mutationList) {
-                    for (var i = 0; i < mutationList.length; i++) {
-                        for (var j = 0; j < mutationList[i].addedNodes.length; j++) {
-                            var node = mutationList[i].addedNodes[j];
-                            if (node instanceof HTMLElement) sweep(node);
-                        }
-                    }
-                }).observe(getDocBody(), { childList: true, subtree: true });
+                // Later posts are swept from the main observer (onNodeAdded)
+                $SS.integrations._sauceSweep = sweep;
             },
 
             /* Scroll to new posts only when already at the bottom (Holotower Auto Scroll) */
@@ -2516,7 +2571,6 @@
                 var originalScrollCheckbox = null;
                 var autoScrollCheckbox = null;
                 var lastPostElements = [];
-                var observer = null;
 
                 function saveAutoScrollState(enabled) {
                     try { localStorage.setItem(STORAGE_KEY, enabled ? "true" : "false"); } catch (e) {}
@@ -2536,7 +2590,11 @@
                     return document.documentElement.scrollHeight - scrollPosition <= 200;
                 }
                 function getCurrentPosts() {
-                    return Array.prototype.slice.call(document.querySelectorAll("p.intro"));
+                    // Real posts only: TS hover previews and inlined quotes
+                    // clone p.intro too, and would inflate the record
+                    return Array.prototype.slice.call(document.querySelectorAll("p.intro")).filter(function (p) {
+                        return !p.closest(".post-hover, .inline-quote-container, .inline-cloned-post");
+                    });
                 }
                 function isLastPostInView() {
                     var lastPost = lastPostElements[lastPostElements.length - 1];
@@ -2610,44 +2668,6 @@
                     }
                 }
 
-                var INLINE_CONTAINER_CLASS = "inline-quote-container";
-                new MutationObserver(function (mutations) {
-                    mutations.forEach(function (mutation) {
-                        if (mutation.type !== "childList" || mutation.addedNodes.length === 0) return;
-                        mutation.addedNodes.forEach(function (node) {
-                            if (node.nodeType !== 1) return;
-                            if (node.classList.contains(INLINE_CONTAINER_CLASS))
-                                node.setAttribute("data-inline-quote", "true");
-                            node.querySelectorAll("." + INLINE_CONTAINER_CLASS).forEach(function (el) {
-                                el.setAttribute("data-inline-quote", "true");
-                            });
-                        });
-                    });
-                }).observe(getDocBody(), { childList: true, subtree: true });
-
-                function setupObserver() {
-                    if (observer) observer.disconnect();
-                    observer = new MutationObserver(function (mutations) {
-                        var shouldCheck = false;
-                        mutations.forEach(function (mutation) {
-                            if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                                for (var i = 0; i < mutation.addedNodes.length; i++) {
-                                    var node = mutation.addedNodes[i];
-                                    if (node.nodeType === 1 && node.matches && (
-                                        node.matches("p.intro, div.post, .post_no") ||
-                                        node.querySelector("p.intro, div.post, .post_no")
-                                    ) && !node.closest("[data-inline-quote]") && !node.hasAttribute("data-inline-quote")) {
-                                        shouldCheck = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        });
-                        if (shouldCheck) setTimeout(monitorForNewPosts, 100);
-                    });
-                    observer.observe(getDocBody(), { childList: true, subtree: true });
-                }
-
                 function initialize() {
                     originalScrollCheckbox = findOriginalScrollCheckbox();
                     if (!originalScrollCheckbox) return;
@@ -2655,23 +2675,30 @@
                     if (!autoScrollCheckbox) return;
                     updatePostRecord();
                     setupCheckboxListeners();
-                    setupObserver();
                     if (autoScrollCheckbox.checked && originalScrollCheckbox.checked)
                         originalScrollCheckbox.checked = false;
                 }
 
                 $.waitFor("input.auto-scroll", initialize);
 
-                var reinitTimeout;
-                new MutationObserver(function () {
-                    clearTimeout(reinitTimeout);
-                    reinitTimeout = setTimeout(function () {
-                        if (!originalScrollCheckbox || !document.contains(originalScrollCheckbox) ||
-                            !autoScrollCheckbox || !document.contains(autoScrollCheckbox)) {
-                            initialize();
-                        }
-                    }, 1000);
-                }).observe(getDocBody(), { childList: true, subtree: false });
+                // Fed by the main DOM observer: new posts outside TS's inline
+                // quote containers and hover previews trigger a check, and a
+                // rebuilt updater row (the site recreates its checkbox) gets
+                // ours re-attached
+                var checkTimeout, reinitTimeout;
+                $SS.integrations._autoScrollNode = function (node) {
+                    if (!node.matches) return;
+                    if ((node.matches("p.intro, div.post, .post_no") || node.querySelector("p.intro, div.post, .post_no")) &&
+                        !node.closest(".inline-quote-container, .post-hover")) {
+                        clearTimeout(checkTimeout);
+                        checkTimeout = setTimeout(monitorForNewPosts, 100);
+                    }
+                    if ((node.matches("input.auto-scroll") || node.querySelector("input.auto-scroll")) &&
+                        (!autoScrollCheckbox || !document.contains(autoScrollCheckbox))) {
+                        clearTimeout(reinitTimeout);
+                        reinitTimeout = setTimeout(initialize, 100);
+                    }
+                };
             },
 
             /* Highlight and pin catalog threads (Holotower Catalog Highlights and Pin) */
@@ -2957,24 +2984,21 @@
 
         /* CONFIG */
         Config: {
-            init: function () {
+            /* overrides: values the open options panel holds that are not
+               stored yet (live preview); they sit on top of storage */
+            init: function (overrides) {
                 var parseVal = function (key, val) {
-                    if (/^(Selected|Hidden)+\s(Themes?)+$/.test(key)) {
-                        if (key === "Selected Theme")
-                            return parseInt(val);
-                        else if (key === "NSFW Theme")
-                            return parseInt(val);
-
+                    if (key === "Selected Theme" || key === "NSFW Theme")
+                        return parseInt(val, 10);
+                    if (key === "Hidden Themes") {
                         for (var i = 0, MAX = val.length, ret = []; i < MAX; ++i)
-                            ret[i] = parseInt(val[i]);
-
+                            ret[i] = parseInt(val[i], 10);
                         return ret;
                     }
-
                     return (Array.isArray(val) && typeof val[0] !== "object") ? val[0] : val;
                 };
 
-                $SS.conf = [];
+                $SS.conf = {};
                 $SS.exportOptions = {};
 
                 for (var key in defaultConfig) {
@@ -2983,6 +3007,9 @@
                         $SS.exportOptions[key] = $SS.conf[key];
                     };
                 };
+                if (overrides)
+                    for (var ok in overrides)
+                        if (ok in defaultConfig) $SS.exportOptions[ok] = $SS.conf[ok] = overrides[ok];
 
                 // One-time migration: "Animated GIF Thumbnails" became the
                 // Replace Thumbnails group (GIF-only to preserve behavior)
@@ -3000,6 +3027,15 @@
                     }
                 } catch (e) {}
 
+                // "Relative Post Dates" duplicated the site's own Show relative
+                // time option (Options → General) and never parsed vichan's
+                // datetime format; hand an enabled setting over to the site
+                try {
+                    if (this.get("Relative Post Dates") === true)
+                        localStorage.show_relative_time = "true";
+                    this.remove("Relative Post Dates");
+                } catch (e) {}
+
                 // Include saved site settings in exports
                 var chanKeys = ["stylesheet", "name", "email", "password", "own_posts", "watch_js", "hidden_threads", "catalog"];
                 chanKeys.forEach(function (key) {
@@ -3012,10 +3048,8 @@
                     } catch (e) {}
                 });
 
-                if (!$SS.location.report) {
-                    $SS.conf["Margin Left"] = $SS.conf["Left Margin"] !== 999 ? $SS.conf["Left Margin"] : $SS.conf["Custom Left Margin"];
-                    $SS.conf["Margin Right"] = $SS.conf["Right Margin"] !== 999 ? $SS.conf["Right Margin"] : $SS.conf["Custom Right Margin"];
-                };
+                $SS.conf["Margin Left"] = $SS.conf["Left Margin"] !== 999 ? $SS.conf["Left Margin"] : $SS.conf["Custom Left Margin"];
+                $SS.conf["Margin Right"] = $SS.conf["Right Margin"] !== 999 ? $SS.conf["Right Margin"] : $SS.conf["Custom Right Margin"];
                 // "Normal" maps to 4chan's native blockquote margin; vichan's own
                 // div.body default is nearly zero, which makes text hug the post
                 // edge and wrap fully under thumbnails.
@@ -3036,6 +3070,19 @@
                 try {
                     if ($SS.hasGM) GM_setValue(key, val);
                     else localStorage.setItem(key, val);
+                    return true;
+                } catch (e) {
+                    // Quota or blocked storage: remember it so Save can say so
+                    ($SS.Config.failed = $SS.Config.failed || []).push(name);
+                    console.error("[StyleTower] could not save " + name + ":", e);
+                    return false;
+                }
+            },
+            remove: function (name) {
+                var key = NAMESPACE + name;
+                try {
+                    if ($SS.hasGM) GM_deleteValue(key);
+                    else localStorage.removeItem(key);
                 } catch (e) {}
             }
         },
@@ -3083,7 +3130,7 @@
                         else boardlist.insertBefore(span, optionsLink);
                     };
                     place();
-                    if (!boardlist.querySelector(".hb-toggle"))
+                    if (!boardlist.querySelector(".hb-toggle") && $SS.isTS())
                         $.waitFor(".boardlist .hb-toggle", place);
                 });
             },
@@ -3108,7 +3155,7 @@
                             "<li class='tab-item'><label class='tab-label' for=themes-select>Themes</label></li>",
                             "</ul><div id=options-container><input type=radio class=tab-select name=tab-select id=main-select hidden checked><div id='main-section' class='options-section'>",
                             "<p class='buttons-container'>",
-                            "<span class='btn-left'><a class='options-button' title='Export your settings as JSON.' name=Export>Export</a><a class='options-button' id='import-settings'><input type=file class='import-input' riced=true accept='application/json'>Import</a><a class='options-button' title='Reset StyleTower settings.' name=resetSettings>Reset</a></span>",
+                            "<span class='btn-left'><a class='options-button' title='Export your settings as JSON. Includes the saved Holotower name, email and post password.' name=Export>Export</a><a class='options-button' id='import-settings'><input type=file class='import-input' riced=true accept='application/json'>Import</a><a class='options-button' title='Reset StyleTower settings.' name=resetSettings>Reset</a></span>",
                             "<span class='btn-center' id=oneechan-version><span>StyleTower</span> v" + VERSION + "<span class=link-delim> | </span><a href='https://github.com/vampiricwulf/StyleTower/releases/latest' id=changelog-link target='_blank' title='Read the changelog.'>Changelog</a><span class=link-delim> | </span><a href='https://github.com/vampiricwulf/StyleTower/issues' id=issues-link target='_blank' title='Report an issue.'>Issues</a></span>",
                             "<span class='btn-right'><a class='options-button' name=save>Save</a><a class='options-button' name=cancel>Cancel</a></span></p>"
                         ];
@@ -3117,6 +3164,13 @@
                     // Working copy for the Mascots tab; serialized on Save
                     try { $SS.options._mascotWork = JSON.parse($SS.conf["Mascots"] || "[]"); }
                     catch (e) { $SS.options._mascotWork = []; }
+                    // Changes apply at once but only Save stores them; the
+                    // reload notice compares against what was stored at open
+                    $SS.options.dirty = false;
+                    $SS.options._baseline = {};
+                    $SS.options.reloadKeys.concat($SS.options.reloadWhenOff).forEach(function (k) {
+                        $SS.options._baseline[k] = $SS.conf[k];
+                    });
 
                     for (key in defaultConfig) {
                         if (/^(Selected|Hidden)+\s(Themes?)+$/.test(key))
@@ -3140,24 +3194,15 @@
                         val = $SS.conf[key];
                         des = defaultConfig[key][1];
 
-                        if ((defaultConfig[key][4] === true) && (key === "Custom Left Margin")) {
+                        if ((defaultConfig[key][4] === true) && /^Custom /.test(key)) {
+                            // Pixel sub-inputs (Custom Left/Right Margin, Custom
+                            // Decoration Width), shown while the parent select
+                            // sits on its "Custom" value
                             var pVal = $SS.conf[defaultConfig[key][2]];
                             id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
                             optionsHTML.push("<span class='option suboption " + id + "' title=\"" + des + "\"" +
                                 (pVal != defaultConfig[key][3] ? "hidden" : "") + "><span class='option-title'>" + key +
-                                "</span><input name='Custom Left Margin' type=text value=" + $SS.conf["Custom Left Margin"] + "px></span>");
-                        } else if ((defaultConfig[key][4] === true) && (key === "Custom Right Margin")) {
-                            var pVal = $SS.conf[defaultConfig[key][2]];
-                            id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
-                            optionsHTML.push("<span class='option suboption " + id + "' title=\"" + des + "\"" +
-                                (pVal != defaultConfig[key][3] ? "hidden" : "") + "><span class='option-title'>" + key +
-                                "</span><input name='Custom Right Margin' type=text value=" + $SS.conf["Custom Right Margin"] + "px></span>");
-                        } else if ((defaultConfig[key][4] === true) && (key === "Custom Decoration Width")) {
-                            var pVal = $SS.conf[defaultConfig[key][2]];
-                            id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
-                            optionsHTML.push("<span class='option suboption " + id + "' title=\"" + des + "\"" +
-                                (pVal != defaultConfig[key][3] ? "hidden" : "") + "><span class='option-title'>" + key +
-                                "</span><input name='Custom Decoration Width' type=text value=" + $SS.conf["Custom Decoration Width"] + "px></span>");
+                                "</span><input name='" + key + "' type=text value=" + val + "px></span>");
                         } else if ((defaultConfig[key][4] === true) && (key === "Dark Theme" || key === "Light Theme")) {
                             var pVal = $SS.conf[defaultConfig[key][2]];
                             id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
@@ -3170,6 +3215,10 @@
                             }
                             html += "</select></label>";
                             optionsHTML.push(html);
+                        } else if (key === "Nav Buttons") {
+                            optionsHTML.push("<span class='option st-nav-row' data-tower-status='added' title=\"" + des + "\"><span class='option-title'>Navigation Buttons</span>" +
+                                "<a class='options-button' name=navPosition title='Scale, position, spacing and order of the ↑ ↓ buttons; drag them on the page while editing.'>Set Position</a>" +
+                                "<span class='st-nav-status'>" + (val ? "Custom" : "Site default") + "</span></span>");
                         } else if (key === "Enable Mascots") {
                             // The Mascots tab: master toggle + display options render
                             // into it via the generic branches below, then the
@@ -3223,24 +3272,18 @@
                             optionsHTML.push(html.join(""));
                         } else if (key === "Custom Font") {
                             optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>Custom Font</span>" +
-                                "<input type=text name='Custom Font' value=\"" + ($SS.conf["Custom Font"] || "") + "\" placeholder='system font name'></label>");
+                                "<input type=text name='Custom Font' value=\"" + $SS.escapeHTML($SS.conf["Custom Font"] || "") + "\" placeholder='system font name'></label>");
                         } else if (key === "QR Button Image") {
                             optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
                                 "<input type=text name='QR Button Image' value=\"" + String($SS.conf["QR Button Image"] || "").replace(/"/g, "&quot;") + "\" placeholder='image URL or data URI'></label>");
-                        } else if (key === "Font Size") {
+                        } else if (/Font Size$/.test(key)) {
                             optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
-                                "<input type=text name='Font Size' value=" + $SS.conf["Font Size"] + "px></label>");
-                        } else if (key === "UI Font Size") {
-                            optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
-                                "<input type=text name='UI Font Size' value=" + $SS.conf["UI Font Size"] + "px></label>");
-                        } else if (key === "Backlink Font Size") {
-                            optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
-                                "<input type=text name='Backlink Font Size' value=" + $SS.conf["Backlink Font Size"] + "px></label>");
+                                "<input type=text name='" + key + "' value=" + val + "px></label>");
                         } else if (key === "Misc") {
                             optionsHTML.push("</div><input type=radio class=tab-select name=tab-select id=misc-select hidden><div id='misc-section' class='options-section'>" +
                                 "<p class='buttons-container'><span class='btn-right'><a class='options-button' name=save>Save</a><a class='options-button' name=cancel>Cancel</a></span></p>");
                         } else if (key === "Themes") {
-                            optionsHTML.push("</div><input type=radio class=tab-select name=tab-select class=tab-select  id=themes-select hidden><div id='themes-section' class='options-section'>");
+                            optionsHTML.push("</div><input type=radio class=tab-select name=tab-select id=themes-select hidden><div id='themes-section' class='options-section'>");
                         } else if (key === "Opacity") {
                             optionsHTML.push("<label class='option' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
                                 "<input type=range name=Opacity min=0 max=100 value=" + val + " class='mascot-opacity'><span class='mascot-opacity-val'>" + val + "%</span></label>");
@@ -3271,7 +3314,9 @@
                                 "Style Holotower TS Notifications": "changed",
                                 "Margin Between Replies": "changed",
                                 "Autohide Style": "changed",
-                                "Enable Mascots": "changed"
+                                "Enable Mascots": "changed",
+                                "Fit Expanded Images": "changed",
+                                "Follow Cursor": "changed"
                             },
                             rootEl = tOptions.elems[0];
                         if (!rootEl) return;
@@ -3292,7 +3337,7 @@
                     $(".import-input", tOptions).bind("change", function () {
                         var file = this.files[0],
                             reader = new FileReader(),
-                            key, imported, val;
+                            imported;
                         if (this.files[0].name.match(/\.json$/) == null) {
                             alert('Only JSON files are accepted!');
                             return;
@@ -3315,7 +3360,8 @@
                                 }
                                 // Close so the open dialog's pre-import state
                                 // can't overwrite the import via a later Save
-                                $SS.options.close();
+                                $SS.options.close(true);
+                                $SS.init(true);
 
                             };
                         })(file);
@@ -3382,8 +3428,22 @@
                                 this.setAttribute("hidden", "");
                             });
                     });
-                    // Mascots tab: gallery interactions on the working copy
+                    // Every setting applies as soon as it changes (typed
+                    // values after a short pause); Save is what stores them
                     var optsNode = tOptions.elems[0];
+                    if (optsNode) {
+                        optsNode.addEventListener("change", function (e) {
+                            if (!$SS.options.isSetting(e.target)) return;
+                            $SS.options.dirty = true;
+                            $SS.options.applyLive();
+                        });
+                        optsNode.addEventListener("input", function (e) {
+                            if (!$SS.options.isSetting(e.target)) return;
+                            $SS.options.dirty = true;
+                            $SS.options.applyLiveSoon();
+                        });
+                    }
+                    // Mascots tab: gallery interactions on the working copy
                     if (optsNode) {
                         optsNode.addEventListener("click", function (e) {
                             var work = $SS.options._mascotWork;
@@ -3396,25 +3456,28 @@
                                 var on = !!e.target.closest(".mascot-select-all");
                                 work.forEach(function (m) { m.enabled = on; });
                                 $SS.options.renderMascotGallery();
+                                $SS.options.touched();
                                 return;
                             }
                             var edit = e.target.closest(".mascot-edit");
                             if (edit) {
-                                $SS.options.showMascotEditor(parseInt(edit.closest(".mascot-tile").getAttribute("data-idx")));
+                                $SS.options.showMascotEditor(parseInt(edit.closest(".mascot-tile").getAttribute("data-idx"), 10));
                                 return;
                             }
                             var del = e.target.closest(".mascot-del");
                             if (del) {
-                                work.splice(parseInt(del.closest(".mascot-tile").getAttribute("data-idx")), 1);
+                                work.splice(parseInt(del.closest(".mascot-tile").getAttribute("data-idx"), 10), 1);
                                 $SS.options.renderMascotGallery();
+                                $SS.options.touched();
                                 return;
                             }
                             var tile = e.target.closest(".mascot-tile");
                             if (tile) {
-                                var m = work[parseInt(tile.getAttribute("data-idx"))];
+                                var m = work[parseInt(tile.getAttribute("data-idx"), 10)];
                                 if (m) {
                                     m.enabled = m.enabled === false;
                                     tile.classList.toggle("selected", m.enabled);
+                                    $SS.options.touched();
                                 }
                             }
                         });
@@ -3425,15 +3488,15 @@
                         $SS.options.saveAndClose = false;
                     });
                     $("a[name=cancel]", tOptions).bind("click", $SS.options.close);
+                    $("a[name=navPosition]", tOptions).bind("click", function () { $SS.options.showNavEditor(); });
 
                     // main tab
-                    $("input[name='Font Size']", tOptions).bind("keydown", function (e) {
-                        var val = parseInt($(this).val());
-
-                        if (e.key === "ArrowUp" && !isNaN(val))
-                            $(this).val(++val + "px");
-                        else if (e.key === "ArrowDown" && !isNaN(val))
-                            $(this).val(--val + "px");
+                    $("input[name='Font Size'], input[name='UI Font Size'], input[name='Backlink Font Size']", tOptions).bind("keydown", function (e) {
+                        var val = parseInt($(this).val(), 10);
+                        if (isNaN(val) || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+                        e.preventDefault();
+                        $(this).val((e.key === "ArrowUp" ? val + 1 : val - 1) + "px");
+                        this.dispatchEvent(new Event("input", { bubbles: true }));
                     });
                     $("input[name='Opacity']", tOptions).bind("input", function () {
                         var v = this.parentNode.querySelector(".mascot-opacity-val");
@@ -3500,6 +3563,9 @@
                     v = $SS.normalizeHex(raw[k]);
                     if (v) t[k] = v;
                 }
+                // OneeChan-era themes name the post highlight differently
+                if (!t.postHLColor && (v = $SS.normalizeHex(raw.highlightColor)))
+                    t.postHLColor = v;
 
                 t.replyOp = $SS.normalizeOpacity(raw.replyOp, "1.0");
                 t.navOp = $SS.normalizeOpacity(raw.navOp, "0.9");
@@ -3551,6 +3617,9 @@
                                 theme = new $SS.Theme(--index);
                                 div = theme.preview();
                                 $("#overlay #themes-section").append(div);
+                                // The list itself is stored now; the tile
+                                // click below only previews the selection
+                                $SS.options.saveThemeState();
                                 div.fire("click").scrollIntoView(true);
                                 $SS.options.refreshThemeSelects();
                             };
@@ -3586,14 +3655,85 @@
                     themes.append(tTheme.preview());
                 }
             },
-            close: function () {
-                return $("#overlay").remove();
+            /* Closes the panel. Unsaved changes are applied live, so ask
+               first and revert to the stored settings when discarding;
+               force skips the question (Save, import) */
+            close: function (force) {
+                if (force !== true && $SS.options.dirty) {
+                    if (!confirm("Discard unsaved changes?")) return false;
+                    $SS.init(true);
+                }
+                $SS.options.dirty = false;
+                $("#overlay").remove();
+                return true;
+            },
+            /* Panel controls that hold settings (not the tab radios or the
+               import file inputs) */
+            isSetting: function (el) {
+                return !!(el && el.matches && el.matches("input[name]:not(.tab-select):not([type=file]), select"));
+            },
+            /* The panel's current values, parsed the way Save stores them */
+            collect: function () {
+                var out = {};
+                $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
+                    var $this = $(this),
+                        name = $this.attr("name"),
+                        val = $this.val();
+                    if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)) {
+                        val = parseInt(val, 10);
+                        // A size still being typed stays out of the preview
+                        if (isNaN(val) || (/Font Size$/.test(name) && val < 6)) return;
+                    }
+                    out[name] = val;
+                });
+                if ($SS.options._mascotWork)
+                    out["Mascots"] = JSON.stringify($SS.options._mascotWork);
+                var sel = $("#oneechan-options #themes-section>div.selected");
+                if (sel.exists()) {
+                    var idx = parseInt(sel.attr("id").substr(5), 10);
+                    if ($SS.conf["Themes"][idx]) {
+                        out["Selected Theme"] = idx;
+                        out["NSFW Theme"] = idx;
+                    }
+                }
+                return out;
+            },
+            /* Applies the panel's values on top of the stored settings */
+            applyLive: function () {
+                clearTimeout($SS.options._liveTimer);
+                if (!$("#oneechan-options").exists()) return;
+                $SS.init(true, $SS.options.collect());
+            },
+            applyLiveSoon: function () {
+                clearTimeout($SS.options._liveTimer);
+                $SS.options._liveTimer = setTimeout($SS.options.applyLive, 250);
+            },
+            touched: function () {
+                $SS.options.dirty = true;
+                $SS.options.applyLive();
+            },
+            /* Re-applies settings: the panel's live values while it is open,
+               the stored ones otherwise */
+            refresh: function () {
+                if ($("#oneechan-options").exists()) $SS.options.applyLive();
+                else $SS.init(true);
             },
             keydown: function (e) {
                 if (e.ctrlKey && e.key === "F1") {
                     e.preventDefault();
                     e.stopPropagation();
                     $SS.options.show();
+                } else if (e.key === "Escape") {
+                    var cancel = document.querySelector("#overlay2 a[name=cancel], #overlay2 a[name=mCancel], #overlay2 a[name=nCancel]");
+                    if (cancel) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        cancel.click();
+                    } else if ($("#overlay").exists()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $SS.options.close();
+                    }
                 }
             },
             /* Persists only theme state (list, selection, hidden). Callers
@@ -3605,11 +3745,10 @@
                     return false;
 
                 var themes = [],
-                    nsfwTheme,
                     selectedTheme;
 
                 $("#oneechan-options #themes-section>div").each(function () {
-                    var oldIndex = parseInt(this.id.substr(5)),
+                    var oldIndex = parseInt(this.id.substr(5), 10),
                         t = $SS.conf["Themes"][oldIndex];
                     if (t && !t.default && !t._isPreview) {
                         // Editor bookkeeping must not reach storage
@@ -3620,22 +3759,17 @@
                 });
 
                 selectedTheme = (selectedTheme = $("#oneechan-options #themes-section>div.selected")).exists() ?
-                    parseInt(selectedTheme.attr("id").substr(5)) : 0;
+                    parseInt(selectedTheme.attr("id").substr(5), 10) : 0;
                 // Ensure selectedTheme is valid
                 if (selectedTheme >= $SS.conf["Themes"].length || !$SS.conf["Themes"][selectedTheme]) {
                     selectedTheme = 0;
                 }
 
-                nsfwTheme = (nsfwTheme = $("#oneechan-options #themes-section>div.nsfw")).exists() ?
-                    parseInt(nsfwTheme.attr("id").substr(5)) : 0;
-                // Ensure nsfwTheme is valid
-                if (nsfwTheme >= $SS.conf["Themes"].length || !$SS.conf["Themes"][nsfwTheme]) {
-                    nsfwTheme = 0;
-                }
-
                 $SS.Config.set("Themes", themes);
                 $SS.Config.set("Selected Theme", selectedTheme);
-                $SS.Config.set("NSFW Theme", nsfwTheme);
+                // Kept in step with the selection: StyleChan-format exports
+                // still carry the key
+                $SS.Config.set("NSFW Theme", selectedTheme);
                 $SS.Config.set("Hidden Themes", $SS.conf["Hidden Themes"]);
                 return true;
             },
@@ -3652,35 +3786,55 @@
                     this.innerHTML = html;
                 });
             },
+            /* Options wired up once at page load (listeners, form hooks,
+               link rewrites) and integrations that cannot be switched off
+               without a reload */
+            reloadKeys: ["Follow Cursor", "Auto-Convert Images", "Remember Comment Draft", "Watch Thread on Reply",
+                "Catalog Links", "Pin Quick Reply", "Autohide Style"],
+            reloadWhenOff: ["Auto Scroll", "Sauce Links", "Catalog Highlights", "Replace Thumbnails",
+                "Replace GIF", "Replace JPG", "Replace PNG", "Replace WEBP", "Replace WEBM/MP4"],
+            noteReloadNeeded: function (before) {
+                var changed = [];
+                $SS.options.reloadKeys.forEach(function (k) {
+                    if (before[k] !== $SS.conf[k]) changed.push(k);
+                });
+                $SS.options.reloadWhenOff.forEach(function (k) {
+                    if (before[k] === true && $SS.conf[k] === false) changed.push(k);
+                });
+                if (!changed.length) return;
+                var content = document.createElement("span"),
+                    link = document.createElement("a");
+                content.appendChild(document.createTextNode("Applies after a reload: " + changed.join(", ") + ". "));
+                link.href = "javascript:;";
+                link.textContent = "Reload now";
+                link.addEventListener("click", function (e) { e.preventDefault(); location.reload(); });
+                content.appendChild(link);
+                $SS.notify({ type: "info", content: content, lifetime: 10 });
+            },
             save: function () {
                 // Never write from a dead panel: the collectors below would
                 // see nothing and wipe stored state
                 if (!$("#oneechan-options").exists())
                     return;
+                var before = $SS.options._baseline || {},
+                    vals = $SS.options.collect();
+                $SS.Config.failed = [];
 
-                // Save main
-                $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
-                    var $this = $(this),
-                        name = $this.attr("name"),
-                        val = $this.val();
-
-                    if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)){
-                        val = parseInt(val);
-                    }
-
-                    $SS.Config.set(name, val);
-                });
-
-                // Save Mascots (gallery edits live in the working copy)
-                if ($SS.options._mascotWork)
-                    $SS.Config.set("Mascots", JSON.stringify($SS.options._mascotWork));
+                for (var name in vals)
+                    if (name !== "Selected Theme" && name !== "NSFW Theme")
+                        $SS.Config.set(name, vals[name]);
 
                 $SS.options.saveThemeState();
+                $SS.options.dirty = false;
 
                 if ($SS.options.saveAndClose)
-                    $SS.options.close();
+                    $SS.options.close(true);
 
-                return $SS.init(true);
+                $SS.init(true);
+                $SS.options.noteReloadNeeded(before);
+                if ($SS.Config.failed.length)
+                    $SS.notify({ type: "warning", lifetime: 10,
+                        content: "Could not save " + $SS.Config.failed.join(", ") + " (storage full or blocked?)." });
             },
             /* Settings import: accepts StyleTower, upstream StyleChan and
                original OneeChan exports, normalizing renamed keys and both
@@ -3765,15 +3919,48 @@
                 }
                 delete imported["Grayscale Mascots"];
 
+                // Custom themes: each goes through the theme-file sanitizer so
+                // foreign flags and editor bookkeeping stay out of storage. The
+                // stored list is replaced, so theme indices below are checked
+                // against defaults + what was just imported
+                var themeCount = ($SS.conf["Themes"] || []).length;
+                if (Array.isArray(imported["Themes"])) {
+                    var themes = [];
+                    imported["Themes"].forEach(function (t) {
+                        if (t && typeof t === "object" && !Array.isArray(t))
+                            themes.push($SS.options.sanitizeTheme(t));
+                    });
+                    $SS.Config.set("Themes", themes);
+                    themeCount = $SS.Themes.defaults.length + themes.length;
+                }
+
                 for (var key in imported) {
                     var target = keyMap[key] || key,
                         val = imported[key];
-                    // Foreign bookkeeping and saved-site blobs never transfer
-                    if (/^(Hidden Themes|Themes|Selected Mascots|Hidden Mascots|Total Mascots|Version Fix|Scrollbar Type)$/.test(target))
+                    // Foreign bookkeeping never transfers
+                    if (/^(Themes|Selected Mascots|Hidden Mascots|Total Mascots|Version Fix|Scrollbar Type)$/.test(target))
                         continue;
                     if (/^Saved4chan\./.test(key))
                         continue;
-                    if (/^(Selected Theme|NSFW Theme|Dark Theme|Light Theme)$/.test(target)) {
+                    // Site settings saved into an export: store them where the
+                    // Restore button reads (raw strings, as localStorage holds them)
+                    if (/^SavedSite\./.test(key)) {
+                        $SS.Config.set("SavedSiteSettings." + key.slice(10),
+                            typeof val === "string" ? val : JSON.stringify(val));
+                        continue;
+                    }
+                    // Retired option: the site's own Show relative time replaced it
+                    if (key === "Relative Post Dates") {
+                        if (val === true) { try { localStorage.show_relative_time = "true"; } catch (e) {} }
+                        continue;
+                    }
+                    if (target === "Hidden Themes") {
+                        // Indices into the default list; OneeChan's list differs
+                        if (isOneeChan || !Array.isArray(val)) continue;
+                        val = val.filter(function (i) {
+                            return typeof i === "number" && i >= 0 && i < $SS.Themes.defaults.length;
+                        });
+                    } else if (/^(Selected Theme|NSFW Theme|Dark Theme|Light Theme)$/.test(target)) {
                         if (typeof val !== "number" || val < 0) continue;
                         if (isOneeChan) {
                             // OneeChan's theme order differs from ours: resolve
@@ -3785,21 +3972,21 @@
                             });
                             if (mapped === -1) continue;
                             val = mapped;
-                        } else if (val >= ($SS.conf["Themes"] || []).length) {
+                        } else if (val >= themeCount) {
                             // StyleChan/StyleTower share the default list;
                             // just guard the range
                             continue;
                         }
-                    } else if (!(target in defaultConfig) && !/^SavedSite\./.test(key)) {
+                    } else if (!(target in defaultConfig)) {
+                        continue;
+                    } else if (val === null || typeof val === "object") {
+                        // Plain options hold primitives; anything else is junk
                         continue;
                     }
                     $SS.Config.set(target, val);
                 }
             },
             /* Mascots tab (OneeChan-style gallery + editor over a working copy) */
-            mascotEsc: function (s) {
-                return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-            },
             mascotName: function (m, i) {
                 if (m.name) return m.name;
                 var base = String(m.url || "").split("/").pop().split("?")[0]
@@ -3809,7 +3996,7 @@
             },
             mascotGalleryHTML: function () {
                 var work = $SS.options._mascotWork || [],
-                    esc = $SS.options.mascotEsc,
+                    esc = $SS.escapeHTML,
                     html = ["<div class='option mascot-gallery-wrap'>",
                         "<p class='mascot-controls'>",
                         "<a class='options-button mascot-add' title='Add a new mascot.'>Add Mascot</a>",
@@ -3838,11 +4025,143 @@
                 tmp.innerHTML = $SS.options.mascotGalleryHTML();
                 wrap.parentNode.replaceChild(tmp.firstChild, wrap);
             },
+            /* One slider row of the editor dialogs */
+            sliderRow: function (title, name, val, min, max, unit, tip, modeCls) {
+                return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
+                    "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
+                    "<input type=number class='mascot-opacity-num' data-for='" + name + "' value='" + val + "' step=1>" +
+                    "<span class='mascot-opacity-val'>" + unit + "</span></label>";
+            },
+            /* Keeps a slider and its typed field together: the field follows
+               the slider, and a typed value past the slider's range widens it */
+            syncSlider: function (el) {
+                if (!el || !el.classList) return;
+                if (el.type === "range" && el.classList.contains("mascot-opacity")) {
+                    var num = el.parentNode.querySelector(".mascot-opacity-num");
+                    if (num) num.value = el.value;
+                } else if (el.classList.contains("mascot-opacity-num")) {
+                    var range = el.parentNode.querySelector("input[type=range]"),
+                        v = parseInt(el.value, 10);
+                    if (!range || isNaN(v)) return;
+                    if (v > parseInt(range.max, 10)) range.max = v;
+                    if (v < parseInt(range.min, 10)) range.min = v;
+                    range.value = v;
+                }
+            },
+            refreshNavStatus: function () {
+                var el = document.querySelector("#oneechan-options .st-nav-status");
+                if (el) el.textContent = $SS.conf["Nav Buttons"] ? "Custom" : "Site default";
+            },
+            /* Navigation buttons editor: sliders plus dragging the buttons on
+               the page; Save persists at once (there is no list to commit) */
+            showNavEditor: function () {
+                // The theme and mascot editors share the #overlay2 id; never allow two
+                $("#overlay2").remove();
+                var d = $SS.navButtonDefaults,
+                    cur = $SS.navButtonSettings() || { scale: d.scale, x: d.x, y: d.y, gap: d.gap, reverse: d.reverse },
+                    maxX = Math.max(200, (window.innerWidth || 1024) - 40),
+                    maxY = Math.max(200, (window.innerHeight || 768) - 40),
+                    slider = $SS.options.sliderRow,
+                    div = $("<div id='st-nav-editor' class='dialog'>").html(
+                        "<label class='add-mascot-label mascot-filter-head'><span class='option-title'>Navigation Buttons</span></label>" +
+                        "<p class='mascot-hint'>Drag the ↑ ↓ buttons on the page to place them, or use the sliders.</p>" +
+                        slider("Scale", "nScale", cur.scale, 25, 300, "%", "Size of the buttons relative to the site's 32px.") +
+                        slider("Horizontal", "nX", cur.x, 0, maxX, "px", "Distance from the right edge of the window.") +
+                        slider("Vertical", "nY", cur.y, 0, maxY, "px", "Distance from the bottom edge of the window.") +
+                        slider("Spacing", "nGap", cur.gap, 0, 300, "px", "Gap between the two buttons (type a larger value for more).") +
+                        "<label class='add-mascot-label' title='Swap the order of the two buttons.'><span class='option-title'>Reverse Order:</span><input type=checkbox name=nReverse" + (cur.reverse ? " checked" : "") + "></label>" +
+                        "<div id='st-nav-buttons-container'><a class='options-button' name=nDefault title=\"Forget the custom placement and use the site's.\">Use Site Default</a><a class='options-button' name=nSave>Save</a><a class='options-button' name=nCancel>Cancel</a></div>"),
+                    node = div.elems[0],
+                    collect = function () {
+                        var g = function (n) { return parseInt(node.querySelector("[name=" + n + "]").value, 10) || 0; };
+                        return { scale: g("nScale") || 100, x: g("nX"), y: g("nY"), gap: g("nGap"), reverse: node.querySelector("[name=nReverse]").checked };
+                    },
+                    overlay2 = $("<div id=overlay2>").append(div),
+                    box = document.getElementById("scroll-buttons"),
+                    preview = function () { $SS.applyNavButtons(collect()); },
+                    setField = function (n, v) {
+                        var el = node.querySelector("[name=" + n + "]");
+                        if (!el) return;
+                        el.value = v;
+                        $SS.options.syncSlider(el);
+                    },
+                    drag = null, dragged = false,
+                    onMove = function (e) {
+                        if (!drag) return;
+                        // Offsets are measured from the right/bottom edges, so
+                        // moving the pointer left or up grows them
+                        var x = Math.min(Math.max(drag.x - (e.clientX - drag.sx), 0), maxX),
+                            y = Math.min(Math.max(drag.y - (e.clientY - drag.sy), 0), maxY);
+                        if (x !== drag.x || y !== drag.y) dragged = true;
+                        setField("nX", x);
+                        setField("nY", y);
+                        preview();
+                        e.preventDefault();
+                    },
+                    onUp = function () {
+                        document.removeEventListener("mousemove", onMove);
+                        document.removeEventListener("mouseup", onUp);
+                        drag = null;
+                    },
+                    onDown = function (e) {
+                        if (e.button !== 0) return;
+                        var c = collect();
+                        drag = { sx: e.clientX, sy: e.clientY, x: c.x, y: c.y };
+                        dragged = false;
+                        document.addEventListener("mousemove", onMove);
+                        document.addEventListener("mouseup", onUp);
+                        e.preventDefault();
+                    },
+                    // The click that ends a drag must not scroll the page
+                    onClick = function (e) {
+                        if (dragged) { dragged = false; e.preventDefault(); e.stopPropagation(); }
+                    },
+                    closeEditor = function () {
+                        if (box) {
+                            box.classList.remove("st-nav-editing");
+                            box.removeEventListener("mousedown", onDown);
+                            box.removeEventListener("click", onClick, true);
+                        }
+                        onUp();
+                        overlay2.remove();
+                        $("#overlay").removeClass("previewing");
+                        $SS.applyNavButtons();
+                        $SS.options.refreshNavStatus();
+                    };
+                $(document.body).append(overlay2);
+                // Hide the options window while the buttons preview live
+                $("#overlay").addClass("previewing");
+                if (box) {
+                    box.classList.add("st-nav-editing");
+                    box.addEventListener("mousedown", onDown);
+                    box.addEventListener("click", onClick, true);
+                }
+                preview();
+                node.addEventListener("input", function (e) {
+                    $SS.options.syncSlider(e.target);
+                    preview();
+                });
+                node.addEventListener("change", preview);
+                $("a[name=nSave]", div).bind("click", function () {
+                    $SS.conf["Nav Buttons"] = JSON.stringify(collect());
+                    $SS.Config.set("Nav Buttons", $SS.conf["Nav Buttons"]);
+                    closeEditor();
+                });
+                $("a[name=nDefault]", div).bind("click", function () {
+                    $SS.conf["Nav Buttons"] = "";
+                    $SS.Config.set("Nav Buttons", "");
+                    closeEditor();
+                });
+                $("a[name=nCancel]", div).bind("click", closeEditor);
+                overlay2.bind("click", function (e) {
+                    if (e.target === overlay2.elems[0]) closeEditor();
+                });
+            },
             showMascotEditor: function (mIndex) {
                 var bEdit = typeof mIndex === "number" && mIndex >= 0,
                     work = $SS.options._mascotWork || ($SS.options._mascotWork = []),
                     m = bEdit ? work[mIndex] : {},
-                    esc = $SS.options.mascotEsc;
+                    esc = $SS.escapeHTML;
                 if (!m) return;
                 var f = function (v, d) { return v === undefined || v === null ? d : v; },
                     clip = m.clip || [0, 0, 0, 0],
@@ -3850,11 +4169,7 @@
                     advanced = $SS.conf["Advanced Mascot Editor"] === true,
                     off = parseInt(f(m.offset, 0), 10),
                     hoff = parseInt(f(m.hoffset, 0), 10),
-                    slider = function (title, name, val, min, max, unit, tip, modeCls) {
-                        return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
-                            "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
-                            "<span class='mascot-opacity-val'>" + val + unit + "</span></label>";
-                    },
+                    slider = $SS.options.sliderRow,
                     div = $("<div id='add-mascot' class='dialog" + (advanced ? " advanced" : "") + "'>").html(
                         "<label class='add-mascot-label mascot-mode-row' title='Simple mode keeps the intuitive controls; advanced exposes raw CSS sizes, precise offsets, clipping, page side and per-board lists.'><span class='option-title'>Advanced Editing:</span><input type=checkbox name=mAdvanced" + (advanced ? " checked" : "") + "></label>" +
                         "<label class='add-mascot-label' title='Name shown in the gallery.'><span class='option-title'>Name:</span><input class='mascot-input' type=text name=mName value=\"" + esc(f(m.name, "")) + "\" placeholder='Mascot name'></label>" +
@@ -3902,8 +4217,7 @@
                         if (num(g("mFContrast")) !== 100) fl.contrast = num(g("mFContrast"));
                         if (num(g("mFSat")) !== 100) fl.sat = num(g("mFSat"));
                         if (num(g("mFBlur"))) fl.blur = num(g("mFBlur"));
-                        var hasFilters = false, fk;
-                        for (fk in fl) { hasFilters = true; break; }
+                        var hasFilters = Object.keys(fl).length > 0;
                         var scaleVal = num(g("mScale")) || 100,
                             sideVal = g("mSide");
                         return {
@@ -3944,14 +4258,13 @@
                 preview();
                 var setField = function (name, val) {
                     var el = node.querySelector("[name=" + name + "]");
-                    if (el) el.value = val;
+                    if (!el) return;
+                    el.value = val;
+                    $SS.options.syncSlider(el);
                 };
                 node.addEventListener("input", function (e) {
                     var t = e.target;
-                    if (t.type === "range") {
-                        var vv = t.parentNode.querySelector(".mascot-opacity-val");
-                        if (vv) vv.textContent = t.value + (t.getAttribute("data-unit") || "%");
-                    }
+                    $SS.options.syncSlider(t);
                     // The simple-mode position sliders and the advanced offset
                     // inputs edit the same values; keep them in sync (the text
                     // inputs are what collect() reads)
@@ -3976,6 +4289,7 @@
                         if (bEdit) work[mIndex] = obj;
                         else work.push(obj);
                         $SS.options.renderMascotGallery();
+                        $SS.options.touched();
                     }
                     closeEditor();
                 });
@@ -4125,21 +4439,17 @@
                             return RPA.join(" ");
                         };
 
-                    // Collect all form values, but only include non-empty color values
+                    // Collect the named fields; empty ones fall back to the base
+                    // theme below. A half-typed hex would preview as black, so
+                    // colors only count once they normalize
                     $("input,textarea,select", overlay).each(function () {
                         var val = this.value;
-                        if (this.name) {
-                            // For color inputs, strip "#" prefix and include if non-white
-                            if (this.type === "color") {
-                                var hex = val.replace("#", "");
-                                if (hex !== "" && hex !== "ffffff" && hex.length === 6) {
-                                    previewTheme[this.name] = hex;
-                                }
-                            } else if (val !== "") {
-                                // For non-color inputs, include if not empty
-                                previewTheme[this.name] = val;
-                            }
+                        if (!this.name || val === "") return;
+                        if (this.classList.contains("color-hex")) {
+                            val = $SS.normalizeHex(val);
+                            if (!val) return;
                         }
+                        previewTheme[this.name] = val;
                     });
 
                     // Set defaults for missing values
@@ -4243,24 +4553,10 @@
                     if (previewThemeIndex !== -1) {
                         $SS.conf["Themes"].splice(previewThemeIndex, 1);
                     }
-                    // Always restore to the originally selected theme (not the theme being edited)
+                    // Back to the selection the panel shows (System Theming
+                    // and the other live values are honored by refresh)
                     $SS.conf["Selected Theme"] = originalSelectedTheme;
-                    // Re-derive the displayed theme the way init does: under
-                    // System Theming the page shows the Dark/Light theme, not
-                    // the selected one
-                    var active;
-                    if ($SS.conf["System Theming"]) {
-                        active = window.matchMedia("(prefers-color-scheme: dark)").matches ?
-                            parseInt($SS.conf["Dark Theme"], 10) : parseInt($SS.conf["Light Theme"], 10);
-                    } else {
-                        active = $SS.location.nsfw ? $SS.conf["NSFW Theme"] : originalSelectedTheme;
-                    }
-                    if (!$SS.conf["Themes"][active]) active = 0;
-                    $SS.theme = new $SS.Theme(active);
-                    $SS.setThemeVariables();
-                    document.documentElement.classList.toggle("isLight", $SS.theme.textColor.isLight === true);
-                    document.documentElement.classList.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
-                    $SS.insertCSS();
+                    $SS.options.refresh();
                     $("#overlay").removeClass("previewing");
                     $("#overlay2").remove();
                 });
@@ -4317,7 +4613,7 @@
                     // the in-memory selection dangling past the array end;
                     // re-init restores the stored state
                     if (previewIndex !== -1)
-                        $SS.init(true);
+                        $SS.options.refresh();
                     return overlay.remove();
                 }
 
@@ -4405,8 +4701,7 @@
                     // stale mid-preview state and can skip both the
                     // selection and the save
                     div.parent().children(".selected").removeClass("selected");
-                    div.parent().children(".nsfw").removeClass("nsfw");
-                    div.addClass("selected nsfw");
+                    div.addClass("selected");
                     div.scrollIntoView(true);
                     // Under System Theming the page displays the Dark/Light
                     // mapping, not the selection; point the governing slot at
@@ -4418,7 +4713,7 @@
                         $SS.Config.set(slot, tIndex);
                     }
                     $SS.options.saveThemeState();
-                    $SS.init(true);
+                    $SS.options.refresh();
                 }
 
                 // The list may have grown; keep the Dark/Light selects in step
@@ -4436,7 +4731,22 @@
                         $SS.conf["Hidden Themes"].push(tIndex) === 1)
                         $("#themes-section a[name=restoreThemes]").show();
                     $SS.Config.set("Hidden Themes", $SS.conf["Hidden Themes"]);
-                    return $("#theme" + tIndex).removeClass("selected").hide();
+                    var tile = $("#theme" + tIndex),
+                        wasSelected = tile.hasClass("selected");
+                    tile.removeClass("selected").hide();
+                    // The page must not keep showing a theme the list no
+                    // longer offers: fall back to the first visible one
+                    if (wasSelected) {
+                        for (var i = 0; i < $SS.conf["Themes"].length; i++) {
+                            if (i !== tIndex && $SS.conf["Hidden Themes"].indexOf(i) === -1) {
+                                $("#theme" + i).addClass("selected");
+                                break;
+                            }
+                        }
+                        $SS.options.saveThemeState();
+                        $SS.options.refresh();
+                    }
+                    return;
                 }
 
                 if (!confirm('Delete theme "' + t.name + '"? This cannot be undone.'))
@@ -4462,7 +4772,7 @@
                 }
 
                 $SS.options.saveThemeState();
-                return $SS.init(true);
+                return $SS.options.refresh();
             },
         },
 
@@ -5406,11 +5716,16 @@
                     i = window.matchMedia('(prefers-color-scheme: dark)').matches ?
                         parseInt($SS.conf["Dark Theme"], 10) : parseInt($SS.conf["Light Theme"], 10);
                 } else {
-                    i = $SS.location.nsfw ?
-                        $SS.conf["NSFW Theme"] : $SS.conf["Selected Theme"];
+                    i = $SS.conf["Selected Theme"];
                 }
 
-                var tIndex = $SS.conf["Themes"][i] ? i : 0;
+                var hidden = $SS.conf["Hidden Themes"] || [],
+                    tIndex = $SS.conf["Themes"][i] ? i : 0;
+                // A stored selection can point at a since-hidden default;
+                // show the first theme the list still offers instead
+                if (hidden.indexOf(tIndex) !== -1)
+                    for (var j = 0; j < $SS.conf["Themes"].length; j++)
+                        if (hidden.indexOf(j) === -1) { tIndex = j; break; }
                 $SS.theme = new $SS.Theme(tIndex); // Set the active theme.
                 $SS.setThemeVariables();
 
@@ -5418,7 +5733,7 @@
                 if (!this._mqListener) {
                     this._mqListener = function () {
                         if ($SS.conf["System Theming"]) {
-                            $SS.init(true);
+                            $SS.options.refresh();
                         }
                     };
                     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this._mqListener);
@@ -5457,14 +5772,12 @@
                 cl.toggle("hl-border", $SS.conf["Decoration Style"] === 1);
                 cl.toggle("hl-outline", $SS.conf["Decoration Style"] === 2);
                 cl.toggle("hl-border-down", $SS.conf["Decoration Style"] === 3);
-                if (!$SS.location.report) {
-                    // The sidebar rearranges the board header/banner; on the
-                    // home page that mangles its custom layout
-                    cl.toggle("right-sidebar", $SS.conf["Sidebar Position"] === 1 && !isHome);
-                    cl.toggle("left-sidebar", $SS.conf["Sidebar Position"] === 2 && !isHome);
-                    cl.toggle("ss-sidebar", $SS.conf["SS-like Sidebar"] === true && !isHome);
-                    cl.toggle("mini-sidebar", $SS.conf["Minimal Sidebar"] === true && !isHome);
-                }
+                // The sidebar rearranges the board header/banner; on the
+                // home page that mangles its custom layout
+                cl.toggle("right-sidebar", $SS.conf["Sidebar Position"] === 1 && !isHome);
+                cl.toggle("left-sidebar", $SS.conf["Sidebar Position"] === 2 && !isHome);
+                cl.toggle("ss-sidebar", $SS.conf["SS-like Sidebar"] === true && !isHome);
+                cl.toggle("mini-sidebar", $SS.conf["Minimal Sidebar"] === true && !isHome);
                 cl.toggle("recolor-even", $SS.conf["Recolor Even Replies"] === true);
                 cl.toggle("alt-spoiler", $SS.conf["Invert Spoiler"] === true);
                 cl.toggle("backlink-icon", $SS.conf["Backlink Icons"] === true);
@@ -5493,7 +5806,7 @@
                 cl.toggle("catalog-justify", $SS.conf["Justified Text"] === true);
                 cl.toggle("catalog-background", $SS.conf["Show Background"] === true);
                 cl.toggle("catalog-thumbsize", $SS.conf["Unified Thumbnail Size"] === true);
-                cl.toggle("use-sc-icons", $SS.conf["Use StyleTower Icons"]);
+                cl.toggle("use-sc-icons", $SS.conf["Use StyleTower Icons"] === true);
                 cl.toggle("highlight-you", $SS.conf["Highlight Posts Quoting You"] === true);
                 cl.toggle("highlight-own", $SS.conf["Highlight Own Posts"] === true);
                 cl.toggle("mascot-overlap", $SS.conf["Mascots Overlap Posts"] === true);
@@ -5528,7 +5841,6 @@
                     $SS._headerObserver = new MutationObserver(syncHeader);
                     $SS._headerObserver.observe(headerEl, { attributes: true, attributeFilter: ["class"] });
                 }
-                if ($SS.conf["Relative Post Dates"]) $SS.relativeDates();
                 $SS.replacePostMenuBtn();
             }
         },
@@ -5571,7 +5883,10 @@
                     var b64 = $SS.cleanBase64(this.img);
                     src = "data:image/" + $SS.typeofBase64(b64) + ";base64," + b64;
                 } else
-                    src = this.img;
+                    src = String(this.img).replace(/['"\\()\s]/g, function (c) {
+                        return /\s/.test(c) ? (c === " " ? "%20" : "") :
+                            "%" + c.charCodeAt(0).toString(16).toUpperCase();
+                    });
 
                 return "url('" + src + "')" + (this.RPA !== undefined ? " " + this.RPA : "");
             };
@@ -5590,38 +5905,47 @@
             this.authorName = theme.authorName || "Anonymous";
             this.authorTrip = theme.authorTrip || "!..NoTrip..";
             this.default = theme.default;
-            this.replyBrder = theme.replyBrder;
             this.bgImg = new $SS.Image(theme.bgImg, theme.bgRPA);
             // Free-text in old saves: clamp to 0..1 so a stray value can't
             // invalidate every rgba() consumer
             this.replyOp = $SS.normalizeOpacity(theme.replyOp, "1.0");
             this.navOp = $SS.normalizeOpacity(theme.navOp, "0.9");
-            this.bgColor = new $SS.Color(theme.bgColor);
-            this.mainColor = new $SS.Color(theme.mainColor);
-            this.brderColor = new $SS.Color(theme.brderColor);
-            this.inputColor = new $SS.Color(theme.inputColor, true);
-            this.inputbColor = new $SS.Color(theme.inputbColor);
-            this.blinkColor = new $SS.Color(theme.blinkColor);
-            this.unreadColor = new $SS.Color(theme.unreadColor);
-            this.linkColor = new $SS.Color(theme.linkColor);
-            this.linkHColor = new $SS.Color(theme.linkHColor);
-            this.qlColor = new $SS.Color(theme.qlColor);
-            this.nameColor = new $SS.Color(theme.nameColor);
-            this.quoteColor = new $SS.Color(theme.quoteColor);
-            this.textColor = new $SS.Color(theme.textColor);
-            this.titleColor = new $SS.Color(theme.titleColor);
-            this.tripColor = new $SS.Color(theme.tripColor);
-            this.boardColor = new $SS.Color(theme.boardColor);
-            this.headerColor = new $SS.Color(theme.headerColor);
-            this.headerLColor = new $SS.Color(theme.headerLColor);
-            this.headerLHColor = new $SS.Color(theme.headerLHColor);
-            this.headerBGColor = new $SS.Color(theme.headerBGColor);
-            this.postHLColor = new $SS.Color(theme.postHLColor);
-            this.quotesYouHLColor = new $SS.Color(theme.quotesYouHLColor);
-            this.ownPostHLColor = new $SS.Color(theme.ownPostHLColor);
-            this.threadHLColor = new $SS.Color(theme.threadHLColor);
-            this.replybgHLColor = new $SS.Color(theme.replybgHLColor);
-            this.replyslctColor = new $SS.Color(theme.replyslctColor);
+            // Themes from older StyleChan/OneeChan versions lack the newer
+            // keys; derive those from related colors rather than painting
+            // them black (OneeChan's highlightColor is our postHLColor)
+            var col = function () {
+                for (var i = 0; i < arguments.length; i++) {
+                    var v = $SS.normalizeHex(theme[arguments[i]]);
+                    if (v) return v;
+                }
+                return null;
+            };
+            this.bgColor = new $SS.Color(col("bgColor", "mainColor"));
+            this.mainColor = new $SS.Color(col("mainColor", "bgColor"));
+            this.textColor = new $SS.Color(col("textColor", "headerColor"));
+            this.brderColor = new $SS.Color(col("brderColor", "mainColor"));
+            this.inputColor = new $SS.Color(col("inputColor", "mainColor"), true);
+            this.inputbColor = new $SS.Color(col("inputbColor", "brderColor", "mainColor"));
+            this.linkColor = new $SS.Color(col("linkColor", "textColor"));
+            this.linkHColor = new $SS.Color(col("linkHColor", "linkColor", "textColor"));
+            this.qlColor = new $SS.Color(col("qlColor", "linkColor", "textColor"));
+            this.blinkColor = new $SS.Color(col("blinkColor", "linkColor", "textColor"));
+            this.unreadColor = new $SS.Color(col("unreadColor", "linkColor", "textColor"));
+            this.nameColor = new $SS.Color(col("nameColor", "textColor"));
+            this.tripColor = new $SS.Color(col("tripColor", "nameColor", "textColor"));
+            this.titleColor = new $SS.Color(col("titleColor", "nameColor", "textColor"));
+            this.quoteColor = new $SS.Color(col("quoteColor", "textColor"));
+            this.headerColor = new $SS.Color(col("headerColor", "textColor"));
+            this.boardColor = new $SS.Color(col("boardColor", "headerColor", "textColor"));
+            this.headerLColor = new $SS.Color(col("headerLColor", "linkColor", "textColor"));
+            this.headerLHColor = new $SS.Color(col("headerLHColor", "linkHColor", "linkColor", "textColor"));
+            this.headerBGColor = new $SS.Color(col("headerBGColor", "mainColor", "bgColor"));
+            this.postHLColor = new $SS.Color(col("postHLColor", "highlightColor", "titleColor", "textColor"));
+            this.quotesYouHLColor = new $SS.Color(col("quotesYouHLColor", "nameColor", "textColor"));
+            this.ownPostHLColor = new $SS.Color(col("ownPostHLColor", "tripColor", "textColor"));
+            this.threadHLColor = new $SS.Color(col("threadHLColor", "titleColor", "textColor"));
+            this.replyslctColor = new $SS.Color(col("replyslctColor", "linkColor", "textColor"));
+            this.replybgHLColor = new $SS.Color(col("replybgHLColor", "mainColor", "bgColor"));
             // Hover previews default to the shade replies always used, so
             // themes without the key keep their look
             this.hoverColor = theme.hoverColor ? new $SS.Color(theme.hoverColor) : null;
@@ -5633,98 +5957,58 @@
             this.icons = {
                 menuIcon: "<svg viewBox='0 0 512 512' preserveAspectRatio='xMidYMid meet' class='icon' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='currentColor' d='M256 432q-15 1-16 16 1 15 16 16 15-1 16-16-1-15-16-16ZM64 288H448v32q-1 27-19 45t-45 19H320v64q-1 27-19 45t-45 19q-27-1-45-19t-19-45V384H128q-27-1-45-19T64 320V288v32-32ZM226 6l21 52q3 6 9 6t9-6L286 6q2-6 9-6H400q20 1 34 14 13 14 14 34V224v22 10H74 64V246 224 48q1-20 14-34Q92 1 112 0h10q6 0 8 6l21 52q3 6 9 6t9-6L190 6q2-6 9-6h19q6 0 8 6Z'/></svg>",
-                star: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                    "<path fill='rgb(" + this.textColor.rgb + ")' d='M14.615,4.928c0.487-0.986,1.284-0.986,1.771,0l2.249,4.554c0.486,0.986,1.775,1.923,2.864,2.081l5.024,0.73c1.089,0.158,1.335,0.916,0.547,1.684l-3.636,3.544c-0.788,0.769-1.28,2.283-1.095,3.368l0.859,5.004c0.186,1.085-0.459,1.553-1.433,1.041l-4.495-2.363c-0.974-0.512-2.567-0.512-3.541,0l-4.495,2.363c-0.974,0.512-1.618,0.044-1.432-1.041l0.858-5.004c0.186-1.085-0.307-2.6-1.094-3.368L3.93,13.977c-0.788-0.768-0.542-1.525,0.547-1.684l5.026-0.73c1.088-0.158,2.377-1.095,2.864-2.081L14.615,4.928z'/></svg>",
-                msg: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                    "<path fill='rgb(" + this.textColor.rgb + ")' d='M16,4.938c-7.732,0-14,4.701-14,10.5c0,1.981,0.741,3.833,2.016,5.414L2,25.272l5.613-1.44c2.339,1.316,5.237,2.106,8.387,2.106c7.732,0,14-4.701,14-10.5S23.732,4.938,16,4.938zM16.868,21.375h-1.969v-1.889h1.969V21.375zM16.772,18.094h-1.777l-0.176-8.083h2.113L16.772,18.094z'/></svg>",
                 backlink: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.blinkColor.rgb + ")' d='M12.981,9.073V6.817l-12.106,6.99l12.106,6.99v-2.422c3.285-0.002,9.052,0.28,9.052,2.269c0,2.78-6.023,4.263-6.023,4.263v2.132c0,0,13.53,0.463,13.53-9.823C29.54,9.134,17.952,8.831,12.981,9.073z'/></svg>",
                 threadClosed: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.headerColor.rgb + ")' d='M22.335,12.833V9.999h-0.001C22.333,6.501,19.498,3.666,16,3.666S9.666,6.502,9.666,10h0v2.833H7.375V25h17.25V12.833H22.335zM11.667,10C11.667,10,11.667,10,11.667,10c0-2.39,1.944-4.334,4.333-4.334c2.391,0,4.335,1.944,4.335,4.333c0,0,0,0,0,0v2.834h-8.668V10z'/></svg>",
                 threadPinned: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z'/></svg>",
-                threadArchived: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                    "<path fill='rgb(" + this.tripColor.rgb + ")' d='M15.5,3.029l-10.8,6.235L4.7,21.735L15.5,27.971l10.8-6.235V9.265L15.5,3.029zM24.988,10.599L16,15.789v10.378c0,0.275-0.225,0.5-0.5,0.5s-0.5-0.225-0.5-0.5V15.786l-8.987-5.188c-0.239-0.138-0.321-0.444-0.183-0.683c0.138-0.238,0.444-0.321,0.683-0.183l8.988,5.189l8.988-5.189c0.238-0.138,0.545-0.055,0.684,0.184C25.309,10.155,25.227,10.461,24.988,10.599z'/></svg>",
                 downArrow: "<svg viewBox='7 4 29 27' preserveAspectRatio='xMidYMid meet' height='16' width='16' xmlns='http://www.w3.org/2000/svg'>" +
+                    "<path fill='rgb(" + this.tripColor.rgb + ")' d='M8.037,11.166L14.5,22.359c0.825,1.43,2.175,1.43,3,0l6.463-11.194c0.826-1.429,0.15-2.598-1.5-2.598H9.537C7.886,8.568,7.211,9.737,8.037,11.166z'/></svg>",
+                // The same arrow cropped to its glyph: the navigation buttons
+                // rotate it, and the empty right side of the 16px version would
+                // become a gap on one side or the other depending on the order
+                navArrow: "<svg viewBox='6.5 7.5 19 17' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M8.037,11.166L14.5,22.359c0.825,1.43,2.175,1.43,3,0l6.463-11.194c0.826-1.429,0.15-2.598-1.5-2.598H9.537C7.886,8.568,7.211,9.737,8.037,11.166z'/></svg>",
                 options: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.headerLColor.rgb + ")' d='M15,10.5c-2.485,0-4.5,2.015-4.5,4.5s2.015,4.5,4.5,4.5s4.5-2.015,4.5-4.5S17.485,10.5,15,10.5z M27.5,17.16v-4.32l-3.02-0.5c-0.22-0.79-0.53-1.54-0.94-2.24l1.78-2.49l-3.05-3.05l-2.49,1.78c-0.7-0.4-1.45-0.72-2.24-0.94L16.16,2.4h-4.32l-0.5,3.02c-0.79,0.22-1.54,0.53-2.24,0.94L6.61,4.58L3.56,7.63l1.78,2.49c-0.4,0.7-0.72,1.45-0.94,2.24l-3.02,0.5v4.32l3.02,0.5c0.22,0.79,0.53,1.54,0.94,2.24l-1.78,2.49l3.05,3.05l2.49-1.78c0.7,0.4,1.45,0.72,2.24,0.94l0.5,3.02h4.32l0.5-3.02c0.79-0.22,1.54-0.53,2.24-0.94l2.49,1.78l3.05-3.05l-1.78-2.49c0.4-0.7,0.72-1.45,0.94-2.24L27.5,17.16z'/></svg>"
             };
 
             if (theme.customCSS) {
-                try {
-                    var css = String(theme.customCSS);
-                    if (css.length > 2 && css[0] === "(" && css[css.length - 1] === ")") {
-                        css = css.slice(1, -1);
-                    }
-                    css = css.replace(/^\\?"|\\?"$/g, '');
-                    this.customCSS = $SS.trimLineBreaks(css);
-                } catch (e) {
-                    alert("Error processing " + this.name + "'s theme.customCSS!\n" + e.message);
-                    this.customCSS = String(theme.customCSS || "");
-                }
+                // Old exports wrapped the CSS in parentheses and quotes
+                var css = String(theme.customCSS);
+                if (css.length > 2 && css[0] === "(" && css[css.length - 1] === ")")
+                    css = css.slice(1, -1);
+                css = css.replace(/^\\?"|\\?"$/g, '');
+                this.customCSS = $SS.trimLineBreaks(css);
             } else
                 this.customCSS = "";
 
             this.preview = function () {
                 var div = $("<div " + (this.hidden ? "hidden=true " : "") +
-                    " id=theme" + this.index + " class=\'theme-preview " + (($SS.conf["Selected Theme"] == $SS.conf["NSFW Theme"]) && ($SS.conf["Selected Theme"] == this.index) ? "selected nsfw" : ($SS.conf["Selected Theme"] == this.index ? "selected " : "") + ($SS.conf["NSFW Theme"] == this.index ? "nsfw " : "")) + "\'>").html("<div class=reply " +
+                    " id=theme" + this.index + " class='theme-preview" + ($SS.conf["Selected Theme"] == this.index ? " selected" : "") + "'>").html("<div class=reply " +
                         "style='background-color:" + this.mainColor.hex + "!important;border:1px solid " + this.brderColor.hex + "!important;color:" + this.textColor.hex + "!important'>" +
                         "<span style='display:inline-block;width:10px;height:10px;border-radius:2px;background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;box-shadow:rgba(" + this.mainColor.shiftRGB(64) + ",.3) 0 1px;'></span>&ensp;" +
                         "<span style='color:" + this.titleColor.hex + "!important; font-weight: bold !important'>" + $SS.escapeHTML(this.name) + "</span>&ensp;" +
                         "<span style='color:" + this.nameColor.hex + "!important; font-weight: bold !important'>" + $SS.escapeHTML(this.authorName) + "</span>&ensp;" +
                         "<span style='color:" + this.tripColor.hex + "!important'> " + $SS.escapeHTML(this.authorTrip) + "</span>" +
                         "<time style='color:" + this.textColor.hex + "'> 20XX.01.01 12:00 </time>" +
-                        "<a href='javascript:;' style='color:" + this.linkColor.hex + "!important' " +
-                        "onmouseover='this.setAttribute(\"style\",\"color:" + this.linkHColor.hex + "!important\")' " +
-                        "onmouseout='this.setAttribute(\"style\",\"color:" + this.linkColor.hex + "!important\")'>No.22772469</a>" +
+                        "<a href='javascript:;' class='pv-link' style='--pv-link:" + this.linkColor.hex + ";--pv-linkh:" + this.linkHColor.hex + "'>No.22772469</a>" +
                         "<br><blockquote><span style='color:" + this.quoteColor.hex + "'>>implying this isn't a post</span><br>Post content is right here.</blockquote>" +
                         "<p class='theme-buttons-container'>" +
-                        "<a href='javascript:;' title='Sets the SFW theme.' style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>SFW</a>" +
-                        "<a href='javascript:;' title='Sets the NSFW theme.' style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>NSFW</a>" +
                         "<a href='javascript:;' title=Edit style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>Edit</a>" +
                         "<a href='javascript:;' title=Delete style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>Delete</a></p>" +
-                        "<h3 class='sfw-label notsafe'>NSFW</h3>" +
-                        "<h3 class='sfw-label safe'>SFW</h3>" +
-                        "<h3 class='sfw-label both'>SFW & NSFW</h3>" +
+                        "<h3 class='selected-label'>Selected</h3>" +
                         "</div>");
 
                 $(div).bind("click", function () {
                     var $this = $(this);
-
-                    // classList.contains never matches a two-token string, so
-                    // test the classes separately
-                    if ($this.hasClass("selected") && $this.hasClass("nsfw")) return;
+                    if ($this.hasClass("selected")) return;
 
                     $this.parent().children(".selected").removeClass("selected");
-                    $this.parent().children(".nsfw").removeClass("nsfw");
-                    $this.addClass("selected nsfw");
-                    // Theme state only: picking a theme must not commit
-                    // half-edited settings from the other tabs
-                    $SS.options.saveThemeState();
-                    $SS.init(true);
-                });
-
-                $("a[title='Sets the SFW theme.']", div).bind("click", function (e) {
-                    e.stopPropagation();
-                    var $this = $(this);
-                    if ($this.parent().parent().parent().hasClass("selected")) return;
-
-                    $this.parent().parent().parent().parent().children(".selected").removeClass("selected");
-                    $this.parent().parent().parent().addClass("selected");
-                    $SS.options.saveThemeState();
-                    $SS.init(true);
-                });
-
-                $("a[title='Sets the NSFW theme.']", div).bind("click", function (e) {
-                    e.stopPropagation();
-                    var $this = $(this);
-                    if ($this.parent().parent().parent().hasClass("nsfw")) return;
-
-                    $this.parent().parent().parent().parent().children(".nsfw").removeClass("nsfw");
-                    $this.parent().parent().parent().addClass("nsfw");
-                    $SS.options.saveThemeState();
-                    $SS.init(true);
+                    $this.addClass("selected");
+                    // Applies at once; the panel's Save stores it
+                    $SS.options.touched();
                 });
                 $("a[title=Delete]", div).bind("click", function (e) {
                     e.stopPropagation();
@@ -5744,7 +6028,12 @@
             if (/^(serif|sans-serif|monospace|cursive|system-ui)$/.test(font))
                 return font;
 
-            return "'" + font + "'";
+            return $SS.cssQuote(font);
+        },
+        /* A single-quoted CSS string: quotes and backslashes escaped, line
+           breaks dropped (a stray quote would otherwise end the rule early) */
+        cssQuote: function (s) {
+            return "'" + String(s == null ? "" : s).replace(/[\\']/g, "\\$&").replace(/[\r\n]/g, "") + "'";
         },
         systemFonts: {
             windows: [
@@ -5770,9 +6059,6 @@
                 "Noto Sans", "Noto Sans Mono", "Tahoma",
                 "Times New Roman", "Ubuntu", "Ubuntu Mono", "Verdana"
             ]
-        },
-        is4chanX: function () {
-            return false;
         },
         isTS: function () {
             // Holotower TS saves its settings on every run
@@ -5870,11 +6156,9 @@
             return {
                 sub: obj.hostname.split(".")[0],
                 board: /\.(?:php|html)$/.test(pathname[0] || "") ? "" : pathname[0],
-                nsfw: false,
                 maxFileSize: $SS.maxFileSizeDefault,
                 reply: pathname[1] === "res",
                 catalog: pathname[1] === "catalog.html",
-                report: false,
                 dead: /^404\b|^Not [Ff]ound\b/.test(document.title)
             };
         }
