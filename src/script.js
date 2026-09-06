@@ -1127,6 +1127,7 @@
                 "--sc-bgImg:" + t.bgImg.get() + ";" +
                 "--sc-icon-backlink:url(\"data:image/svg+xml," + t.icons.backlink + "\");" +
                 "--sc-icon-downArrow:url(\"data:image/svg+xml," + t.icons.downArrow + "\");" +
+                "--sc-icon-navArrow:url(\"data:image/svg+xml," + t.icons.navArrow + "\");" +
                 "--sc-icon-threadClosed:url(\"data:image/svg+xml," + t.icons.threadClosed + "\");" +
                 "--sc-icon-threadPinned:url(\"data:image/svg+xml," + t.icons.threadPinned + "\");" +
                 "--sc-icon-menu:url(\"data:image/svg+xml," + t.icons.menuIcon.replace("currentColor", "rgb(" + t.headerLColor.rgb + ")") + "\");" +
@@ -5929,6 +5930,11 @@
                 threadPinned: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z'/></svg>",
                 downArrow: "<svg viewBox='7 4 29 27' preserveAspectRatio='xMidYMid meet' height='16' width='16' xmlns='http://www.w3.org/2000/svg'>" +
+                    "<path fill='rgb(" + this.tripColor.rgb + ")' d='M8.037,11.166L14.5,22.359c0.825,1.43,2.175,1.43,3,0l6.463-11.194c0.826-1.429,0.15-2.598-1.5-2.598H9.537C7.886,8.568,7.211,9.737,8.037,11.166z'/></svg>",
+                // The same arrow cropped to its glyph: the navigation buttons
+                // rotate it, and the empty right side of the 16px version would
+                // become a gap on one side or the other depending on the order
+                navArrow: "<svg viewBox='6.5 7.5 19 17' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M8.037,11.166L14.5,22.359c0.825,1.43,2.175,1.43,3,0l6.463-11.194c0.826-1.429,0.15-2.598-1.5-2.598H9.537C7.886,8.568,7.211,9.737,8.037,11.166z'/></svg>",
                 options: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.headerLColor.rgb + ")' d='M15,10.5c-2.485,0-4.5,2.015-4.5,4.5s2.015,4.5,4.5,4.5s4.5-2.015,4.5-4.5S17.485,10.5,15,10.5z M27.5,17.16v-4.32l-3.02-0.5c-0.22-0.79-0.53-1.54-0.94-2.24l1.78-2.49l-3.05-3.05l-2.49,1.78c-0.7-0.4-1.45-0.72-2.24-0.94L16.16,2.4h-4.32l-0.5,3.02c-0.79,0.22-1.54,0.53-2.24,0.94L6.61,4.58L3.56,7.63l1.78,2.49c-0.4,0.7-0.72,1.45-0.94,2.24l-3.02,0.5v4.32l3.02,0.5c0.22,0.79,0.53,1.54,0.94,2.24l-1.78,2.49l3.05,3.05l2.49-1.78c0.7,0.4,1.45,0.72,2.24,0.94l0.5,3.02h4.32l0.5-3.02c0.79-0.22,1.54-0.53,2.24-0.94l2.49,1.78l3.05-3.05l-1.78-2.49c0.4-0.7,0.72-1.45,0.94-2.24L27.5,17.16z'/></svg>"

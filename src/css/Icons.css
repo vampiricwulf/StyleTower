@@ -85,7 +85,7 @@
   display: block;
   width: 32px;
   height: 32px;
-  background-image: var(--sc-icon-downArrow);
+  background-image: var(--sc-icon-navArrow);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;

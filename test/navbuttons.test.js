@@ -178,3 +178,15 @@ test("a stored position survives an options Save and is exported", async () => {
     assert.equal($SS.Config.get("Nav Buttons"), CUSTOM);
     assert.equal($SS.exportOptions["Nav Buttons"], CUSTOM);
 });
+
+test("the navigation arrows use a tightly cropped, centered icon so neither order has hidden padding", async () => {
+    const w = await load();
+    const vars = w.document.getElementById("sc-theme-vars").textContent;
+    assert.match(vars, /--sc-icon-navArrow:url\("data:image\/svg\+xml,<svg viewBox='6\.5 7\.5 19 17'/);
+    const fs = require("fs"), path = require("path");
+    const icons = fs.readFileSync(path.join(require("./harness").ROOT, "src", "css", "Icons.css"), "utf8");
+    const scroll = icons.slice(icons.indexOf("#scroll-buttons a::before"));
+    assert.match(scroll, /background-image:\s*var\(--sc-icon-navArrow\)/);
+    assert.doesNotMatch(scroll.split("}")[0], /downArrow/);
+    assert.match(icons, /a\.inline-active[\s\S]*?var\(--sc-icon-downArrow\)/, "the backlink arrow keeps its icon");
+});
