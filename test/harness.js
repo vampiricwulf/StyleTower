@@ -25,11 +25,13 @@ function fixture(name) {
 }
 
 function shim(w, opts) {
+    // Records scheme listeners so a test can flip w.__mq.matches and fire them
+    const mq = w.__mq = { matches: !!opts.dark, listeners: [] };
     w.matchMedia = w.matchMedia || function (q) {
         return {
-            matches: !!opts.dark, media: q,
-            addEventListener() {}, removeEventListener() {},
-            addListener() {}, removeListener() {}
+            get matches() { return mq.matches; }, media: q,
+            addEventListener(type, fn) { mq.listeners.push(fn); }, removeEventListener() {},
+            addListener(fn) { mq.listeners.push(fn); }, removeListener() {}
         };
     };
     w.IntersectionObserver = class {
