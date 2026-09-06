@@ -7,15 +7,13 @@ input,
 textarea,
 span.omitted,
 div.pages a.selected,
-.pln,
 select,
 form table th,
 form[name=post] table td {
   color: var(--sc-textColor) !important;
 }
 /* Names */
-p.intro span.name,
-.com {
+p.intro span.name {
   color: var(--sc-nameColor) !important;
 }
 p.intro span.capcode,
@@ -23,22 +21,18 @@ p.intro a.capcode {
   color: #800080 !important;
 }
 /* Tripcodes */
-p.intro span.trip,
-.tag {
+p.intro span.trip {
   color: var(--sc-tripColor) !important;
 }
 /* Links */
 a:not(span.spoiler>a),
 a:visited,
 span.spoiler:hover>a:not(:hover),
-:root .typ,
-:root .atn,
 :root .options-button {
   color: var(--sc-linkColor) !important;
 }
 :root a:hover,
 :root div.post p.intro a.post_no:hover,
-.lit,
 #import-link>.options-button:hover {
   color: var(--sc-linkHColor) !important;
 }
@@ -59,15 +53,12 @@ span.spoiler:hover>a:not(:hover),
 /* Greentext */
 div.body span.quote,
 span.spoiler:hover .quote,
-.str,
-.atv,
 .theme-catalog .replies .quote {
   color: var(--sc-quoteColor) !important;
 }
 /* Subject and Option labels */
 span.subject,
 .option.header .option-title,
-.kwd,
 .tab-label {
   color: var(--sc-titleColor) !important;
 }
@@ -99,7 +90,6 @@ pre {
   background: none repeat scroll 0 0 rgba(var(--sc-codeBackground)) !important;
   border: 1px solid rgba(var(--sc-codeBorder)) !important;
 }
-.pun,
 ::placeholder {
   color: rgba(var(--sc-textColor-rgb),.4) !important;
 }
@@ -158,7 +148,6 @@ form[name=post] table td {
 }
 .options-button,
 #link-quick-reply,
-label[for='q-spoiler-image'],
 div.pages a.selected,
 input[value='Next'],
 input[value='Previous'],
@@ -261,7 +250,6 @@ img.thread-image {
 :root.rounded-corners .options-button,
 :root.rounded-corners label.tab-label,
 :root.rounded-corners div.pages a.selected,
-:root.rounded-corners label[for='q-spoiler-image'],
 :root.rounded-corners #oneechan-options,
 :root.rounded-corners .color-picker-btn,
 :root.rounded-corners.op-background .post.op,
@@ -297,7 +285,6 @@ input,
 textarea,
 :root.vertical-qr #quick-reply .handle,
 #quick-reply select,
-label[for='q-spoiler-image'],
 select,
 form table th,
 #quick-reply,

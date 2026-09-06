@@ -40,9 +40,6 @@ div.post.op {
   margin-left: 4px;
   margin-right: 4px;
 }
-.expanded-image {
-  position: relative;
-}
 :root.op-background .op {
   padding: 4px 0;
 }
@@ -58,7 +55,6 @@ div.post.op {
    always forced so spacing is uniform whatever TS/lazy scripts do to the DOM;
    Normal maps to 4px, keeping the option ladder monotonic */
 .thread>.post.reply,
-.threadContainer>.post.reply,
 .threadingContainer>.post.reply,
 :root.op-background .thread>.post.op {
   margin-bottom: " + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : 4) + "px !important;
@@ -82,77 +78,28 @@ div.post.op {
    and nothing relies on its float clearing (posts are BFCs and div.thread
    itself clears) — spacing comes solely from the forced margins */
 .thread > br,
-.threadContainer > br,
 .threadingContainer > br,
 .post + br,
 .reply + br {
   display: none !important;
 }
-.container~.inline {
-  margin: 2px 0 2px 13px !important;
-}
-:root.bottom-backlinks .container~.inline {
-  margin: 0 13px 2px !important;
-}
-:root.bottom-backlinks .container~.inline:last-of-type:not(.inline .hasInline .inline) {
-  margin-bottom: 3px !important;
-}
-.hashlink {
-  padding-left: 2px;
-}
-:root.backlink-icon .post.op a.hashlink {
-  vertical-align: middle;
-}
 div.body {
   margin: " + $SS.conf["Margin Post Message"] + " !important;
 }
-:root.bottom-backlinks .container {
-  padding-left: 8px;
-}
-:root.bottom-backlinks .post:not(:root.op-background .op) .container:not(:empty) {
-  padding-bottom: 4px;
-}
-/* Fit Expanded Images option */
-:root.fit-eximg.fit-height .full-image {
+/* Fit Expanded Images option: an expanded image never exceeds the viewport
+   (the site only caps its width at 98%) */
+:root.fit-eximg .full-image {
   max-height: calc(100vh - 8rem) !important;
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
 }
 /* Fit Width option (never force TS/site-hidden posts visible) */
 :root.reply-fit-width .reply.post:not(.iq-hidden-post):not(.hidden-post):not(.hidden) {
   display: block !important;
 }
-:root.reply-fit-width .stub ~ .reply.post {
-  display: none !important;
-}
-.hasInline .inline>.post.reply:not(.expanded-image):not(.hasInline),
 :root.reply-fit-width .post.reply {
   overflow: hidden !important;
-}
-:root.reply-fit-width .post.expanded-image::after,
-:root.reply-fit-width .post.reply.hasInline::after {
-  clear: both !important;
-  content: '' !important;
-  display: block !important;
-}
-.threadContainer .hide-reply-button {
-  margin-left: -12px !important;
-}
-.stub {
-  padding: 2px;
-}
-.stub > a.show-thread-button {
-  margin-right: 4px;
-}
-:root.reply-hide .thread>.post.reply.expanded-image,
-:root.reply-hide .thread>.post.reply.hasInline {
-   margin-left: 12px !important;
-}
-/* Quote Threading */
-.threadContainer {
-  margin-left: 0 !important;
-  padding-left: 20px!important;
-}
-:root.reply-hide .thread>.threadContainer {
-   margin-left: 13px !important;
 }
 /* Style Post Info option */
 :root.post-info .post.reply>p.intro {
@@ -167,9 +114,6 @@ div.body {
    generated CSS gives it negative margins meant for its original position) */
 p.intro a.post-btn {
   margin: 0 0 0 5px !important;
-}
-:root.reply-fit-width .post.reply .container {
-  padding-right: 5px;
 }
 :root.reply-fit-width.fit-postmenu p.intro > a.post-btn {
   float: right !important;

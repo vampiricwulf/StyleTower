@@ -24,7 +24,7 @@ Open the settings with the **[StyleTower]** link next to the site's **[Options]*
 - Holotower-native styling: fixed header clearance, post menu, posting form, "Posting mode" banner, file-selector dropzone, catalog, thread watcher, scroll arrows and more
 - Layout options: reply fit width, margins, borders, rounded corners, post decoration and highlight styles, sidebar (with mini and Style-Script-like variants), quick reply autohide styles
 - Quick reply refinements: submit button on its own bottom row, themed posting controls, optional comment draft memory, auto image conversion, auto-watch on reply
-- Extras: Animated GIF Thumbnails, mascots, custom Quick Reply button image, relative post dates, themed SVG icons, styled scrollbars, toast notifications
+- Extras: Replace Thumbnails (sharp full-size JPG/PNG/WEBP thumbnails, animated GIFs, muted looping WEBM/MP4), mascots, custom Quick Reply button image, themed SVG icons, styled scrollbars, toast notifications
 
 ## Built-in integrations
 

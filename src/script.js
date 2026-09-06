@@ -250,8 +250,7 @@
         "Highlight Current Board": [true, "Gives the current board link a bottom highlight border."],
         ":: Holotower": ["header", ""],
         ":: General": ["header", ""],
-        "Relative Post Dates": [false, "Display dates like '3 minutes ago'. Tooltip shows the original timestamp."],
-        "Follow Cursor": [true, "Image previews follow the cursor instead of staying in the corner."],
+        "Follow Cursor": [true, "Quote (post) previews follow the cursor instead of staying where they opened. The site's own Image hover option has a matching setting for images."],
         "Catalog Links": [false, "Converts board navigation links to catalog links."],
         "Highlight Posts Quoting You": [true, "Styles the highlight of posts quoting you (posts are marked by the site/Holotower TS)."],
         "Highlight Own Posts": [true, "Styles the highlight of your own posts (posts are marked by the site/Holotower TS)."],
@@ -418,14 +417,18 @@
         return this instanceof $lib ?
             this.init(selector, root) : new $lib(selector, root);
     };
-    $.waitFor = function (selector, cb) {
+    /* Runs cb once selector matches. Gives up after timeout ms (default
+       $SS.waitTimeout): an element another script never builds would
+       otherwise keep a document-wide observer polling every mutation */
+    $.waitFor = function (selector, cb, timeout) {
         var el = document.querySelector(selector);
         if (el) { cb(el); return; }
-        var obs = new MutationObserver(function () {
+        var timer, obs = new MutationObserver(function () {
             var el = document.querySelector(selector);
-            if (el) { cb(el); obs.disconnect(); }
+            if (el) { clearTimeout(timer); obs.disconnect(); cb(el); }
         });
         obs.observe(document.documentElement, { childList: true, subtree: true });
+        timer = setTimeout(function () { obs.disconnect(); }, timeout || $SS.waitTimeout);
     };
     $.waitForFn = function (test, cb) {
         var result = test();
@@ -585,8 +588,8 @@
                     case "radio":
                         return el.checked == true;
                     default:
-                        if (/^\d+$/.test(el.value))
-                            return parseInt(el.value);
+                        if (/^-?\d+$/.test(el.value))
+                            return parseInt(el.value, 10);
                         return el.value;
                 }
             }
@@ -745,6 +748,7 @@
     /* STYLE SCRIPT CLASSES & METHODS */
     $SS = {
         browser: {},
+        waitTimeout: 60000,
         DOMLoaded: function (reload) {
             $SS.classes.init();
             $SS.disableSiteTheme();
@@ -776,6 +780,9 @@
                     var i, j, MAX, _MAX, nodes, node, inlineSync = false;
 
                     for (i = 0, MAX = mutations.length; i < MAX; ++i) {
+                        // The site's expand-video player comes and goes inside
+                        // a replaced video thumb's file block
+                        $SS.syncVideoThumb(mutations[i].target);
                         // Containers vanish on collapse; watch removals too
                         nodes = mutations[i].removedNodes;
                         for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
@@ -805,8 +812,8 @@
                                     $SS.moveOmittedSpans(node);
                                     if ($SS.addIndexHideButtons) $SS.addIndexHideButtons(node);
                                     $SS.replaceThumbnails(node);
-                                    $SS.relativeDates(node);
                                     $SS.replacePostMenuBtn(node);
+                                    $SS.integrations.onNodeAdded(node);
                                 }
                             }
                             var pm = node.matches && node.matches(".post-menu") ? node : node.querySelector ? node.querySelector(".post-menu") : null;
@@ -867,15 +874,17 @@
                 // Compact single-line thread footer: pull the updater and thread
                 // stats up next to the [Return]/[Go to top]/[Catalog] links.
                 if ($SS.location.reply) {
+                    // #updater is the site's (auto-reload.js); #thread_stats is TS's
                     $.waitFor("#updater", function (updater) {
                         var links = document.getElementById("thread-links");
                         if (links && links.parentNode && updater.previousElementSibling !== links)
                             links.parentNode.insertBefore(updater, links.nextSibling);
                     });
-                    $.waitFor("#thread_stats", function (stats) {
-                        var ti = document.getElementById("thread-interactions");
-                        if (ti && stats.parentNode !== ti) ti.appendChild(stats);
-                    });
+                    if ($SS.isTS())
+                        $.waitFor("#thread_stats", function (stats) {
+                            var ti = document.getElementById("thread-interactions");
+                            if (ti && stats.parentNode !== ti) ti.appendChild(stats);
+                        });
                 }
                 // Re-replace a thumb after the site's inline expansion collapses
                 // it back to the static thumbnail (that swap is src-only, which
@@ -892,17 +901,7 @@
                 // Native QR autohide (focus/hover behavior for Normal & Vertical Tabbed)
                 $SS.initNativeQRAutohide();
 
-                // Set maxlength on subject and name inputs (100 char limit)
-                $("input[name=subject], input[name=name]", document).each(function () {
-                    this.setAttribute("maxlength", "100");
-                    this.addEventListener("input", function () {
-                        if (this.value.length >= 100) {
-                            this.style.setProperty("border-color", "red", "important");
-                            var el = this;
-                            setTimeout(function () { el.style.removeProperty("border-color"); }, 600);
-                        }
-                    });
-                });
+                $SS.limitNameSubject(document);
 
                 // Auto-watch thread on post submission
                 if ($SS.conf["Watch Thread on Reply"] && $SS.location.reply) {
@@ -1084,25 +1083,19 @@
                 "--sc-nameColor:" + t.nameColor.hex + ";" +
                 "--sc-tripColor:" + t.tripColor.hex + ";" +
                 "--sc-linkColor:" + t.linkColor.hex + ";" +
-                "--sc-linkColor-rgb:" + t.linkColor.rgb + ";" +
                 "--sc-linkHColor:" + t.linkHColor.hex + ";" +
-                "--sc-linkHColor-rgb:" + t.linkHColor.rgb + ";" +
                 "--sc-headerColor:" + t.headerColor.hex + ";" +
                 "--sc-headerLColor:" + t.headerLColor.hex + ";" +
                 "--sc-headerLHColor:" + t.headerLHColor.hex + ";" +
                 "--sc-quoteColor:" + t.quoteColor.hex + ";" +
-                "--sc-quoteColor-rgb:" + t.quoteColor.rgb + ";" +
                 "--sc-titleColor:" + t.titleColor.hex + ";" +
                 "--sc-boardColor:" + t.boardColor.hex + ";" +
                 "--sc-blinkColor:" + t.blinkColor.hex + ";" +
                 "--sc-qlColor:" + t.qlColor.hex + ";" +
                 "--sc-bgColor:" + t.bgColor.hex + ";" +
-                "--sc-bgColor-rgb:" + t.bgColor.rgb + ";" +
                 "--sc-mainColor:" + t.mainColor.hex + ";" +
                 "--sc-mainColor-rgb:" + t.mainColor.rgb + ";" +
                 "--sc-mainColor-shiftM30:" + t.mainColor.shiftRGB(-30) + ";" +
-                "--sc-mainColor-shiftM25:" + t.mainColor.shiftRGB(-25) + ";" +
-                "--sc-mainColor-shiftM18:" + t.mainColor.shiftRGB(-18) + ";" +
                 "--sc-mainColor-shiftM16:" + t.mainColor.shiftRGB(-16) + ";" +
                 "--sc-mainColor-shiftM15:" + t.mainColor.shiftRGB(-15) + ";" +
                 "--sc-mainColor-shiftM10:" + t.mainColor.shiftRGB(-10) + ";" +
@@ -1114,7 +1107,6 @@
                 "--sc-brderColor:" + t.brderColor.hex + ";" +
                 "--sc-brderColor-rgb:" + t.brderColor.rgb + ";" +
                 "--sc-inputColor:" + t.inputColor.hex + ";" +
-                "--sc-inputColor-rgb:" + t.inputColor.rgb + ";" +
                 "--sc-inputColor-shift25:" + t.inputColor.shiftRGB(25) + ";" +
                 "--sc-inputColor-hover:" + t.inputColor.hover + ";" +
                 "--sc-inputbColor:" + t.inputbColor.hex + ";" +
@@ -1128,7 +1120,6 @@
                 "--sc-hoverOutColor-rgb:" + hoverOutRGB + ";" +
                 "--sc-hoverOutOp:" + t.hoverOutOp + ";" +
                 "--sc-postHLColor-rgb:" + t.postHLColor.rgb + ";" +
-                "--sc-quotesYouHLColor:" + t.quotesYouHLColor.hex + ";" +
                 "--sc-quotesYouHLColor-rgb:" + t.quotesYouHLColor.rgb + ";" +
                 "--sc-ownPostHLColor-rgb:" + t.ownPostHLColor.rgb + ";" +
                 "--sc-replybgHLColor-rgb:" + t.replybgHLColor.rgb + ";" +
@@ -1139,13 +1130,10 @@
                 "--sc-navOp:" + t.navOp + ";" +
                 "--sc-sidebar-bg:rgba(" + t.mainColor.shiftRGB(-18) + "," + sidebarBgOpacity + ");" +
                 "--sc-bgImg:" + t.bgImg.get() + ";" +
-                "--sc-icon-star:url(\"data:image/svg+xml," + t.icons.star + "\");" +
                 "--sc-icon-backlink:url(\"data:image/svg+xml," + t.icons.backlink + "\");" +
                 "--sc-icon-downArrow:url(\"data:image/svg+xml," + t.icons.downArrow + "\");" +
                 "--sc-icon-threadClosed:url(\"data:image/svg+xml," + t.icons.threadClosed + "\");" +
                 "--sc-icon-threadPinned:url(\"data:image/svg+xml," + t.icons.threadPinned + "\");" +
-                "--sc-icon-threadArchived:url(\"data:image/svg+xml," + t.icons.threadArchived + "\");" +
-                "--sc-icon-msg:url(\"data:image/svg+xml," + t.icons.msg + "\");" +
                 "--sc-icon-menu:url(\"data:image/svg+xml," + t.icons.menuIcon.replace("currentColor", "rgb(" + t.headerLColor.rgb + ")") + "\");" +
                 "--sc-icon-options:url(\"data:image/svg+xml," + t.icons.options + "\");" +
                 // Styling hooks exposed by Holotower TS
@@ -1190,6 +1178,22 @@
             $SS._styleLoadedTimer = setTimeout(function () {
                 try { window.dispatchEvent(new Event("style-loaded")); } catch (e) {}
             }, 50);
+        },
+        /* 100-character cap on the name/subject fields, flashing the border
+           when it is hit (the QR is a fresh clone each time it opens) */
+        limitNameSubject: function (root) {
+            $("input[name=subject], input[name=name]", root).each(function () {
+                if (this._stLimited) return;
+                this._stLimited = true;
+                this.setAttribute("maxlength", "100");
+                this.addEventListener("input", function () {
+                    if (this.value.length >= 100) {
+                        this.style.setProperty("border-color", "red", "important");
+                        var el = this;
+                        setTimeout(function () { el.style.removeProperty("border-color"); }, 600);
+                    }
+                });
+            });
         },
         getActiveFileInput: function () {
             return document.querySelector("#quick-reply input[type=file]") ||
@@ -1495,7 +1499,8 @@
                     // st-video-thumb class) and forward clicks to it
                     if (img._scVideoThumb) return;
                     img._scVideoThumb = true;
-                    var file = img.closest(".file");
+                    // div.file: the player link itself carries class="file"
+                    var file = img.closest("div.file");
                     var video = document.createElement("video");
                     video.className = "st-thumb-video";
                     video.src = href;
@@ -1519,35 +1524,52 @@
                         e.stopPropagation();
                         img.click();
                     });
-                    // While the site's expanded player is open, hide the
-                    // looping thumb; bring it back on collapse
-                    new MutationObserver(function () {
-                        var expanded = false, sib = img.parentNode.querySelectorAll("div > video");
-                        sib.forEach(function (v) {
-                            if (v !== video && v.parentNode.style.display !== "none") expanded = true;
-                        });
-                        video.style.display = expanded ? "none" : "";
-                        if (expanded) { try { video.pause(); } catch (er) {} }
-                        else if (video._stInView !== false) { try { video.play(); } catch (er) {} }
-                    }).observe(img.parentNode, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+                    // Player open/close is tracked by the shared observers
+                    // (syncVideoThumb) rather than one observer per thumb
+                    $SS.watchThumbAttributes();
                     return;
                 }
-                var apply = function () {
-                    if (!img.classList.contains("full-image") && img.src !== href)
-                        img.src = href;
-                };
-                apply();
+                img._scFullSrc = href;
+                $SS.assertThumbSrc(img);
                 // A lazy loader may overwrite the src with a placeholder and
-                // later its cached static thumb; re-assert the full source
-                // whenever the src changes away from it.
-                if (!img._scGifObserved) {
-                    img._scGifObserved = true;
-                    new MutationObserver(function () {
-                        if (!img.classList.contains("full-image") && img.src !== href)
-                            setTimeout(apply, 60);
-                    }).observe(img, { attributes: true, attributeFilter: ["src"] });
+                // later its cached static thumb; the shared attribute observer
+                // re-asserts the full source whenever it changes away from it
+                $SS.watchThumbAttributes();
+            });
+        },
+        assertThumbSrc: function (img) {
+            if (img._scFullSrc && !img.classList.contains("full-image") && img.src !== img._scFullSrc)
+                img.src = img._scFullSrc;
+        },
+        /* Shows the looping stand-in only while the site's expanded player
+           (a div > video it drops beside the thumb) is absent or hidden */
+        syncVideoThumb: function (el) {
+            var file = el && el.closest ? el.closest("div.file.st-video-thumb") : null;
+            if (!file) return;
+            var video = file.querySelector("video.st-thumb-video");
+            if (!video) return;
+            var expanded = false;
+            file.querySelectorAll("div > video").forEach(function (v) {
+                if (v !== video && v.parentNode.style.display !== "none") expanded = true;
+            });
+            video.style.display = expanded ? "none" : "";
+            if (expanded) { try { video.pause(); } catch (er) {} }
+            else if (video._stInView !== false) { try { video.play(); } catch (er) {} }
+        },
+        /* One attribute observer for every replaced thumb: src rewrites by
+           the lazy loader, and style toggles on the expanded player wrapper */
+        watchThumbAttributes: function () {
+            if ($SS._thumbAttrObserver) return;
+            $SS._thumbAttrObserver = new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var t = mutations[i].target;
+                    if (mutations[i].attributeName === "src") {
+                        if (t._scFullSrc) setTimeout($SS.assertThumbSrc, 60, t);
+                    } else
+                        $SS.syncVideoThumb(t);
                 }
             });
+            $SS._thumbAttrObserver.observe(getDocBody(), { attributes: true, attributeFilter: ["src", "style"], subtree: true });
         },
         /* Playing videos hold a display wake lock and decode continuously,
            so thumbnail videos only play while actually in the viewport: a
@@ -1581,6 +1603,25 @@
                     content: msg,
                     lifetime: 5
                 });
+            }
+
+            // Hands a file to the input and replays the events the site's
+            // listeners missed while ours held the original change
+            function pass(file, input) {
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                    input.dispatchEvent(new Event("change", { bubbles: true }));
+                } catch (err) { console.warn("Failed to hand the file back:", err); }
+                input._scConverting = false;
+            }
+
+            // Only raster images go through the canvas; videos, PDFs and
+            // files with no MIME type are the site's business
+            function isConvertible(file) {
+                return /^image\//.test(file.type) && file.type !== "image/gif" && file.type !== "image/svg+xml";
             }
 
             function convertToJPEG(file, baseName, qrInput) {
@@ -1628,11 +1669,15 @@
                     }
 
                     tryQuality(0);
-                }).catch(function (err) { console.warn("Image conversion failed:", err); });
+                }).catch(function (err) {
+                    console.warn("Image conversion failed:", err);
+                    // The selection was cleared for the conversion: put the
+                    // original back rather than lose the upload
+                    pass(file, qrInput);
+                });
             }
 
             function shouldConvert(file) {
-                if (file.type === "image/gif") return false;
                 if (file.type === "image/jpeg" || file.type === "image/png") return file.size > MAX_BYTES;
                 return true;
             }
@@ -1659,27 +1704,16 @@
                 var maxDim = $SS.maxImageDim;
 
                 createImageBitmap(file).then(function (bitmap) {
-                    if (bitmap.width > maxDim || bitmap.height > maxDim) {
-                        bitmap.close();
+                    var tooBig = bitmap.width > maxDim || bitmap.height > maxDim;
+                    bitmap.close();
+                    if (tooBig) {
                         clearSelectedFile(input);
                         convertToJPEG(file, baseName, input);
-                    } else {
-                        bitmap.close();
-                        var dt = new DataTransfer();
-                        dt.items.add(file);
-                        input.files = dt.files;
-                        input.dispatchEvent(new Event("input", { bubbles: true }));
-                        input.dispatchEvent(new Event("change", { bubbles: true }));
-                        input._scConverting = false;
-                    }
+                    } else
+                        pass(file, input);
                 }).catch(function (err) {
                     console.warn("Image dimension check failed:", err);
-                    var dt = new DataTransfer();
-                    dt.items.add(file);
-                    input.files = dt.files;
-                    input.dispatchEvent(new Event("input", { bubbles: true }));
-                    input.dispatchEvent(new Event("change", { bubbles: true }));
-                    input._scConverting = false;
+                    pass(file, input);
                 });
             }
 
@@ -1690,7 +1724,7 @@
                 if (input.type !== "file") return;
                 if (!input.closest("#quick-reply, form[name='post']")) return;
                 var file = input.files && input.files[0];
-                if (!file || file.type === "image/gif") return;
+                if (!file || !isConvertible(file)) return;
 
                 e.stopImmediatePropagation();
                 input._scConverting = true;
@@ -1705,7 +1739,7 @@
                 if (!files || !files.length) return;
 
                 var file = files[0];
-                if (file.type === "image/gif") return;
+                if (!isConvertible(file)) return;
 
                 // Find the active file input (quick reply or main form)
                 var qrInput = findQRFileInput();
@@ -1893,7 +1927,6 @@
             var storageKey = $SS.getRememberCommentKey();
             var saveTimer = null;
             var savedDraft;
-            var suppressRemember = false;
 
             if (!commentField) return;
 
@@ -1904,10 +1937,6 @@
             }
 
             function queueSave() {
-                if (suppressRemember) {
-                    suppressRemember = false;
-                }
-
                 clearTimeout(saveTimer);
                 saveTimer = setTimeout(function () {
                     if (commentField.value.trim())
@@ -1918,7 +1947,6 @@
             }
 
             function clearSavedComment() {
-                suppressRemember = true;
                 clearTimeout(saveTimer);
                 $SS.clearRememberedComment();
             }
@@ -2035,33 +2063,6 @@
                     $SS.localJSON.set("watch_js", watchData);
                 }
             } catch (e) {}
-        },
-        relativeDates: function (root) {
-            if (!$SS.conf["Relative Post Dates"]) return;
-            var now = Date.now();
-            (root && root.querySelectorAll ? root : document).querySelectorAll("p.intro time[datetime]").forEach(function (dt) {
-                if (!dt._relativeDateSet) {
-                    var utc = Date.parse(dt.getAttribute("datetime"));
-                    if (isNaN(utc)) return;
-                    dt._relativeDateSet = true;
-                    dt.title = dt.textContent;
-                    var seconds = Math.floor((now - utc) / 1000);
-                    var minutes = Math.floor(seconds / 60);
-                    var hours = Math.floor(minutes / 60);
-                    var days = Math.floor(hours / 24);
-                    var weeks = Math.floor(days / 7);
-                    var months = Math.floor(days / 30);
-                    var text;
-                    if (seconds < 60) text = "just now";
-                    else if (minutes < 60) text = minutes + " min ago";
-                    else if (hours < 24) text = hours + " hr ago";
-                    else if (days < 7) text = days + " day" + (days > 1 ? "s" : "") + " ago";
-                    else if (weeks < 5) text = weeks + " week" + (weeks > 1 ? "s" : "") + " ago";
-                    else if (months < 12) text = months + " month" + (months > 1 ? "s" : "") + " ago";
-                    else text = Math.floor(days / 365) + " year" + (Math.floor(days / 365) > 1 ? "s" : "") + " ago";
-                    dt.textContent = text;
-                }
-            });
         },
         replacePostMenuBtn: function (root) {
             root = root || document;
@@ -2299,24 +2300,33 @@
                     type = 'warning';
                 } else {
                     msg = fileOnly ? "File deleted." : "Post deleted.";
+                    $SS.removeDeletedPost(postId, fileOnly, board);
                 }
                 $SS.notify({ type: type, content: msg, lifetime: 5 });
             };
             xhr.send(formData);
         },
+        /* Reflects a successful deletion without a reload: the file block
+           goes, or the whole post; an OP takes its thread with it, so head
+           back to the index */
+        removeDeletedPost: function (postId, fileOnly, board) {
+            var post = document.getElementById("reply_" + postId) || document.getElementById("op_" + postId);
+            if (!post) return;
+            if (fileOnly) {
+                post.querySelectorAll(".files").forEach(function (f) { f.remove(); });
+                return;
+            }
+            if (post.classList.contains("op")) {
+                location.href = "/" + (board || $SS.location.board) + "/";
+                return;
+            }
+            if (post._stHideBtn && post._stHideBtn.parentNode) post._stHideBtn.remove();
+            post.remove();
+        },
         QRDialogCreationHandler: function (e) {
             var qr = e.target;
 
-            $("input[name=subject], input[name=name]", qr).each(function () {
-                this.setAttribute("maxlength", "100");
-                this.addEventListener("input", function () {
-                    if (this.value.length >= 100) {
-                        this.style.setProperty("border-color", "red", "important");
-                        var el = this;
-                        setTimeout(function () { el.style.removeProperty("border-color"); }, 600);
-                    }
-                });
-            });
+            $SS.limitNameSubject(qr);
             if ($SS.conf["Watch Thread on Reply"] && $SS.location.reply) {
                 $SS.handleFormNode(qr);
             }
@@ -2429,6 +2439,13 @@
                 if ($SS.conf["Sauce Links"] && !I._sauce) { I._sauce = true; I.initSauceLinks(); }
                 if ($SS.conf["Catalog Highlights"] && $SS.location.catalog && !I._catalog) { I._catalog = true; I.initCatalogHighlights(); }
             },
+            /* Called by the main DOM observer for each added element; the
+               integrations hook in here instead of observing on their own */
+            onNodeAdded: function (node) {
+                var I = $SS.integrations;
+                if (I._sauceSweep) I._sauceSweep(node);
+                if (I._autoScrollNode) I._autoScrollNode(node);
+            },
 
             /* X/BSKY sauce links on file info (Holotower X/BSKY Sauce) */
             initSauceLinks: function () {
@@ -2470,14 +2487,8 @@
                 }
 
                 sweep(document);
-                new MutationObserver(function (mutationList) {
-                    for (var i = 0; i < mutationList.length; i++) {
-                        for (var j = 0; j < mutationList[i].addedNodes.length; j++) {
-                            var node = mutationList[i].addedNodes[j];
-                            if (node instanceof HTMLElement) sweep(node);
-                        }
-                    }
-                }).observe(getDocBody(), { childList: true, subtree: true });
+                // Later posts are swept from the main observer (onNodeAdded)
+                $SS.integrations._sauceSweep = sweep;
             },
 
             /* Scroll to new posts only when already at the bottom (Holotower Auto Scroll) */
@@ -2487,7 +2498,6 @@
                 var originalScrollCheckbox = null;
                 var autoScrollCheckbox = null;
                 var lastPostElements = [];
-                var observer = null;
 
                 function saveAutoScrollState(enabled) {
                     try { localStorage.setItem(STORAGE_KEY, enabled ? "true" : "false"); } catch (e) {}
@@ -2581,44 +2591,6 @@
                     }
                 }
 
-                var INLINE_CONTAINER_CLASS = "inline-quote-container";
-                new MutationObserver(function (mutations) {
-                    mutations.forEach(function (mutation) {
-                        if (mutation.type !== "childList" || mutation.addedNodes.length === 0) return;
-                        mutation.addedNodes.forEach(function (node) {
-                            if (node.nodeType !== 1) return;
-                            if (node.classList.contains(INLINE_CONTAINER_CLASS))
-                                node.setAttribute("data-inline-quote", "true");
-                            node.querySelectorAll("." + INLINE_CONTAINER_CLASS).forEach(function (el) {
-                                el.setAttribute("data-inline-quote", "true");
-                            });
-                        });
-                    });
-                }).observe(getDocBody(), { childList: true, subtree: true });
-
-                function setupObserver() {
-                    if (observer) observer.disconnect();
-                    observer = new MutationObserver(function (mutations) {
-                        var shouldCheck = false;
-                        mutations.forEach(function (mutation) {
-                            if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                                for (var i = 0; i < mutation.addedNodes.length; i++) {
-                                    var node = mutation.addedNodes[i];
-                                    if (node.nodeType === 1 && node.matches && (
-                                        node.matches("p.intro, div.post, .post_no") ||
-                                        node.querySelector("p.intro, div.post, .post_no")
-                                    ) && !node.closest("[data-inline-quote]") && !node.hasAttribute("data-inline-quote")) {
-                                        shouldCheck = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        });
-                        if (shouldCheck) setTimeout(monitorForNewPosts, 100);
-                    });
-                    observer.observe(getDocBody(), { childList: true, subtree: true });
-                }
-
                 function initialize() {
                     originalScrollCheckbox = findOriginalScrollCheckbox();
                     if (!originalScrollCheckbox) return;
@@ -2626,23 +2598,30 @@
                     if (!autoScrollCheckbox) return;
                     updatePostRecord();
                     setupCheckboxListeners();
-                    setupObserver();
                     if (autoScrollCheckbox.checked && originalScrollCheckbox.checked)
                         originalScrollCheckbox.checked = false;
                 }
 
                 $.waitFor("input.auto-scroll", initialize);
 
-                var reinitTimeout;
-                new MutationObserver(function () {
-                    clearTimeout(reinitTimeout);
-                    reinitTimeout = setTimeout(function () {
-                        if (!originalScrollCheckbox || !document.contains(originalScrollCheckbox) ||
-                            !autoScrollCheckbox || !document.contains(autoScrollCheckbox)) {
-                            initialize();
-                        }
-                    }, 1000);
-                }).observe(getDocBody(), { childList: true, subtree: false });
+                // Fed by the main DOM observer: new posts outside TS's inline
+                // quote containers and hover previews trigger a check, and a
+                // rebuilt updater row (the site recreates its checkbox) gets
+                // ours re-attached
+                var checkTimeout, reinitTimeout;
+                $SS.integrations._autoScrollNode = function (node) {
+                    if (!node.matches) return;
+                    if ((node.matches("p.intro, div.post, .post_no") || node.querySelector("p.intro, div.post, .post_no")) &&
+                        !node.closest(".inline-quote-container, .post-hover")) {
+                        clearTimeout(checkTimeout);
+                        checkTimeout = setTimeout(monitorForNewPosts, 100);
+                    }
+                    if ((node.matches("input.auto-scroll") || node.querySelector("input.auto-scroll")) &&
+                        (!autoScrollCheckbox || !document.contains(autoScrollCheckbox))) {
+                        clearTimeout(reinitTimeout);
+                        reinitTimeout = setTimeout(initialize, 100);
+                    }
+                };
             },
 
             /* Highlight and pin catalog threads (Holotower Catalog Highlights and Pin) */
@@ -2930,18 +2909,13 @@
         Config: {
             init: function () {
                 var parseVal = function (key, val) {
-                    if (/^(Selected|Hidden)+\s(Themes?)+$/.test(key)) {
-                        if (key === "Selected Theme")
-                            return parseInt(val);
-                        else if (key === "NSFW Theme")
-                            return parseInt(val);
-
+                    if (key === "Selected Theme" || key === "NSFW Theme")
+                        return parseInt(val, 10);
+                    if (key === "Hidden Themes") {
                         for (var i = 0, MAX = val.length, ret = []; i < MAX; ++i)
-                            ret[i] = parseInt(val[i]);
-
+                            ret[i] = parseInt(val[i], 10);
                         return ret;
                     }
-
                     return (Array.isArray(val) && typeof val[0] !== "object") ? val[0] : val;
                 };
 
@@ -2971,6 +2945,15 @@
                     }
                 } catch (e) {}
 
+                // "Relative Post Dates" duplicated the site's own Show relative
+                // time option (Options → General) and never parsed vichan's
+                // datetime format; hand an enabled setting over to the site
+                try {
+                    if (this.get("Relative Post Dates") === true)
+                        localStorage.show_relative_time = "true";
+                    this.remove("Relative Post Dates");
+                } catch (e) {}
+
                 // Include saved site settings in exports
                 var chanKeys = ["stylesheet", "name", "email", "password", "own_posts", "watch_js", "hidden_threads", "catalog"];
                 chanKeys.forEach(function (key) {
@@ -2983,10 +2966,8 @@
                     } catch (e) {}
                 });
 
-                if (!$SS.location.report) {
-                    $SS.conf["Margin Left"] = $SS.conf["Left Margin"] !== 999 ? $SS.conf["Left Margin"] : $SS.conf["Custom Left Margin"];
-                    $SS.conf["Margin Right"] = $SS.conf["Right Margin"] !== 999 ? $SS.conf["Right Margin"] : $SS.conf["Custom Right Margin"];
-                };
+                $SS.conf["Margin Left"] = $SS.conf["Left Margin"] !== 999 ? $SS.conf["Left Margin"] : $SS.conf["Custom Left Margin"];
+                $SS.conf["Margin Right"] = $SS.conf["Right Margin"] !== 999 ? $SS.conf["Right Margin"] : $SS.conf["Custom Right Margin"];
                 // "Normal" maps to 4chan's native blockquote margin; vichan's own
                 // div.body default is nearly zero, which makes text hug the post
                 // edge and wrap fully under thumbnails.
@@ -3007,6 +2988,13 @@
                 try {
                     if ($SS.hasGM) GM_setValue(key, val);
                     else localStorage.setItem(key, val);
+                } catch (e) {}
+            },
+            remove: function (name) {
+                var key = NAMESPACE + name;
+                try {
+                    if ($SS.hasGM) GM_deleteValue(key);
+                    else localStorage.removeItem(key);
                 } catch (e) {}
             }
         },
@@ -3054,7 +3042,7 @@
                         else boardlist.insertBefore(span, optionsLink);
                     };
                     place();
-                    if (!boardlist.querySelector(".hb-toggle"))
+                    if (!boardlist.querySelector(".hb-toggle") && $SS.isTS())
                         $.waitFor(".boardlist .hb-toggle", place);
                 });
             },
@@ -3111,24 +3099,15 @@
                         val = $SS.conf[key];
                         des = defaultConfig[key][1];
 
-                        if ((defaultConfig[key][4] === true) && (key === "Custom Left Margin")) {
+                        if ((defaultConfig[key][4] === true) && /^Custom /.test(key)) {
+                            // Pixel sub-inputs (Custom Left/Right Margin, Custom
+                            // Decoration Width), shown while the parent select
+                            // sits on its "Custom" value
                             var pVal = $SS.conf[defaultConfig[key][2]];
                             id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
                             optionsHTML.push("<span class='option suboption " + id + "' title=\"" + des + "\"" +
                                 (pVal != defaultConfig[key][3] ? "hidden" : "") + "><span class='option-title'>" + key +
-                                "</span><input name='Custom Left Margin' type=text value=" + $SS.conf["Custom Left Margin"] + "px></span>");
-                        } else if ((defaultConfig[key][4] === true) && (key === "Custom Right Margin")) {
-                            var pVal = $SS.conf[defaultConfig[key][2]];
-                            id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
-                            optionsHTML.push("<span class='option suboption " + id + "' title=\"" + des + "\"" +
-                                (pVal != defaultConfig[key][3] ? "hidden" : "") + "><span class='option-title'>" + key +
-                                "</span><input name='Custom Right Margin' type=text value=" + $SS.conf["Custom Right Margin"] + "px></span>");
-                        } else if ((defaultConfig[key][4] === true) && (key === "Custom Decoration Width")) {
-                            var pVal = $SS.conf[defaultConfig[key][2]];
-                            id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
-                            optionsHTML.push("<span class='option suboption " + id + "' title=\"" + des + "\"" +
-                                (pVal != defaultConfig[key][3] ? "hidden" : "") + "><span class='option-title'>" + key +
-                                "</span><input name='Custom Decoration Width' type=text value=" + $SS.conf["Custom Decoration Width"] + "px></span>");
+                                "</span><input name='" + key + "' type=text value=" + val + "px></span>");
                         } else if ((defaultConfig[key][4] === true) && (key === "Dark Theme" || key === "Light Theme")) {
                             var pVal = $SS.conf[defaultConfig[key][2]];
                             id = defaultConfig[key][2].replace(/\s/g, "_") + defaultConfig[key][3];
@@ -3194,24 +3173,18 @@
                             optionsHTML.push(html.join(""));
                         } else if (key === "Custom Font") {
                             optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>Custom Font</span>" +
-                                "<input type=text name='Custom Font' value=\"" + ($SS.conf["Custom Font"] || "") + "\" placeholder='system font name'></label>");
+                                "<input type=text name='Custom Font' value=\"" + $SS.escapeHTML($SS.conf["Custom Font"] || "") + "\" placeholder='system font name'></label>");
                         } else if (key === "QR Button Image") {
                             optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
                                 "<input type=text name='QR Button Image' value=\"" + String($SS.conf["QR Button Image"] || "").replace(/"/g, "&quot;") + "\" placeholder='image URL or data URI'></label>");
-                        } else if (key === "Font Size") {
+                        } else if (/Font Size$/.test(key)) {
                             optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
-                                "<input type=text name='Font Size' value=" + $SS.conf["Font Size"] + "px></label>");
-                        } else if (key === "UI Font Size") {
-                            optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
-                                "<input type=text name='UI Font Size' value=" + $SS.conf["UI Font Size"] + "px></label>");
-                        } else if (key === "Backlink Font Size") {
-                            optionsHTML.push("<label class='option visible' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
-                                "<input type=text name='Backlink Font Size' value=" + $SS.conf["Backlink Font Size"] + "px></label>");
+                                "<input type=text name='" + key + "' value=" + val + "px></label>");
                         } else if (key === "Misc") {
                             optionsHTML.push("</div><input type=radio class=tab-select name=tab-select id=misc-select hidden><div id='misc-section' class='options-section'>" +
                                 "<p class='buttons-container'><span class='btn-right'><a class='options-button' name=save>Save</a><a class='options-button' name=cancel>Cancel</a></span></p>");
                         } else if (key === "Themes") {
-                            optionsHTML.push("</div><input type=radio class=tab-select name=tab-select class=tab-select  id=themes-select hidden><div id='themes-section' class='options-section'>");
+                            optionsHTML.push("</div><input type=radio class=tab-select name=tab-select id=themes-select hidden><div id='themes-section' class='options-section'>");
                         } else if (key === "Opacity") {
                             optionsHTML.push("<label class='option' title=\"" + des + "\"><span class='option-title'>" + key + "</span>" +
                                 "<input type=range name=Opacity min=0 max=100 value=" + val + " class='mascot-opacity'><span class='mascot-opacity-val'>" + val + "%</span></label>");
@@ -3263,7 +3236,7 @@
                     $(".import-input", tOptions).bind("change", function () {
                         var file = this.files[0],
                             reader = new FileReader(),
-                            key, imported, val;
+                            imported;
                         if (this.files[0].name.match(/\.json$/) == null) {
                             alert('Only JSON files are accepted!');
                             return;
@@ -3576,7 +3549,6 @@
                     return false;
 
                 var themes = [],
-                    nsfwTheme,
                     selectedTheme;
 
                 $("#oneechan-options #themes-section>div").each(function () {
@@ -3597,16 +3569,11 @@
                     selectedTheme = 0;
                 }
 
-                nsfwTheme = (nsfwTheme = $("#oneechan-options #themes-section>div.nsfw")).exists() ?
-                    parseInt(nsfwTheme.attr("id").substr(5)) : 0;
-                // Ensure nsfwTheme is valid
-                if (nsfwTheme >= $SS.conf["Themes"].length || !$SS.conf["Themes"][nsfwTheme]) {
-                    nsfwTheme = 0;
-                }
-
                 $SS.Config.set("Themes", themes);
                 $SS.Config.set("Selected Theme", selectedTheme);
-                $SS.Config.set("NSFW Theme", nsfwTheme);
+                // Kept in step with the selection: StyleChan-format exports
+                // still carry the key
+                $SS.Config.set("NSFW Theme", selectedTheme);
                 $SS.Config.set("Hidden Themes", $SS.conf["Hidden Themes"]);
                 return true;
             },
@@ -3736,15 +3703,48 @@
                 }
                 delete imported["Grayscale Mascots"];
 
+                // Custom themes: each goes through the theme-file sanitizer so
+                // foreign flags and editor bookkeeping stay out of storage. The
+                // stored list is replaced, so theme indices below are checked
+                // against defaults + what was just imported
+                var themeCount = ($SS.conf["Themes"] || []).length;
+                if (Array.isArray(imported["Themes"])) {
+                    var themes = [];
+                    imported["Themes"].forEach(function (t) {
+                        if (t && typeof t === "object" && !Array.isArray(t))
+                            themes.push($SS.options.sanitizeTheme(t));
+                    });
+                    $SS.Config.set("Themes", themes);
+                    themeCount = $SS.Themes.defaults.length + themes.length;
+                }
+
                 for (var key in imported) {
                     var target = keyMap[key] || key,
                         val = imported[key];
-                    // Foreign bookkeeping and saved-site blobs never transfer
-                    if (/^(Hidden Themes|Themes|Selected Mascots|Hidden Mascots|Total Mascots|Version Fix|Scrollbar Type)$/.test(target))
+                    // Foreign bookkeeping never transfers
+                    if (/^(Themes|Selected Mascots|Hidden Mascots|Total Mascots|Version Fix|Scrollbar Type)$/.test(target))
                         continue;
                     if (/^Saved4chan\./.test(key))
                         continue;
-                    if (/^(Selected Theme|NSFW Theme|Dark Theme|Light Theme)$/.test(target)) {
+                    // Site settings saved into an export: store them where the
+                    // Restore button reads (raw strings, as localStorage holds them)
+                    if (/^SavedSite\./.test(key)) {
+                        $SS.Config.set("SavedSiteSettings." + key.slice(10),
+                            typeof val === "string" ? val : JSON.stringify(val));
+                        continue;
+                    }
+                    // Retired option: the site's own Show relative time replaced it
+                    if (key === "Relative Post Dates") {
+                        if (val === true) { try { localStorage.show_relative_time = "true"; } catch (e) {} }
+                        continue;
+                    }
+                    if (target === "Hidden Themes") {
+                        // Indices into the default list; OneeChan's list differs
+                        if (isOneeChan || !Array.isArray(val)) continue;
+                        val = val.filter(function (i) {
+                            return typeof i === "number" && i >= 0 && i < $SS.Themes.defaults.length;
+                        });
+                    } else if (/^(Selected Theme|NSFW Theme|Dark Theme|Light Theme)$/.test(target)) {
                         if (typeof val !== "number" || val < 0) continue;
                         if (isOneeChan) {
                             // OneeChan's theme order differs from ours: resolve
@@ -3756,21 +3756,18 @@
                             });
                             if (mapped === -1) continue;
                             val = mapped;
-                        } else if (val >= ($SS.conf["Themes"] || []).length) {
+                        } else if (val >= themeCount) {
                             // StyleChan/StyleTower share the default list;
                             // just guard the range
                             continue;
                         }
-                    } else if (!(target in defaultConfig) && !/^SavedSite\./.test(key)) {
+                    } else if (!(target in defaultConfig)) {
                         continue;
                     }
                     $SS.Config.set(target, val);
                 }
             },
             /* Mascots tab (OneeChan-style gallery + editor over a working copy) */
-            mascotEsc: function (s) {
-                return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-            },
             mascotName: function (m, i) {
                 if (m.name) return m.name;
                 var base = String(m.url || "").split("/").pop().split("?")[0]
@@ -3780,7 +3777,7 @@
             },
             mascotGalleryHTML: function () {
                 var work = $SS.options._mascotWork || [],
-                    esc = $SS.options.mascotEsc,
+                    esc = $SS.escapeHTML,
                     html = ["<div class='option mascot-gallery-wrap'>",
                         "<p class='mascot-controls'>",
                         "<a class='options-button mascot-add' title='Add a new mascot.'>Add Mascot</a>",
@@ -3813,7 +3810,7 @@
                 var bEdit = typeof mIndex === "number" && mIndex >= 0,
                     work = $SS.options._mascotWork || ($SS.options._mascotWork = []),
                     m = bEdit ? work[mIndex] : {},
-                    esc = $SS.options.mascotEsc;
+                    esc = $SS.escapeHTML;
                 if (!m) return;
                 var f = function (v, d) { return v === undefined || v === null ? d : v; },
                     clip = m.clip || [0, 0, 0, 0],
@@ -3873,8 +3870,7 @@
                         if (num(g("mFContrast")) !== 100) fl.contrast = num(g("mFContrast"));
                         if (num(g("mFSat")) !== 100) fl.sat = num(g("mFSat"));
                         if (num(g("mFBlur"))) fl.blur = num(g("mFBlur"));
-                        var hasFilters = false, fk;
-                        for (fk in fl) { hasFilters = true; break; }
+                        var hasFilters = Object.keys(fl).length > 0;
                         var scaleVal = num(g("mScale")) || 100,
                             sideVal = g("mSide");
                         return {
@@ -4096,21 +4092,17 @@
                             return RPA.join(" ");
                         };
 
-                    // Collect all form values, but only include non-empty color values
+                    // Collect the named fields; empty ones fall back to the base
+                    // theme below. A half-typed hex would preview as black, so
+                    // colors only count once they normalize
                     $("input,textarea,select", overlay).each(function () {
                         var val = this.value;
-                        if (this.name) {
-                            // For color inputs, strip "#" prefix and include if non-white
-                            if (this.type === "color") {
-                                var hex = val.replace("#", "");
-                                if (hex !== "" && hex !== "ffffff" && hex.length === 6) {
-                                    previewTheme[this.name] = hex;
-                                }
-                            } else if (val !== "") {
-                                // For non-color inputs, include if not empty
-                                previewTheme[this.name] = val;
-                            }
+                        if (!this.name || val === "") return;
+                        if (this.classList.contains("color-hex")) {
+                            val = $SS.normalizeHex(val);
+                            if (!val) return;
                         }
+                        previewTheme[this.name] = val;
                     });
 
                     // Set defaults for missing values
@@ -4224,7 +4216,7 @@
                         active = window.matchMedia("(prefers-color-scheme: dark)").matches ?
                             parseInt($SS.conf["Dark Theme"], 10) : parseInt($SS.conf["Light Theme"], 10);
                     } else {
-                        active = $SS.location.nsfw ? $SS.conf["NSFW Theme"] : originalSelectedTheme;
+                        active = originalSelectedTheme;
                     }
                     if (!$SS.conf["Themes"][active]) active = 0;
                     $SS.theme = new $SS.Theme(active);
@@ -4376,8 +4368,7 @@
                     // stale mid-preview state and can skip both the
                     // selection and the save
                     div.parent().children(".selected").removeClass("selected");
-                    div.parent().children(".nsfw").removeClass("nsfw");
-                    div.addClass("selected nsfw");
+                    div.addClass("selected");
                     div.scrollIntoView(true);
                     // Under System Theming the page displays the Dark/Light
                     // mapping, not the selection; point the governing slot at
@@ -5377,8 +5368,7 @@
                     i = window.matchMedia('(prefers-color-scheme: dark)').matches ?
                         parseInt($SS.conf["Dark Theme"], 10) : parseInt($SS.conf["Light Theme"], 10);
                 } else {
-                    i = $SS.location.nsfw ?
-                        $SS.conf["NSFW Theme"] : $SS.conf["Selected Theme"];
+                    i = $SS.conf["Selected Theme"];
                 }
 
                 var tIndex = $SS.conf["Themes"][i] ? i : 0;
@@ -5428,14 +5418,12 @@
                 cl.toggle("hl-border", $SS.conf["Decoration Style"] === 1);
                 cl.toggle("hl-outline", $SS.conf["Decoration Style"] === 2);
                 cl.toggle("hl-border-down", $SS.conf["Decoration Style"] === 3);
-                if (!$SS.location.report) {
-                    // The sidebar rearranges the board header/banner; on the
-                    // home page that mangles its custom layout
-                    cl.toggle("right-sidebar", $SS.conf["Sidebar Position"] === 1 && !isHome);
-                    cl.toggle("left-sidebar", $SS.conf["Sidebar Position"] === 2 && !isHome);
-                    cl.toggle("ss-sidebar", $SS.conf["SS-like Sidebar"] === true && !isHome);
-                    cl.toggle("mini-sidebar", $SS.conf["Minimal Sidebar"] === true && !isHome);
-                }
+                // The sidebar rearranges the board header/banner; on the
+                // home page that mangles its custom layout
+                cl.toggle("right-sidebar", $SS.conf["Sidebar Position"] === 1 && !isHome);
+                cl.toggle("left-sidebar", $SS.conf["Sidebar Position"] === 2 && !isHome);
+                cl.toggle("ss-sidebar", $SS.conf["SS-like Sidebar"] === true && !isHome);
+                cl.toggle("mini-sidebar", $SS.conf["Minimal Sidebar"] === true && !isHome);
                 cl.toggle("recolor-even", $SS.conf["Recolor Even Replies"] === true);
                 cl.toggle("alt-spoiler", $SS.conf["Invert Spoiler"] === true);
                 cl.toggle("backlink-icon", $SS.conf["Backlink Icons"] === true);
@@ -5464,7 +5452,7 @@
                 cl.toggle("catalog-justify", $SS.conf["Justified Text"] === true);
                 cl.toggle("catalog-background", $SS.conf["Show Background"] === true);
                 cl.toggle("catalog-thumbsize", $SS.conf["Unified Thumbnail Size"] === true);
-                cl.toggle("use-sc-icons", $SS.conf["Use StyleTower Icons"]);
+                cl.toggle("use-sc-icons", $SS.conf["Use StyleTower Icons"] === true);
                 cl.toggle("highlight-you", $SS.conf["Highlight Posts Quoting You"] === true);
                 cl.toggle("highlight-own", $SS.conf["Highlight Own Posts"] === true);
                 cl.toggle("mascot-overlap", $SS.conf["Mascots Overlap Posts"] === true);
@@ -5499,7 +5487,6 @@
                     $SS._headerObserver = new MutationObserver(syncHeader);
                     $SS._headerObserver.observe(headerEl, { attributes: true, attributeFilter: ["class"] });
                 }
-                if ($SS.conf["Relative Post Dates"]) $SS.relativeDates();
                 $SS.replacePostMenuBtn();
             }
         },
@@ -5561,7 +5548,6 @@
             this.authorName = theme.authorName || "Anonymous";
             this.authorTrip = theme.authorTrip || "!..NoTrip..";
             this.default = theme.default;
-            this.replyBrder = theme.replyBrder;
             this.bgImg = new $SS.Image(theme.bgImg, theme.bgRPA);
             // Free-text in old saves: clamp to 0..1 so a stray value can't
             // invalidate every rgba() consumer
@@ -5604,18 +5590,12 @@
             this.icons = {
                 menuIcon: "<svg viewBox='0 0 512 512' preserveAspectRatio='xMidYMid meet' class='icon' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='currentColor' d='M256 432q-15 1-16 16 1 15 16 16 15-1 16-16-1-15-16-16ZM64 288H448v32q-1 27-19 45t-45 19H320v64q-1 27-19 45t-45 19q-27-1-45-19t-19-45V384H128q-27-1-45-19T64 320V288v32-32ZM226 6l21 52q3 6 9 6t9-6L286 6q2-6 9-6H400q20 1 34 14 13 14 14 34V224v22 10H74 64V246 224 48q1-20 14-34Q92 1 112 0h10q6 0 8 6l21 52q3 6 9 6t9-6L190 6q2-6 9-6h19q6 0 8 6Z'/></svg>",
-                star: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                    "<path fill='rgb(" + this.textColor.rgb + ")' d='M14.615,4.928c0.487-0.986,1.284-0.986,1.771,0l2.249,4.554c0.486,0.986,1.775,1.923,2.864,2.081l5.024,0.73c1.089,0.158,1.335,0.916,0.547,1.684l-3.636,3.544c-0.788,0.769-1.28,2.283-1.095,3.368l0.859,5.004c0.186,1.085-0.459,1.553-1.433,1.041l-4.495-2.363c-0.974-0.512-2.567-0.512-3.541,0l-4.495,2.363c-0.974,0.512-1.618,0.044-1.432-1.041l0.858-5.004c0.186-1.085-0.307-2.6-1.094-3.368L3.93,13.977c-0.788-0.768-0.542-1.525,0.547-1.684l5.026-0.73c1.088-0.158,2.377-1.095,2.864-2.081L14.615,4.928z'/></svg>",
-                msg: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                    "<path fill='rgb(" + this.textColor.rgb + ")' d='M16,4.938c-7.732,0-14,4.701-14,10.5c0,1.981,0.741,3.833,2.016,5.414L2,25.272l5.613-1.44c2.339,1.316,5.237,2.106,8.387,2.106c7.732,0,14-4.701,14-10.5S23.732,4.938,16,4.938zM16.868,21.375h-1.969v-1.889h1.969V21.375zM16.772,18.094h-1.777l-0.176-8.083h2.113L16.772,18.094z'/></svg>",
                 backlink: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.blinkColor.rgb + ")' d='M12.981,9.073V6.817l-12.106,6.99l12.106,6.99v-2.422c3.285-0.002,9.052,0.28,9.052,2.269c0,2.78-6.023,4.263-6.023,4.263v2.132c0,0,13.53,0.463,13.53-9.823C29.54,9.134,17.952,8.831,12.981,9.073z'/></svg>",
                 threadClosed: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.headerColor.rgb + ")' d='M22.335,12.833V9.999h-0.001C22.333,6.501,19.498,3.666,16,3.666S9.666,6.502,9.666,10h0v2.833H7.375V25h17.25V12.833H22.335zM11.667,10C11.667,10,11.667,10,11.667,10c0-2.39,1.944-4.334,4.333-4.334c2.391,0,4.335,1.944,4.335,4.333c0,0,0,0,0,0v2.834h-8.668V10z'/></svg>",
                 threadPinned: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z'/></svg>",
-                threadArchived: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
-                    "<path fill='rgb(" + this.tripColor.rgb + ")' d='M15.5,3.029l-10.8,6.235L4.7,21.735L15.5,27.971l10.8-6.235V9.265L15.5,3.029zM24.988,10.599L16,15.789v10.378c0,0.275-0.225,0.5-0.5,0.5s-0.5-0.225-0.5-0.5V15.786l-8.987-5.188c-0.239-0.138-0.321-0.444-0.183-0.683c0.138-0.238,0.444-0.321,0.683-0.183l8.988,5.189l8.988-5.189c0.238-0.138,0.545-0.055,0.684,0.184C25.309,10.155,25.227,10.461,24.988,10.599z'/></svg>",
                 downArrow: "<svg viewBox='7 4 29 27' preserveAspectRatio='xMidYMid meet' height='16' width='16' xmlns='http://www.w3.org/2000/svg'>" +
                     "<path fill='rgb(" + this.tripColor.rgb + ")' d='M8.037,11.166L14.5,22.359c0.825,1.43,2.175,1.43,3,0l6.463-11.194c0.826-1.429,0.15-2.598-1.5-2.598H9.537C7.886,8.568,7.211,9.737,8.037,11.166z'/></svg>",
                 options: "<svg viewBox='0 0 30 30' preserveAspectRatio='xMidYMid meet' xmlns='http://www.w3.org/2000/svg'>" +
@@ -5623,23 +5603,18 @@
             };
 
             if (theme.customCSS) {
-                try {
-                    var css = String(theme.customCSS);
-                    if (css.length > 2 && css[0] === "(" && css[css.length - 1] === ")") {
-                        css = css.slice(1, -1);
-                    }
-                    css = css.replace(/^\\?"|\\?"$/g, '');
-                    this.customCSS = $SS.trimLineBreaks(css);
-                } catch (e) {
-                    alert("Error processing " + this.name + "'s theme.customCSS!\n" + e.message);
-                    this.customCSS = String(theme.customCSS || "");
-                }
+                // Old exports wrapped the CSS in parentheses and quotes
+                var css = String(theme.customCSS);
+                if (css.length > 2 && css[0] === "(" && css[css.length - 1] === ")")
+                    css = css.slice(1, -1);
+                css = css.replace(/^\\?"|\\?"$/g, '');
+                this.customCSS = $SS.trimLineBreaks(css);
             } else
                 this.customCSS = "";
 
             this.preview = function () {
                 var div = $("<div " + (this.hidden ? "hidden=true " : "") +
-                    " id=theme" + this.index + " class=\'theme-preview " + (($SS.conf["Selected Theme"] == $SS.conf["NSFW Theme"]) && ($SS.conf["Selected Theme"] == this.index) ? "selected nsfw" : ($SS.conf["Selected Theme"] == this.index ? "selected " : "") + ($SS.conf["NSFW Theme"] == this.index ? "nsfw " : "")) + "\'>").html("<div class=reply " +
+                    " id=theme" + this.index + " class='theme-preview" + ($SS.conf["Selected Theme"] == this.index ? " selected" : "") + "'>").html("<div class=reply " +
                         "style='background-color:" + this.mainColor.hex + "!important;border:1px solid " + this.brderColor.hex + "!important;color:" + this.textColor.hex + "!important'>" +
                         "<span style='display:inline-block;width:10px;height:10px;border-radius:2px;background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;box-shadow:rgba(" + this.mainColor.shiftRGB(64) + ",.3) 0 1px;'></span>&ensp;" +
                         "<span style='color:" + this.titleColor.hex + "!important; font-weight: bold !important'>" + $SS.escapeHTML(this.name) + "</span>&ensp;" +
@@ -5651,49 +5626,19 @@
                         "onmouseout='this.setAttribute(\"style\",\"color:" + this.linkColor.hex + "!important\")'>No.22772469</a>" +
                         "<br><blockquote><span style='color:" + this.quoteColor.hex + "'>>implying this isn't a post</span><br>Post content is right here.</blockquote>" +
                         "<p class='theme-buttons-container'>" +
-                        "<a href='javascript:;' title='Sets the SFW theme.' style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>SFW</a>" +
-                        "<a href='javascript:;' title='Sets the NSFW theme.' style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>NSFW</a>" +
                         "<a href='javascript:;' title=Edit style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>Edit</a>" +
                         "<a href='javascript:;' title=Delete style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>Delete</a></p>" +
-                        "<h3 class='sfw-label notsafe'>NSFW</h3>" +
-                        "<h3 class='sfw-label safe'>SFW</h3>" +
-                        "<h3 class='sfw-label both'>SFW & NSFW</h3>" +
+                        "<h3 class='selected-label'>Selected</h3>" +
                         "</div>");
 
                 $(div).bind("click", function () {
                     var $this = $(this);
-
-                    // classList.contains never matches a two-token string, so
-                    // test the classes separately
-                    if ($this.hasClass("selected") && $this.hasClass("nsfw")) return;
+                    if ($this.hasClass("selected")) return;
 
                     $this.parent().children(".selected").removeClass("selected");
-                    $this.parent().children(".nsfw").removeClass("nsfw");
-                    $this.addClass("selected nsfw");
+                    $this.addClass("selected");
                     // Theme state only: picking a theme must not commit
                     // half-edited settings from the other tabs
-                    $SS.options.saveThemeState();
-                    $SS.init(true);
-                });
-
-                $("a[title='Sets the SFW theme.']", div).bind("click", function (e) {
-                    e.stopPropagation();
-                    var $this = $(this);
-                    if ($this.parent().parent().parent().hasClass("selected")) return;
-
-                    $this.parent().parent().parent().parent().children(".selected").removeClass("selected");
-                    $this.parent().parent().parent().addClass("selected");
-                    $SS.options.saveThemeState();
-                    $SS.init(true);
-                });
-
-                $("a[title='Sets the NSFW theme.']", div).bind("click", function (e) {
-                    e.stopPropagation();
-                    var $this = $(this);
-                    if ($this.parent().parent().parent().hasClass("nsfw")) return;
-
-                    $this.parent().parent().parent().parent().children(".nsfw").removeClass("nsfw");
-                    $this.parent().parent().parent().addClass("nsfw");
                     $SS.options.saveThemeState();
                     $SS.init(true);
                 });
@@ -5741,9 +5686,6 @@
                 "Noto Sans", "Noto Sans Mono", "Tahoma",
                 "Times New Roman", "Ubuntu", "Ubuntu Mono", "Verdana"
             ]
-        },
-        is4chanX: function () {
-            return false;
         },
         isTS: function () {
             // Holotower TS saves its settings on every run
@@ -5841,11 +5783,9 @@
             return {
                 sub: obj.hostname.split(".")[0],
                 board: /\.(?:php|html)$/.test(pathname[0] || "") ? "" : pathname[0],
-                nsfw: false,
                 maxFileSize: $SS.maxFileSizeDefault,
                 reply: pathname[1] === "res",
                 catalog: pathname[1] === "catalog.html",
-                report: false,
                 dead: /^404\b|^Not [Ff]ound\b/.test(document.title)
             };
         }

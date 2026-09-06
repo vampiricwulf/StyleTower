@@ -9,10 +9,6 @@
   gap: 6px;
   pointer-events: none;
 }
-:root.bottom-header #styletower-notifications {
-  top: auto;
-  bottom: 10px;
-}
 .styletower-notification {
   pointer-events: auto;
   cursor: pointer;

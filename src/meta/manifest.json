@@ -1,7 +1,7 @@
 {
   "name": "<%= meta.name %>",
   "version": "<%= version %>",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "description": "<%= description %>",
   "icons": {
     "16": "icon16.png",
@@ -12,15 +12,10 @@
     "js": ["script.js"],
     "matches": <%= JSON.stringify(meta.matches) %>,
     "exclude_matches": <%= JSON.stringify(meta.exclude_matches) %>,
-    "all_frames": true,
-    "run_at": "document_start"
+    "run_at": "document_end"
   }],
   "homepage_url": "<%= meta.page %>",
   "update_url": "<%= meta.downloads %>updates.xml",
-  "permissions": [
-    "storage",
-    "*://holotower.org/*",
-    "*://boards.holotower.org/*",
-    "*://text.holotower.org/*"
-  ]
+  "permissions": ["storage"],
+  "host_permissions": <%= JSON.stringify(meta.matches) %>
 }

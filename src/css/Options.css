@@ -19,12 +19,12 @@
   padding: 0.4em 0.4em 2.7em 0.4em;
 }
 /* Main */
-#options-container:not(.yui-skin-sam) {
+#options-container {
   padding: 3px;
   box-shadow: inset rgba(0,0,0,.3) 0 0 5px;
   border-radius: 5px;
 }
-#options-container:not(.yui-skin-sam),
+#options-container,
 .options-section {
   height: 100%;
 }
@@ -78,11 +78,6 @@
   float: left !important;
   margin-right: 5px !important;
 }
-/*Remove font datalist dropdown arrow in Chrome*/
-input[name='Font Family']::-webkit-calendar-picker-indicator,
-input[name='Font Family']::-webkit-list-button {
-  display: none !important;
-}
 .suboption::before {
   border-bottom:1px solid rgba(0,0,0,.1);
   border-left:1px solid rgba(0,0,0,.1);
@@ -135,32 +130,20 @@ input[name='Font Family']::-webkit-list-button {
   width:50px;
   border-radius:3px;
 }
-/* SFW & NSFW Labels */
-.theme-preview .sfw-label {
-  bottom:-5px;
-  font-size:32px!important;
-  margin:0!important;
-  opacity:0;
-  position:absolute;
-  right:300px;
-  
+/* Selected theme marker */
+.theme-preview .selected-label {
+  bottom: -5px;
+  font-size: 32px !important;
+  margin: 0 !important;
+  opacity: 0;
+  position: absolute;
+  right: 300px;
+  transition: opacity .3s, right .3s;
 }
-.theme-preview.selected:not(.nsfw) .sfw-label, 
-.theme-preview.nsfw:not(.selected) .sfw-label, 
-.theme-preview.nsfw.selected .both {
-  transition:opacity .3s, right .3s;
-}
-.theme-preview.nsfw .notsafe,
-.theme-preview.selected .safe,
-.theme-preview.selected.nsfw .both {
-  opacity:1;
-  right:3px;
-  z-index:1;
-}
-.theme-preview.selected.nsfw .sfw-label:not(.both) {
-  opacity:0 !important;
-  right:300px !important;
-  z-index:0 !important;
+.theme-preview.selected .selected-label {
+  opacity: 1;
+  right: 3px;
+  z-index: 1;
 }
 /* Theme preview post */
 .theme-preview-post {

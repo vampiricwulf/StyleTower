@@ -6,10 +6,10 @@
   color: var(--sc-textColor) !important;
 }
 /* Generic links first; specific components override below by order */
-:root.st-home .page a {
+:root.st-home #page a {
   color: var(--sc-linkColor);
 }
-:root.st-home .page a:hover {
+:root.st-home #page a:hover {
   color: var(--sc-linkHColor);
 }
 /* Page frame + columns */

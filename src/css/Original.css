@@ -44,25 +44,6 @@ p.fileinfo > .unimportant {
   margin-left: 4px;
 }
 /* Padding according to header position */
-.fixed.bottom-header body.active-thread {
-  padding-bottom: 0em;
-  padding-top: .5em;
-}
-.fixed.bottom-header body.active-index {
-  padding-bottom: 4.5em;
-  padding-top: .5em;
-}
-.fixed.bottom-header body.active-catalog,
-.fixed.bottom-header.catalog-mode body {
-  padding-bottom: 3em;
-  padding-top: .5em;
-}
-.fixed.bottom-header body {
-  padding-top: .5em;
-}
-:root.bottom-header:not(.autohide) body.active-index {
-  padding-bottom: 5em !important;
-}
 .fixed.top-header body.active-index {
   padding-bottom: 2.5em;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
@@ -71,8 +52,7 @@ p.fileinfo > .unimportant {
   padding-bottom: 0;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
 }
-.fixed.top-header body.active-catalog,
-.fixed.top-header.catalog-mode body {
+.fixed.top-header body.active-catalog {
   padding-bottom: .5em;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
 }
@@ -94,9 +74,6 @@ div.post {
 }
 :root:not(.reply-fit-width) form[name=postcontrols] div.post.reply:not([hidden]):not(.iq-hidden-post):not(.hidden-post):not(.hidden) {
   display: table !important;
-}
-:root:not(.reply-fit-width) form[name=postcontrols] .stub~div.post.reply:not([hidden]) {
-  display: none !important;
 }
 div.thread {
   margin: 0;
@@ -129,10 +106,6 @@ table {
 /* Bottom Controls */
 #post-moderation-fields {
   float: right;
-}
-.fixed.bottom-header body.active-index #post-moderation-fields,
-.fixed.bottom-header body.active-thread #post-moderation-fields {
-  margin-bottom: 35px;
 }
 .fixed.top-header body.active-thread #post-moderation-fields,
 .fixed.top-header body.active-index #post-moderation-fields {
@@ -222,8 +195,10 @@ form[name=post] input[type=file]:hover::-webkit-file-upload-button {
 div.pages {
   margin-bottom: 10px;
 }
-/* Follow Cursor option */
-:root.follow-cursor #image-hover {
+/* Follow Cursor option: the site's image hover (#chx_hoverImage, moved by
+   the site's own "Image hover should follow cursor" setting) stays inside
+   the viewport */
+:root.follow-cursor #chx_hoverImage {
   max-width: calc(100vw - 100px);
   max-height: calc(100vh - 60px);
 }
