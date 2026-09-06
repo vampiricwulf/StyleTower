@@ -41,6 +41,7 @@ function shim(w, opts) {
         constructor() { const f = []; this._files = f; this.items = { add(file) { f.push(file); } }; }
         get files() { return this._files; }
     };
+    w.Element.prototype.scrollIntoView = function () {};
     w.HTMLMediaElement.prototype.play = function () { this.__played = (this.__played || 0) + 1; return Promise.resolve(); };
     w.HTMLMediaElement.prototype.pause = function () { this.__paused = (this.__paused || 0) + 1; };
     w.alert = function (m) { (w.__alerts = w.__alerts || []).push(String(m)); };
