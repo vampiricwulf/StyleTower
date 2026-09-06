@@ -16,7 +16,7 @@ StyleTower is a *styler*: it themes the page and the features the site and Holot
 - Firefox: requires [Violentmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/)
 - Chrome/Edge: requires [Violentmonkey](https://chromewebstore.google.com/detail/violentmonkey/jinjaccalgkegednnccohejagnlnfdag/)
 
-Open the settings with the **[StyleTower]** link next to the site's **[Options]** in the board list, or **CTRL + F1**.
+Open the settings with the **[StyleTower]** link next to the site's **[Options]** in the board list, or **CTRL + F1**; **Escape** closes them.
 
 ## Highlights
 

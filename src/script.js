@@ -729,18 +729,25 @@
     $SS = {
         waitTimeout: 60000,
         draftDelay: 5000,
+        /* Runs one startup feature; a failure is logged and the rest keeps
+           going, so a site change that breaks one hook cannot take the
+           theme down with it */
+        guard: function (name, fn) {
+            try { return fn(); } catch (e) { console.error("[StyleTower] " + name + " failed:", e); }
+        },
         DOMLoaded: function (reload) {
-            $SS.classes.init();
-            $SS.disableSiteTheme();
-            $SS.displayMascots();
-            $SS.integrations.init();
+            var guard = $SS.guard;
+            guard("classes", $SS.classes.init);
+            guard("disableSiteTheme", $SS.disableSiteTheme);
+            guard("displayMascots", $SS.displayMascots);
+            guard("integrations", $SS.integrations.init);
             // Runs on settings reloads too so Replace Thumbnails applies
             // without a page refresh (idempotent per image)
-            $SS.replaceThumbnails();
+            guard("replaceThumbnails", $SS.replaceThumbnails);
 
             var div;
             if (reload !== true) {
-                $SS.options.init();
+                guard("options", $SS.options.init);
 
                 document.addEventListener("click", function (e) {
                     var li = e.target.closest("[data-cmd='toggle-you']");
@@ -842,18 +849,18 @@
 
                 // Auto-convert images on drop
                 if ($SS.conf["Auto-Convert Images"]) {
-                    $SS.initImageConvertOnDrop();
+                    guard("initImageConvertOnDrop", $SS.initImageConvertOnDrop);
                 }
                 // Normalize OP structure (move .files inside .post.op)
-                $SS.moveOPFiles();
-                $SS.tidyFileInfo();
-                $SS.moveOmittedSpans();
+                guard("moveOPFiles", $SS.moveOPFiles);
+                guard("tidyFileInfo", $SS.tidyFileInfo);
+                guard("moveOmittedSpans", $SS.moveOmittedSpans);
                 // One-click post hiding + control row on index pages
                 if (!$SS.location.reply && !$SS.location.catalog && $SS.location.board) {
-                    $SS.initIndexPostHiding();
-                    $SS.initIndexNav();
+                    guard("initIndexPostHiding", $SS.initIndexPostHiding);
+                    guard("initIndexNav", $SS.initIndexNav);
                 }
-                $SS.initCatalogCards();
+                guard("initCatalogCards", $SS.initCatalogCards);
                 // Compact single-line thread footer: pull the updater and thread
                 // stats up next to the [Return]/[Go to top]/[Catalog] links.
                 if ($SS.location.reply) {
@@ -869,22 +876,12 @@
                             if (ti && stats.parentNode !== ti) ti.appendChild(stats);
                         });
                 }
-                // Re-replace a thumb after the site's inline expansion collapses
-                // it back to the static thumbnail (that swap is src-only, which
-                // the childList observer doesn't see).
-                if ($SS.conf["Replace Thumbnails"]) {
-                    document.addEventListener("click", function (e) {
-                        var a = e.target.closest && e.target.closest(".file > a");
-                        if (!a) return;
-                        setTimeout(function () { $SS.replaceThumbnails(a.closest(".file").parentNode); }, 150);
-                    });
-                }
                 // Remember QR comments
-                $SS.initRememberComment();
+                guard("initRememberComment", $SS.initRememberComment);
                 // Native QR autohide (focus/hover behavior for Normal & Vertical Tabbed)
-                $SS.initNativeQRAutohide();
+                guard("initNativeQRAutohide", $SS.initNativeQRAutohide);
 
-                $SS.limitNameSubject(document);
+                guard("limitNameSubject", function () { $SS.limitNameSubject(document); });
 
                 // Auto-watch thread on post submission
                 if ($SS.conf["Watch Thread on Reply"] && $SS.location.reply) {
@@ -2978,7 +2975,13 @@
                 try {
                     if ($SS.hasGM) GM_setValue(key, val);
                     else localStorage.setItem(key, val);
-                } catch (e) {}
+                    return true;
+                } catch (e) {
+                    // Quota or blocked storage: remember it so Save can say so
+                    ($SS.Config.failed = $SS.Config.failed || []).push(name);
+                    console.error("[StyleTower] could not save " + name + ":", e);
+                    return false;
+                }
             },
             remove: function (name) {
                 var key = NAMESPACE + name;
@@ -3361,13 +3364,11 @@
                     $("a[name=cancel]", tOptions).bind("click", $SS.options.close);
 
                     // main tab
-                    $("input[name='Font Size']", tOptions).bind("keydown", function (e) {
-                        var val = parseInt($(this).val());
-
-                        if (e.key === "ArrowUp" && !isNaN(val))
-                            $(this).val(++val + "px");
-                        else if (e.key === "ArrowDown" && !isNaN(val))
-                            $(this).val(--val + "px");
+                    $("input[name='Font Size'], input[name='UI Font Size'], input[name='Backlink Font Size']", tOptions).bind("keydown", function (e) {
+                        var val = parseInt($(this).val(), 10);
+                        if (isNaN(val) || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+                        e.preventDefault();
+                        $(this).val((e.key === "ArrowUp" ? val + 1 : val - 1) + "px");
                     });
                     $("input[name='Opacity']", tOptions).bind("input", function () {
                         var v = this.parentNode.querySelector(".mascot-opacity-val");
@@ -3626,6 +3627,7 @@
                     return;
                 var before = {};
                 $SS.options.reloadKeys.concat($SS.options.reloadWhenOff).forEach(function (k) { before[k] = $SS.conf[k]; });
+                $SS.Config.failed = [];
 
                 // Save main
                 $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
@@ -3651,6 +3653,9 @@
 
                 $SS.init(true);
                 $SS.options.noteReloadNeeded(before);
+                if ($SS.Config.failed.length)
+                    $SS.notify({ type: "warning", lifetime: 10,
+                        content: "Could not save " + $SS.Config.failed.join(", ") + " (storage full or blocked?)." });
             },
             /* Settings import: accepts StyleTower, upstream StyleChan and
                original OneeChan exports, normalizing renamed keys and both

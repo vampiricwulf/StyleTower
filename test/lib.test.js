@@ -87,3 +87,16 @@ test("TS posting controls are not polled for when TS is absent", async () => {
     await sleep(80);
     assert.equal(pending, 0, "no 500ms retry timers without TS");
 });
+
+test("a feature that throws during startup does not stop the others", async () => {
+    const w = await load({ noinit: true });
+    const { $SS } = w.__ST;
+    $SS.initIndexNav = function () { throw new Error("boom"); };
+    $SS.moveOmittedSpans = function () { throw new Error("bang"); };
+    $SS.init();
+    await until(() => $SS._initDone, 2000);
+    assert.ok(w.document.getElementById("StyleTowerLink"), "later features still ran");
+    assert.ok(w.document.querySelector("#reply_101 .sc-sauce-link"), "integrations still ran");
+    const logged = w.__errors.map(e => e.message || String(e)).join("\n");
+    assert.match(logged, /moveOmittedSpans/, "the failing feature is named in the console");
+});

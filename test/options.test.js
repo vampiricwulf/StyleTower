@@ -146,3 +146,36 @@ test("a parent checkbox reveals and hides its sub-options", async () => {
     parent.dispatchEvent(new w.Event("change", { bubbles: true }));
     assert.equal(sub.hasAttribute("hidden"), true, "hidden again");
 });
+
+test("a failed storage write on Save is reported instead of silently dropped", async () => {
+    const w = await load({
+        setup(w) {
+            const proto = w.Storage.prototype, orig = proto.setItem;
+            proto.setItem = function (k, v) {
+                if (k === "StyleTower.Mascots") throw new w.DOMException("quota", "QuotaExceededError");
+                return orig.call(this, k, v);
+            };
+        }
+    });
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    w.document.querySelector("#oneechan-options a[name=save]").click();
+    await sleep(50);
+    const notes = [...w.document.querySelectorAll(".styletower-notification-warning .styletower-notification-text")].map(n => n.textContent);
+    assert.ok(notes.some(t => /Mascots/.test(t) && /sav/i.test(t)), "got: " + JSON.stringify(notes));
+});
+
+test("arrow keys step every font-size field", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    const d = w.document;
+    ["Font Size", "UI Font Size", "Backlink Font Size"].forEach(name => {
+        const input = d.querySelector("#oneechan-options input[name='" + name + "']");
+        const before = parseInt(input.value, 10);
+        input.dispatchEvent(new w.KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+        assert.equal(input.value, (before + 1) + "px", name + " up");
+        input.dispatchEvent(new w.KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+        assert.equal(input.value, before + "px", name + " down");
+    });
+});

@@ -23,7 +23,6 @@ export default defineConfig([
         $docHead: "writable",
         getDocBody: "readonly",
         getDocHead: "readonly",
-        TCaptcha: "readonly",
       },
     },
     rules: {
