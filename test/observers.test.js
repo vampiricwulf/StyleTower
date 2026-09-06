@@ -123,3 +123,32 @@ test("video thumbnails: loops do not preload until they are played", async () =>
     const video = w.document.querySelector("#reply_103 video.st-thumb-video");
     assert.equal(video.getAttribute("preload"), "none");
 });
+
+test("follow cursor: the current hover preview is positioned on mouse move, including a later one", async () => {
+    const w = await load({
+        setup(w) {
+            Object.defineProperty(w.HTMLElement.prototype, "clientWidth", { get() { return 1000; }, configurable: true });
+            Object.defineProperty(w.HTMLElement.prototype, "clientHeight", { get() { return 800; }, configurable: true });
+        }
+    });
+    const d = w.document;
+    const move = (x, y) => d.dispatchEvent(new w.MouseEvent("mousemove", { clientX: x, clientY: y, bubbles: true }));
+    const hover = d.createElement("div");
+    hover.className = "post reply post-hover";
+    hover.id = "post-hover-101";
+    d.body.appendChild(hover);
+    await sleep(30);
+    move(100, 200);
+    assert.equal(hover.style.position, "fixed");
+    assert.ok(hover.style.top !== "", "top set");
+    hover.remove();
+    await sleep(30);
+    const later = d.createElement("div");
+    later.className = "post reply post-hover";
+    later.id = "post-hover-102";
+    d.body.appendChild(later);
+    await sleep(30);
+    move(900, 50);
+    assert.equal(later.style.position, "fixed");
+    assert.ok(later.style.right !== "" || later.style.left !== "", "placed horizontally");
+});

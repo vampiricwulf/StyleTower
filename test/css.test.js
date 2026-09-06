@@ -65,3 +65,25 @@ test("an auto-hidden header leaves no top padding: the zeroing rule outranks the
     assert.equal(has(original, /\.fixed\.top-header\.autohide body/), false, "the 2em auto-hide rule is gone");
     assert.equal(has(general, /:root\.autohide\.fixed\.top-header body[^{]*\{[^}]*padding-top:\s*0 !important/), true, "zeroing rule at fixed-header specificity");
 });
+
+test("no selector group is declared twice in the same file and media context", () => {
+    const dupes = [];
+    cssFiles.forEach(f => {
+        const text = css(f).replace(/\/\*[\s\S]*?\*\//g, "");
+        const seen = new Map();
+        let media = "";
+        // walk rule by rule, tracking the enclosing @media block
+        const re = /(@media[^{]*\{)|([^{}]+)\{([^{}]*)\}|(\})/g;
+        let m;
+        while ((m = re.exec(text))) {
+            if (m[1]) { media = m[1].replace(/\s+/g, " ").trim(); continue; }
+            if (m[4]) { media = ""; continue; }
+            const sel = m[2].replace(/\s+/g, " ").trim();
+            if (!sel) continue;
+            const key = media + " | " + sel;
+            if (seen.has(key)) dupes.push(f + ": " + sel.slice(0, 80));
+            seen.set(key, true);
+        }
+    });
+    assert.deepEqual(dupes, []);
+});

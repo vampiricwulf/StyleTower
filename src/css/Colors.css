@@ -39,16 +39,13 @@ span.spoiler:hover>a:not(:hover),
 /* Header */
 .boardlist {
   color: var(--sc-headerColor) !important;
+  border: none !important;
 }
 .boardlist a {
   color: var(--sc-headerLColor) !important;
 }
 .boardlist a:hover {
   color: var(--sc-headerLHColor) !important;
-}
-.boardlist {
-  background-color: var(--sc-headerBGColor);
-  border-bottom-color: var(--sc-brderColor);
 }
 /* Greentext */
 div.body span.quote,
@@ -102,6 +99,8 @@ body {
 .reply,
 :root.op-background .post.op {
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp))!important;
+  border-width: 0 1px 1px 0;
+  border-style: solid;
 }
 #options_div,
 #alert_div,
@@ -208,11 +207,6 @@ div.post.reply[style*='box-shadow: 0 3px red'] {
   border-bottom: 1px solid rgb(var(--sc-mainColor-shift4));
 }
 /* Borders */
-.reply,
-:root.op-background .post.op {
-  border-width: 0 1px 1px 0;
-  border-style: solid;
-}
 :root.borders-all .reply,
 :root.borders-all.op-background .post.op {
   border-width: 1px !important;
@@ -304,9 +298,6 @@ input[type=text]:focus,
 textarea:focus,
 select:focus {
   border: 1px solid var(--sc-linkColor) !important;
-}
-.boardlist {
-  border: none !important;
 }
 /* Shadows */
 img.thread-image {

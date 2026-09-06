@@ -250,7 +250,7 @@
         "Highlight Current Board": [true, "Gives the current board link a bottom highlight border."],
         ":: Holotower": ["header", ""],
         ":: General": ["header", ""],
-        "Follow Cursor": [true, "Quote (post) previews follow the cursor instead of staying where they opened. The site's own Image hover option has a matching setting for images."],
+        "Follow Cursor": [true, "Quote previews sit beside the cursor on the roomier side of the screen and stay inside the viewport, instead of the site's placement with the preview's corner under the cursor."],
         "Catalog Links": [false, "Converts board navigation links to catalog links."],
         "Highlight Posts Quoting You": [true, "Styles the highlight of posts quoting you (posts are marked by the site/Holotower TS)."],
         "Highlight Own Posts": [true, "Styles the highlight of your own posts (posts are marked by the site/Holotower TS)."],
@@ -766,6 +766,7 @@
                         nodes = mutations[i].removedNodes;
                         for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
                             if (!inlineSync && touchesInline(nodes[j])) inlineSync = true;
+                            if (nodes[j] === $SS._hoverEl) $SS._hoverEl = null;
                         }
 
                         nodes = mutations[i].addedNodes;
@@ -774,6 +775,8 @@
                             node = nodes[j];
                             if (node.nodeType !== 1) continue;
                             if (!inlineSync && touchesInline(node)) inlineSync = true;
+                            // The site's post-hover.js adds one preview at a time
+                            if (node.classList.contains("post-hover")) $SS._hoverEl = node;
                             var canHavePosts = node.nodeName !== "SCRIPT" && node.nodeName !== "STYLE" &&
                                 node.nodeName !== "LINK" && node.nodeName !== "META" && node.nodeName !== "BR";
 
@@ -816,8 +819,8 @@
                 // Post hover previews follow the cursor
                 if ($SS.conf["Follow Cursor"]) {
                     document.addEventListener("mousemove", function (e) {
-                        var img = document.querySelector(".post-hover");
-                        if (!img) return;
+                        var img = $SS._hoverEl;
+                        if (!img || !img.isConnected) return;
                         var cw = document.documentElement.clientWidth;
                         var ch = document.documentElement.clientHeight;
                         var h = img.offsetHeight, w = img.offsetWidth;
@@ -1833,7 +1836,11 @@
             return NAMESPACE + "RememberComment:";
         },
         getRememberCommentKey: function () {
-            return $SS.getRememberCommentPrefix() + location.pathname;
+            // /board/res/N.html and /board/res/N+50.html are the same thread
+            var thread = $SS.getThreadId(),
+                where = thread ? $SS.location.board + "/res/" + thread :
+                    location.pathname.replace(/index\.html$/, "");
+            return $SS.getRememberCommentPrefix() + where;
         },
         getRememberCommentExpiry: function () {
             return 24 * 60 * 60 * 1000;
@@ -2901,7 +2908,7 @@
                     return (Array.isArray(val) && typeof val[0] !== "object") ? val[0] : val;
                 };
 
-                $SS.conf = [];
+                $SS.conf = {};
                 $SS.exportOptions = {};
 
                 for (var key in defaultConfig) {
@@ -3523,6 +3530,17 @@
                     e.preventDefault();
                     e.stopPropagation();
                     $SS.options.show();
+                } else if (e.key === "Escape") {
+                    var cancel = document.querySelector("#overlay2 a[name=cancel], #overlay2 a[name=mCancel]");
+                    if (cancel) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        cancel.click();
+                    } else if ($("#overlay").exists()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $SS.options.close();
+                    }
                 }
             },
             /* Persists only theme state (list, selection, hidden). Callers
@@ -4411,7 +4429,22 @@
                         $SS.conf["Hidden Themes"].push(tIndex) === 1)
                         $("#themes-section a[name=restoreThemes]").show();
                     $SS.Config.set("Hidden Themes", $SS.conf["Hidden Themes"]);
-                    return $("#theme" + tIndex).removeClass("selected").hide();
+                    var tile = $("#theme" + tIndex),
+                        wasSelected = tile.hasClass("selected");
+                    tile.removeClass("selected").hide();
+                    // The page must not keep showing a theme the list no
+                    // longer offers: fall back to the first visible one
+                    if (wasSelected) {
+                        for (var i = 0; i < $SS.conf["Themes"].length; i++) {
+                            if (i !== tIndex && $SS.conf["Hidden Themes"].indexOf(i) === -1) {
+                                $("#theme" + i).addClass("selected");
+                                break;
+                            }
+                        }
+                        $SS.options.saveThemeState();
+                        $SS.init(true);
+                    }
+                    return;
                 }
 
                 if (!confirm('Delete theme "' + t.name + '"? This cannot be undone.'))
@@ -5644,9 +5677,7 @@
                         "<span style='color:" + this.nameColor.hex + "!important; font-weight: bold !important'>" + $SS.escapeHTML(this.authorName) + "</span>&ensp;" +
                         "<span style='color:" + this.tripColor.hex + "!important'> " + $SS.escapeHTML(this.authorTrip) + "</span>" +
                         "<time style='color:" + this.textColor.hex + "'> 20XX.01.01 12:00 </time>" +
-                        "<a href='javascript:;' style='color:" + this.linkColor.hex + "!important' " +
-                        "onmouseover='this.setAttribute(\"style\",\"color:" + this.linkHColor.hex + "!important\")' " +
-                        "onmouseout='this.setAttribute(\"style\",\"color:" + this.linkColor.hex + "!important\")'>No.22772469</a>" +
+                        "<a href='javascript:;' class='pv-link' style='--pv-link:" + this.linkColor.hex + ";--pv-linkh:" + this.linkHColor.hex + "'>No.22772469</a>" +
                         "<br><blockquote><span style='color:" + this.quoteColor.hex + "'>>implying this isn't a post</span><br>Post content is right here.</blockquote>" +
                         "<p class='theme-buttons-container'>" +
                         "<a href='javascript:;' title=Edit style='background-color:" + this.inputColor.hex + "!important;border:1px solid " + this.inputbColor.hex + "!important;color:" + this.textColor.hex + "!important'>Edit</a>" +

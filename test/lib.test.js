@@ -63,3 +63,11 @@ test("no document-wide observers are left behind when TS-only elements never app
     const leaked = observers.filter(o => o.__active && o.__target === w.document.documentElement);
     assert.equal(leaked.length, 0, "waitFor observers on <html> still connected: " + leaked.length);
 });
+
+test("comment drafts are keyed by thread, not by the URL variant", async () => {
+    const a = await load({ url: "https://holotower.org/hlgg/res/100.html" });
+    const b = await load({ url: "https://holotower.org/hlgg/res/100+50.html" });
+    assert.equal(a.__ST.$SS.getRememberCommentKey(), b.__ST.$SS.getRememberCommentKey());
+    const c = await load({ url: "https://holotower.org/hlgg/res/101.html" });
+    assert.notEqual(a.__ST.$SS.getRememberCommentKey(), c.__ST.$SS.getRememberCommentKey());
+});

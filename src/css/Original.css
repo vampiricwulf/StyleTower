@@ -63,9 +63,6 @@ div.thread {
   padding-bottom: 10px;
 }
 div.pages {
-  padding: 4px;
-}
-div.pages {
   float: left;
 }
 span.spoiler,
@@ -171,9 +168,6 @@ form[name=post] input[type=file]:hover::-webkit-file-upload-button {
   background: rgb(var(--sc-mainColor-shift10)) !important;
 }
 /* Page List */
-div.pages {
-  margin-bottom: 10px;
-}
 /* Follow Cursor option: the site's image hover (#chx_hoverImage, moved by
    the site's own "Image hover should follow cursor" setting) stays inside
    the viewport */

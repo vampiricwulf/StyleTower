@@ -101,11 +101,6 @@ module.exports = (grunt) ->
     'concat:testscript'
   ]
 
-  grunt.registerTask 'release', [
-    'default'
-    'compress:crx'
-  ]
-
   # Version bumps rebuild in the same run: reloadPkg refreshes the config the
   # concat templates read, so the outputs carry the new version immediately
   grunt.registerTask 'patch',   [

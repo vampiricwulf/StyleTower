@@ -104,3 +104,18 @@ test("the Export button warns that saved site credentials are included", async (
     const btn = w.document.querySelector("#oneechan-options a[name=Export]");
     assert.match(btn.title, /password/i);
 });
+
+test("Escape closes the options panel, and an open editor first", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    const esc = () => d.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    $SS.options.show();
+    $SS.options.showTheme(2);
+    assert.ok(d.getElementById("add-theme"));
+    esc();
+    assert.equal(d.getElementById("add-theme"), null, "editor closed");
+    assert.ok(d.getElementById("overlay"), "panel still open");
+    esc();
+    assert.equal(d.getElementById("overlay"), null, "panel closed");
+});

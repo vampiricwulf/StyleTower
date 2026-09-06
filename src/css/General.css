@@ -13,9 +13,6 @@ div.post.reply {
   padding: 0 !important;
   max-width: none !important;
 }
-div.post.op {
-  display: block;
-}
 p.intro {
   margin: 0 !important;
   padding: 5px 13px !important;
@@ -37,6 +34,7 @@ span.omitted {
 /* The site gives OPs margin-right:20px and no left margin while replies get
    4px sides; match them so OP and reply blocks share edges like 4chan */
 div.post.op {
+  display: block;
   margin-left: 4px;
   margin-right: 4px;
 }
@@ -116,9 +114,7 @@ p.intro a.post-btn {
 }
 :root.reply-fit-width.fit-postmenu p.intro > a.post-btn {
   float: right !important;
-}
-:root.reply-fit-width.fit-postmenu p.intro > a.post-btn {
-  margin: 2px 20px 0 0;
+  margin: 2px 20px 0 0 !important;
 }
 :root.reply-fit-width .post a.post-btn {
   position: relative;
@@ -178,7 +174,6 @@ input[type=checkbox]:checked::before {
   right: 0;
   left: 0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-  border-bottom: 1px solid;
 }
 /* TS slides an auto-hidden header fully off-screen, so the page needs no
    clearance; the fixed-header padding rules carry three classes, hence the
@@ -249,20 +244,9 @@ input[value='Next']:hover,
 input[value='Previous']:hover {
   opacity: .7;
 }
-div.pages {
-  margin-left: 18px;
-  margin-bottom: 15px;
-}
-:root.reply-fit-width div.pages {
-  margin-left: 0;
-}
 .pages a {
   padding: 5px 10px;
   margin-left: -1px;
-}
-div.pages a.selected {
-  padding-top: 3px;
-  transition: opacity .3s ease-in 0s;
 }
 /* Thread nav banner: 4chan-style plain link row (font-size 0 hides the
    "Posting mode: Reply" text node; links restore their size) */
@@ -413,6 +397,7 @@ div.pages a.selected {
   background: rgba(var(--sc-mainColor-shiftM16), .8) !important;
   color: var(--sc-textColor) !important;
   text-decoration: none !important;
+  transition: opacity .3s ease-in 0s;
 }
 :root.rounded-corners div.pages a.selected {
   border-radius: 2px;

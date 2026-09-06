@@ -29,14 +29,11 @@
 :root.oneechan.highlight-own .post.reply.you {
   border-left: " + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
-/* Highlighted Reply BG */
+/* Highlighted Reply BG + Reply Selection outline (TS also receives the
+   selection color via --highlight-color) */
 .reply.highlighted,
 .reply:target {
   background: rgba(var(--sc-replybgHLColor-rgb),0.8) !important;
-}
-/* Reply Selection: first-party consumer (TS also receives it via --highlight-color) */
-.reply.highlighted,
-.reply:target {
   outline: 1px solid rgba(var(--sc-replyslctColor-rgb),0.8) !important;
 }
 /* Expanded (inlined) backlinks/quotelinks: TS marks them a.inline-active, but

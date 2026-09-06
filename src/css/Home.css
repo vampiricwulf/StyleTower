@@ -33,6 +33,7 @@
 }
 :root.st-home .featured-frame {
   background: var(--sc-inputColor) !important;
+  border-color: var(--sc-brderColor) !important;
 }
 :root.st-home .poll-button {
   background: rgb(var(--sc-mainColor-rgb)) !important;
@@ -139,9 +140,6 @@
 :root.st-home .thread-meta,
 :root.st-home .thread-stats {
   opacity: .7;
-}
-:root.st-home .featured-frame {
-  border-color: var(--sc-brderColor) !important;
 }
 /* Music player */
 :root.st-home .music-player {

@@ -101,6 +101,13 @@
 .theme-preview {
   cursor: default;
 }
+/* Tile post-number link: colors from the tile's own palette */
+.theme-preview a.pv-link {
+  color: var(--pv-link) !important;
+}
+.theme-preview a.pv-link:hover {
+  color: var(--pv-linkh) !important;
+}
 .theme-preview blockquote {
   margin: 12px 40px !important;
 }
@@ -235,7 +242,9 @@
 }
 #add-theme .option-title {
   float: left;
+  flex-shrink: 0;
   padding-left: 5px;
+  padding-right: 8px;
   min-width: 120px;
 }
 #add-theme .theme-fields > label {
@@ -255,14 +264,10 @@
   outline: 1px dashed var(--sc-linkColor);
   outline-offset: -2px;
 }
-#add-theme .option-title {
-  flex-shrink: 0;
-  padding-right: 8px;
-}
 #add-theme .theme-fields > label > input[type=text],
 #add-theme .theme-fields > label > select {
   width: auto;
-  max-width: 55%;
+  max-width: 100%;
   appearance: auto;
   text-align: left;
 }
@@ -294,12 +299,6 @@
   resize: vertical;
   overflow-y: auto;
   font-family: monospace;
-}
-#add-theme .theme-fields > label > input[type=text],
-#add-theme .theme-fields > label > select {
-  width: auto;
-  max-width: 100%;
-  appearance: auto;
 }
 .color-picker-wrap {
   display: inline-flex;

@@ -88,3 +88,20 @@ test("a theme missing secondary colors derives them from its palette instead of 
     assert.equal(t.qlColor.hex, "#969696", "quotelinks follow the link color");
     assert.equal(t.boardColor.hex, "#a4a4a4", "board title follows the header text");
 });
+
+test("hiding the selected default theme moves the selection to a visible theme", async () => {
+    const w = await load({ storage: { "Selected Theme": 3 } });
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    $SS.options.deleteTheme(3);
+    assert.deepEqual(Array.from($SS.Config.get("Hidden Themes")), [3]);
+    assert.notEqual($SS.Config.get("Selected Theme"), 3, "selection left the hidden theme");
+    assert.notEqual($SS.theme.index, 3, "and the page no longer shows it");
+    assert.ok(w.document.querySelector("#themes-section .theme-preview.selected:not([hidden])"), "a visible tile is selected");
+});
+
+test("theme tiles use no inline event handlers", async () => {
+    const w = await load();
+    w.__ST.$SS.options.show();
+    assert.equal(w.document.querySelector("#themes-section [onmouseover], #themes-section [onmouseout], #themes-section [onclick]"), null);
+});
