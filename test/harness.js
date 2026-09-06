@@ -89,9 +89,20 @@ async function load(opts) {
     if (opts.noinit) w.__ST_NOINIT = true;
     if (opts.setup) opts.setup(w);
     w.eval(script());
+    openWindows.push(w);
     if (!opts.noinit) await until(() => w.__ST && w.__ST.$SS._initDone, 2000);
     return w;
 }
+
+// Pages start long timers (the index control row's "N min ago" label), which
+// keep a jsdom window's loop alive and a test process from exiting: close
+// every window this file opened once its tests are done
+const openWindows = [];
+try {
+    require("node:test").after(() => {
+        openWindows.forEach(w => { try { w.close(); } catch (e) {} });
+    });
+} catch (e) { /* not running under node:test */ }
 
 function until(test, ms) {
     return new Promise(function (resolve, reject) {

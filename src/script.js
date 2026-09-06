@@ -728,6 +728,7 @@
     /* STYLE SCRIPT CLASSES & METHODS */
     $SS = {
         waitTimeout: 60000,
+        draftDelay: 5000,
         DOMLoaded: function (reload) {
             $SS.classes.init();
             $SS.disableSiteTheme();
@@ -1932,7 +1933,7 @@
                         $SS.saveRememberedComment(storageKey, commentField.value);
                     else
                         $SS.clearRememberedComment();
-                }, 5000);
+                }, $SS.draftDelay);
             }
 
             function clearSavedComment() {
