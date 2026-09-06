@@ -46,3 +46,45 @@ test("the editor's live preview ignores a half-typed hex", async () => {
     const selected = $SS.conf["Themes"][$SS.conf["Selected Theme"]];
     assert.equal($SS.theme.mainColor.hex, "#" + selected.mainColor, "cancel restores the selection");
 });
+
+test("every shipped theme file carries the full palette", async () => {
+    const fs = require("fs"), path = require("path");
+    const { ROOT } = require("./harness");
+    const w = await load();
+    const required = w.__ST.$SS.Themes.defaults[0];
+    const keys = Object.keys(required).filter(k => /Color$/.test(k));
+    const dir = path.join(ROOT, "themes");
+    const gaps = [];
+    fs.readdirSync(dir).filter(f => /\.json$/.test(f)).forEach(f => {
+        const t = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+        const missing = keys.filter(k => !(k in t));
+        if (missing.length) gaps.push(f + ": " + missing.join(","));
+    });
+    assert.deepEqual(gaps, []);
+});
+
+test("a theme missing secondary colors derives them from its palette instead of black", async () => {
+    const w = await load({
+        storage: {
+            "Themes": [{
+                name: "Sparse", mainColor: "282828", bgColor: "1e1e1e", textColor: "a4a4a4",
+                linkColor: "969696", linkHColor: "5d6a9e", nameColor: "6c7fcb", tripColor: "5d6a9e",
+                titleColor: "6c7fcb", headerColor: "a4a4a4", headerBGColor: "191919", quoteColor: "b8b784",
+                brderColor: "282828", inputColor: "191919", inputbColor: "1e1e1e"
+            }],
+            "Selected Theme": 27
+        }
+    });
+    const t = w.__ST.$SS.theme;
+    assert.equal(t.name, "Sparse");
+    const derived = {
+        qlColor: t.qlColor.hex, blinkColor: t.blinkColor.hex, unreadColor: t.unreadColor.hex,
+        boardColor: t.boardColor.hex, headerLColor: t.headerLColor.hex, headerLHColor: t.headerLHColor.hex,
+        postHLColor: t.postHLColor.hex, quotesYouHLColor: t.quotesYouHLColor.hex, ownPostHLColor: t.ownPostHLColor.hex,
+        threadHLColor: t.threadHLColor.hex, replyslctColor: t.replyslctColor.hex, replybgHLColor: t.replybgHLColor.hex
+    };
+    const black = Object.keys(derived).filter(k => derived[k] === "#000000");
+    assert.deepEqual(black, [], "fell back to black: " + JSON.stringify(derived));
+    assert.equal(t.qlColor.hex, "#969696", "quotelinks follow the link color");
+    assert.equal(t.boardColor.hex, "#a4a4a4", "board title follows the header text");
+});

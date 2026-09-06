@@ -26,14 +26,6 @@
   background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
   border-color: var(--sc-brderColor) !important;
 }
-:root.st-home .sub-panel {
-  background: rgb(var(--sc-mainColor-rgb)) !important;
-  border-color: var(--sc-inputbColor) !important;
-}
-:root.st-home .right-panel {
-  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
-  border-color: var(--sc-brderColor) !important;
-}
 :root.st-home .thread-list li,
 :root.st-home .window-mods .info-list li,
 :root.st-home .poll-results {

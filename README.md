@@ -43,7 +43,9 @@ The following standalone Holotower userscripts are folded into StyleTower and ca
 
 ## Theming
 
-Get [more themes](https://github.com/3nly/StyleChan/wiki/Custom-Themes#custom-themes) — StyleChan/OneeChan themes are compatible.
+Get [more themes](https://github.com/3nly/StyleChan/wiki/Custom-Themes#custom-themes) — StyleChan/OneeChan themes are compatible, and a few more ship in [themes/](themes/).
+
+The [StyleTower Tools](https://vampiricwulf.github.io/StyleTower/) page hosts the Theme Creator (build a theme from a screenshot or a palette, with a live preview) and the Theme Converter.
 
 ## Troubleshooting
 

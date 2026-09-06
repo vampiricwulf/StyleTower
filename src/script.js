@@ -677,26 +677,6 @@
 
             return new $lib(selector, this.elems[0]);
         },
-        nextSibling: function (selector) {
-            if (!this.hasSingleEl() ? true : this.elems[0].nextSibling == null)
-                return new $lib(null);
-
-            if (selector != undefined) {
-                var t, m = new $lib(selector, this.elems[0].parentNode),
-                    s = this.elems[0].parentNode.childNodes;
-
-                for (var i = s.length - 1; i >= 0; --i) {
-                    if (s[i] === this.elems[0] && t == undefined) // end and no matching siblings
-                        return new $lib(null);
-                    else if (s[i] === this.elems[0] && t != undefined) // end and matched sibling
-                        return new $lib(t);
-                    else if (m.elems.indexOf(s[i]) !== -1) // this element matches the selector
-                        t = s[i];
-                }
-            }
-
-            return new $lib(this.elems[0].nextSibling);
-        },
 
 
         /* EVENT METHODS */
@@ -747,7 +727,6 @@
 
     /* STYLE SCRIPT CLASSES & METHODS */
     $SS = {
-        browser: {},
         waitTimeout: 60000,
         DOMLoaded: function (reload) {
             $SS.classes.init();
@@ -1467,7 +1446,7 @@
             // copied: re-arm it -- cloning strips the muted/loop property
             // state, and an unmuted clone would play sound -- and hand it to
             // the viewport observer so it plays while the preview is visible
-            scope.querySelectorAll(".post-hover video.st-thumb-video, .inline video.st-thumb-video, .inline-cloned-post video.st-thumb-video").forEach(function (v) {
+            scope.querySelectorAll(".post-hover video.st-thumb-video, .inline-cloned-post video.st-thumb-video").forEach(function (v) {
                 if (v._stCloneArmed) return;
                 v._stCloneArmed = true;
                 v.muted = true;
@@ -1479,7 +1458,7 @@
                 // Never build a second player inside a clone: the original
                 // was already processed and its processed markers are JS
                 // properties that cloning strips
-                if (img.closest(".post-hover, .inline, .inline-cloned-post")) return;
+                if (img.closest(".post-hover, .inline-cloned-post")) return;
                 var href = img.parentNode.href || "";
                 // Video thumbs link to the site player, with the actual file
                 // in the v= parameter
@@ -1514,6 +1493,9 @@
                     video.setAttribute("muted", "");
                     video.setAttribute("loop", "");
                     video.setAttribute("playsinline", "");
+                    // Playback is viewport-driven, so nothing loads until then
+                    video.preload = "none";
+                    video.setAttribute("preload", "none");
                     video.style.width = img.style.width || (img.width ? img.width + "px" : "");
                     video.style.height = img.style.height || (img.height ? img.height + "px" : "");
                     img.parentNode.insertBefore(video, img.nextSibling);
@@ -2025,10 +2007,6 @@
                 if (qr && !qr.contains(e.relatedTarget)) qr.classList.remove("focus");
             });
         },
-        getThreadTitle: function () {
-            var el = document.querySelector(".post.op .subject");
-            return (el && el.textContent.trim()) || document.title.replace(/\s*-\s*\/[^\/]*\/\s*$/, '') || "Untitled";
-        },
         localJSON: {
             get: function (key) {
                 try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
@@ -2517,7 +2495,11 @@
                     return document.documentElement.scrollHeight - scrollPosition <= 200;
                 }
                 function getCurrentPosts() {
-                    return Array.prototype.slice.call(document.querySelectorAll("p.intro"));
+                    // Real posts only: TS hover previews and inlined quotes
+                    // clone p.intro too, and would inflate the record
+                    return Array.prototype.slice.call(document.querySelectorAll("p.intro")).filter(function (p) {
+                        return !p.closest(".post-hover, .inline-quote-container, .inline-cloned-post");
+                    });
                 }
                 function isLastPostInView() {
                     var lastPost = lastPostElements[lastPostElements.length - 1];
@@ -3067,7 +3049,7 @@
                             "<li class='tab-item'><label class='tab-label' for=themes-select>Themes</label></li>",
                             "</ul><div id=options-container><input type=radio class=tab-select name=tab-select id=main-select hidden checked><div id='main-section' class='options-section'>",
                             "<p class='buttons-container'>",
-                            "<span class='btn-left'><a class='options-button' title='Export your settings as JSON.' name=Export>Export</a><a class='options-button' id='import-settings'><input type=file class='import-input' riced=true accept='application/json'>Import</a><a class='options-button' title='Reset StyleTower settings.' name=resetSettings>Reset</a></span>",
+                            "<span class='btn-left'><a class='options-button' title='Export your settings as JSON. Includes the saved Holotower name, email and post password.' name=Export>Export</a><a class='options-button' id='import-settings'><input type=file class='import-input' riced=true accept='application/json'>Import</a><a class='options-button' title='Reset StyleTower settings.' name=resetSettings>Reset</a></span>",
                             "<span class='btn-center' id=oneechan-version><span>StyleTower</span> v" + VERSION + "<span class=link-delim> | </span><a href='https://github.com/vampiricwulf/StyleTower/releases/latest' id=changelog-link target='_blank' title='Read the changelog.'>Changelog</a><span class=link-delim> | </span><a href='https://github.com/vampiricwulf/StyleTower/issues' id=issues-link target='_blank' title='Report an issue.'>Issues</a></span>",
                             "<span class='btn-right'><a class='options-button' name=save>Save</a><a class='options-button' name=cancel>Cancel</a></span></p>"
                         ];
@@ -3444,6 +3426,9 @@
                     v = $SS.normalizeHex(raw[k]);
                     if (v) t[k] = v;
                 }
+                // OneeChan-era themes name the post highlight differently
+                if (!t.postHLColor && (v = $SS.normalizeHex(raw.highlightColor)))
+                    t.postHLColor = v;
 
                 t.replyOp = $SS.normalizeOpacity(raw.replyOp, "1.0");
                 t.navOp = $SS.normalizeOpacity(raw.navOp, "0.9");
@@ -3590,11 +3575,38 @@
                     this.innerHTML = html;
                 });
             },
+            /* Options wired up once at page load (listeners, form hooks,
+               link rewrites) and integrations that cannot be switched off
+               without a reload */
+            reloadKeys: ["Follow Cursor", "Auto-Convert Images", "Remember Comment Draft", "Watch Thread on Reply",
+                "Catalog Links", "Pin Quick Reply", "Autohide Style"],
+            reloadWhenOff: ["Auto Scroll", "Sauce Links", "Catalog Highlights", "Replace Thumbnails",
+                "Replace GIF", "Replace JPG", "Replace PNG", "Replace WEBP", "Replace WEBM/MP4"],
+            noteReloadNeeded: function (before) {
+                var changed = [];
+                $SS.options.reloadKeys.forEach(function (k) {
+                    if (before[k] !== $SS.conf[k]) changed.push(k);
+                });
+                $SS.options.reloadWhenOff.forEach(function (k) {
+                    if (before[k] === true && $SS.conf[k] === false) changed.push(k);
+                });
+                if (!changed.length) return;
+                var content = document.createElement("span"),
+                    link = document.createElement("a");
+                content.appendChild(document.createTextNode("Applies after a reload: " + changed.join(", ") + ". "));
+                link.href = "javascript:;";
+                link.textContent = "Reload now";
+                link.addEventListener("click", function (e) { e.preventDefault(); location.reload(); });
+                content.appendChild(link);
+                $SS.notify({ type: "info", content: content, lifetime: 10 });
+            },
             save: function () {
                 // Never write from a dead panel: the collectors below would
                 // see nothing and wipe stored state
                 if (!$("#oneechan-options").exists())
                     return;
+                var before = {};
+                $SS.options.reloadKeys.concat($SS.options.reloadWhenOff).forEach(function (k) { before[k] = $SS.conf[k]; });
 
                 // Save main
                 $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
@@ -3618,7 +3630,8 @@
                 if ($SS.options.saveAndClose)
                     $SS.options.close();
 
-                return $SS.init(true);
+                $SS.init(true);
+                $SS.options.noteReloadNeeded(before);
             },
             /* Settings import: accepts StyleTower, upstream StyleChan and
                original OneeChan exports, normalizing renamed keys and both
@@ -5553,32 +5566,42 @@
             // invalidate every rgba() consumer
             this.replyOp = $SS.normalizeOpacity(theme.replyOp, "1.0");
             this.navOp = $SS.normalizeOpacity(theme.navOp, "0.9");
-            this.bgColor = new $SS.Color(theme.bgColor);
-            this.mainColor = new $SS.Color(theme.mainColor);
-            this.brderColor = new $SS.Color(theme.brderColor);
-            this.inputColor = new $SS.Color(theme.inputColor, true);
-            this.inputbColor = new $SS.Color(theme.inputbColor);
-            this.blinkColor = new $SS.Color(theme.blinkColor);
-            this.unreadColor = new $SS.Color(theme.unreadColor);
-            this.linkColor = new $SS.Color(theme.linkColor);
-            this.linkHColor = new $SS.Color(theme.linkHColor);
-            this.qlColor = new $SS.Color(theme.qlColor);
-            this.nameColor = new $SS.Color(theme.nameColor);
-            this.quoteColor = new $SS.Color(theme.quoteColor);
-            this.textColor = new $SS.Color(theme.textColor);
-            this.titleColor = new $SS.Color(theme.titleColor);
-            this.tripColor = new $SS.Color(theme.tripColor);
-            this.boardColor = new $SS.Color(theme.boardColor);
-            this.headerColor = new $SS.Color(theme.headerColor);
-            this.headerLColor = new $SS.Color(theme.headerLColor);
-            this.headerLHColor = new $SS.Color(theme.headerLHColor);
-            this.headerBGColor = new $SS.Color(theme.headerBGColor);
-            this.postHLColor = new $SS.Color(theme.postHLColor);
-            this.quotesYouHLColor = new $SS.Color(theme.quotesYouHLColor);
-            this.ownPostHLColor = new $SS.Color(theme.ownPostHLColor);
-            this.threadHLColor = new $SS.Color(theme.threadHLColor);
-            this.replybgHLColor = new $SS.Color(theme.replybgHLColor);
-            this.replyslctColor = new $SS.Color(theme.replyslctColor);
+            // Themes from older StyleChan/OneeChan versions lack the newer
+            // keys; derive those from related colors rather than painting
+            // them black (OneeChan's highlightColor is our postHLColor)
+            var col = function () {
+                for (var i = 0; i < arguments.length; i++) {
+                    var v = $SS.normalizeHex(theme[arguments[i]]);
+                    if (v) return v;
+                }
+                return null;
+            };
+            this.bgColor = new $SS.Color(col("bgColor", "mainColor"));
+            this.mainColor = new $SS.Color(col("mainColor", "bgColor"));
+            this.textColor = new $SS.Color(col("textColor", "headerColor"));
+            this.brderColor = new $SS.Color(col("brderColor", "mainColor"));
+            this.inputColor = new $SS.Color(col("inputColor", "mainColor"), true);
+            this.inputbColor = new $SS.Color(col("inputbColor", "brderColor", "mainColor"));
+            this.linkColor = new $SS.Color(col("linkColor", "textColor"));
+            this.linkHColor = new $SS.Color(col("linkHColor", "linkColor", "textColor"));
+            this.qlColor = new $SS.Color(col("qlColor", "linkColor", "textColor"));
+            this.blinkColor = new $SS.Color(col("blinkColor", "linkColor", "textColor"));
+            this.unreadColor = new $SS.Color(col("unreadColor", "linkColor", "textColor"));
+            this.nameColor = new $SS.Color(col("nameColor", "textColor"));
+            this.tripColor = new $SS.Color(col("tripColor", "nameColor", "textColor"));
+            this.titleColor = new $SS.Color(col("titleColor", "nameColor", "textColor"));
+            this.quoteColor = new $SS.Color(col("quoteColor", "textColor"));
+            this.headerColor = new $SS.Color(col("headerColor", "textColor"));
+            this.boardColor = new $SS.Color(col("boardColor", "headerColor", "textColor"));
+            this.headerLColor = new $SS.Color(col("headerLColor", "linkColor", "textColor"));
+            this.headerLHColor = new $SS.Color(col("headerLHColor", "linkHColor", "linkColor", "textColor"));
+            this.headerBGColor = new $SS.Color(col("headerBGColor", "mainColor", "bgColor"));
+            this.postHLColor = new $SS.Color(col("postHLColor", "highlightColor", "titleColor", "textColor"));
+            this.quotesYouHLColor = new $SS.Color(col("quotesYouHLColor", "nameColor", "textColor"));
+            this.ownPostHLColor = new $SS.Color(col("ownPostHLColor", "tripColor", "textColor"));
+            this.threadHLColor = new $SS.Color(col("threadHLColor", "titleColor", "textColor"));
+            this.replyslctColor = new $SS.Color(col("replyslctColor", "linkColor", "textColor"));
+            this.replybgHLColor = new $SS.Color(col("replybgHLColor", "mainColor", "bgColor"));
             // Hover previews default to the shade replies always used, so
             // themes without the key keep their look
             this.hoverColor = theme.hoverColor ? new $SS.Color(theme.hoverColor) : null;

@@ -106,7 +106,6 @@ div.body {
   box-shadow: inset rgba(0,0,0,.05) 0 -1px 2px;
   padding-top: 2px !important;
 }
-:root.post-info .inline .post.reply,
 :root.post-info .post.reply.post-hover {
   padding: 0 0 1px !important;
 }
@@ -181,7 +180,11 @@ input[type=checkbox]:checked::before {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid;
 }
-:root.autohide body {
+/* TS slides an auto-hidden header fully off-screen, so the page needs no
+   clearance; the fixed-header padding rules carry three classes, hence the
+   matching specificity here */
+:root.autohide body,
+:root.autohide.fixed.top-header body {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
@@ -197,9 +200,6 @@ input[type=checkbox]:checked::before {
 h2, h3 {
   margin: auto;
 }
-.shortcut {
-  vertical-align: baseline !important;
-}
 /* Floating QR button (visibility is handled by the site/TS) */
 a.quick-reply-btn img {
   display: block;
@@ -212,19 +212,6 @@ a.quick-reply-btn img {
 hr {
   height: 2px;
   border: none !important;
-}
-:root.reply-fit-width #unread-line {
-  margin: auto;
-  width: 100%;
-}
-#unread-line {
-  margin-top: " + (($SS.conf["Margin Between Replies"] < -2) ? ($SS.conf["Margin Between Replies"] - 1) : -3) + "px !important;
-  margin-bottom: " + (($SS.conf["Margin Between Replies"] < -2) ? -5 : -3) + "px !important;
-  position: relative;
-}
-/* Scroll Marker */
-:root:not(.autohide) #scroll-marker {
-  pointer-events: none !important;
 }
 /* Board Title */
 header h1 {

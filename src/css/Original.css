@@ -8,21 +8,6 @@
   display: block;
   clear: left;
 }
-.mu-s {
-  font-weight: bold;
-}
-.mu-i {
-  font-style: italic;
-}
-.mu-r {
-  color: #c41e3a;
-}
-.mu-g {
-  color: #00a550;
-}
-.mu-b {
-  color: #1d8dc4;
-}
 .files .file > a {
   float: left;
   margin-left: 13px;
@@ -55,9 +40,6 @@ p.fileinfo > .unimportant {
 .fixed.top-header body.active-catalog {
   padding-bottom: .5em;
   padding-top: " + (($SS.conf["Font Size"] <= 11) ? 3.2 : 2.4) + "em !important;
-}
-.fixed.top-header.autohide body {
-  padding-top: 2em !important;
 }
 .fixed.top-header body {
   padding-top: 2.4em !important;
@@ -119,9 +101,6 @@ input[value='Previous'] {
 /* Other */
 div.post img.icon {
   margin-bottom: -3px;
-}
-:root.reply-fit-width .inline {
-  display: flow-root !important;
 }
 select {
   padding: 0 0 2px 2px;

@@ -97,3 +97,29 @@ test("video thumbnails: a looping video stands in, hides while the site's player
     await sleep(80);
     assert.equal(video.style.display, "", "loop back after collapse");
 });
+
+test("auto scroll: a hover preview present during a new post does not skew later detection", async () => {
+    const w = await load({ storage: { "Auto Scroll": true } });
+    const d = w.document;
+    await sleep(50);
+    d.querySelector("#updater input.auto-scroll-claude").checked = true;
+    // TS drops a cloned post (with its own p.intro) into the body on hover
+    const clone = d.createElement("div");
+    clone.className = "post reply post-hover";
+    clone.id = "post-hover-101";
+    clone.innerHTML = '<p class="intro"><span class="name">Anonymous</span></p><div class="body">clone</div>';
+    d.body.appendChild(clone);
+    addReply(w, 210);
+    await sleep(250);
+    assert.equal((w.__scrollCalls || []).length, 1, "first real post scrolls");
+    clone.remove();
+    addReply(w, 211);
+    await sleep(250);
+    assert.equal(w.__scrollCalls.length, 2, "the next real post still scrolls after the clone is gone");
+});
+
+test("video thumbnails: loops do not preload until they are played", async () => {
+    const w = await load({ storage: { "Replace Thumbnails": true, "Replace WEBM/MP4": true } });
+    const video = w.document.querySelector("#reply_103 video.st-thumb-video");
+    assert.equal(video.getAttribute("preload"), "none");
+});

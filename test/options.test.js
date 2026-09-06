@@ -71,3 +71,36 @@ test("a quick reply that appears later gets the name/subject limits", async () =
     assert.equal(d.querySelector("form[name=post]:not(#quick-reply) input[name=name]").getAttribute("maxlength"), "100");
     assert.ok(qr.querySelector(".st-submit-row"), "submit moved to its own row");
 });
+
+test("saving an option that only applies on the next load says so", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    const box = d.querySelector("#oneechan-options input[name='Catalog Links']");
+    box.checked = !box.checked;
+    d.querySelector("#oneechan-options a[name=save]").click();
+    await sleep(50);
+    const notes = [...d.querySelectorAll(".styletower-notification-text")].map(n => n.textContent);
+    assert.ok(notes.some(t => /reload/i.test(t) && /Catalog Links/.test(t)), "got: " + JSON.stringify(notes));
+});
+
+test("saving only live options does not mention a reload", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    const box = d.querySelector("#oneechan-options input[name='Rounded Corners']");
+    box.checked = !box.checked;
+    d.querySelector("#oneechan-options a[name=save]").click();
+    await sleep(50);
+    const notes = [...d.querySelectorAll(".styletower-notification-text")].map(n => n.textContent);
+    assert.ok(!notes.some(t => /reload/i.test(t)), "got: " + JSON.stringify(notes));
+});
+
+test("the Export button warns that saved site credentials are included", async () => {
+    const w = await load();
+    w.__ST.$SS.options.show();
+    const btn = w.document.querySelector("#oneechan-options a[name=Export]");
+    assert.match(btn.title, /password/i);
+});

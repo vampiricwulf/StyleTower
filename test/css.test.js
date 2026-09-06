@@ -37,7 +37,9 @@ test("stylesheets carry no rules for classes nothing sets on Holotower", () => {
         "bottom-header", "bottom-backlinks", "reply-hide", "catalog-mode",
         ".hashlink", ".threadContainer", ".hasInline", ".stub", ".expanded-image",
         "q-spoiler-image", "yui-skin-sam", ".pln", ".kwd", ".atv", ".typ", ".atn", ".lit", ".pun",
-        ".hide-reply-button", ".show-thread-button", "::-webkit-calendar-picker-indicator", ".sfw-label"
+        ".hide-reply-button", ".show-thread-button", "::-webkit-calendar-picker-indicator", ".sfw-label",
+        ".inline ", ".inline{", ".inline>", "#unread-line", "#scroll-marker", ".shortcut", ".right-panel", ".sub-panel",
+        ".mu-", ".options-button-small"
     ];
     const found = dead.filter(token => allCSS.indexOf(token) !== -1);
     assert.deepEqual(found, []);
@@ -56,4 +58,10 @@ test("every emitted --sc variable is consumed and every consumed one is emitted"
     const undef = [...used].filter(v => !defined.has(v));
     assert.deepEqual(unused, [], "emitted but never referenced");
     assert.deepEqual(undef, [], "referenced but never emitted");
+});
+
+test("an auto-hidden header leaves no top padding: the zeroing rule outranks the fixed-header ones", () => {
+    const original = css("Original.css"), general = css("General.css");
+    assert.equal(has(original, /\.fixed\.top-header\.autohide body/), false, "the 2em auto-hide rule is gone");
+    assert.equal(has(general, /:root\.autohide\.fixed\.top-header body[^{]*\{[^}]*padding-top:\s*0 !important/), true, "zeroing rule at fixed-header specificity");
 });

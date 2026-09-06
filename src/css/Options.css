@@ -436,10 +436,6 @@
   text-align:center;
   cursor: pointer;
 }
-.options-button-small {
-  padding: 0.15em 0.4em;
-  min-width: 2.3em;
-}
 #import-link {
   line-height: 1.7em;
   overflow:hidden;
