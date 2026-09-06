@@ -37,6 +37,7 @@ export default defineConfig([
       "no-redeclare": "off",
       "no-empty": ["error", { allowEmptyCatch: true }],
       "no-useless-escape": "off",
+      "radix": "error",
     },
   },
 ]);

@@ -3350,18 +3350,18 @@
                             }
                             var edit = e.target.closest(".mascot-edit");
                             if (edit) {
-                                $SS.options.showMascotEditor(parseInt(edit.closest(".mascot-tile").getAttribute("data-idx")));
+                                $SS.options.showMascotEditor(parseInt(edit.closest(".mascot-tile").getAttribute("data-idx"), 10));
                                 return;
                             }
                             var del = e.target.closest(".mascot-del");
                             if (del) {
-                                work.splice(parseInt(del.closest(".mascot-tile").getAttribute("data-idx")), 1);
+                                work.splice(parseInt(del.closest(".mascot-tile").getAttribute("data-idx"), 10), 1);
                                 $SS.options.renderMascotGallery();
                                 return;
                             }
                             var tile = e.target.closest(".mascot-tile");
                             if (tile) {
-                                var m = work[parseInt(tile.getAttribute("data-idx"))];
+                                var m = work[parseInt(tile.getAttribute("data-idx"), 10)];
                                 if (m) {
                                     m.enabled = m.enabled === false;
                                     tile.classList.toggle("selected", m.enabled);
@@ -3570,7 +3570,7 @@
                     selectedTheme;
 
                 $("#oneechan-options #themes-section>div").each(function () {
-                    var oldIndex = parseInt(this.id.substr(5)),
+                    var oldIndex = parseInt(this.id.substr(5), 10),
                         t = $SS.conf["Themes"][oldIndex];
                     if (t && !t.default && !t._isPreview) {
                         // Editor bookkeeping must not reach storage
@@ -3581,7 +3581,7 @@
                 });
 
                 selectedTheme = (selectedTheme = $("#oneechan-options #themes-section>div.selected")).exists() ?
-                    parseInt(selectedTheme.attr("id").substr(5)) : 0;
+                    parseInt(selectedTheme.attr("id").substr(5), 10) : 0;
                 // Ensure selectedTheme is valid
                 if (selectedTheme >= $SS.conf["Themes"].length || !$SS.conf["Themes"][selectedTheme]) {
                     selectedTheme = 0;
@@ -3649,7 +3649,7 @@
                         val = $this.val();
 
                     if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)){
-                        val = parseInt(val);
+                        val = parseInt(val, 10);
                     }
 
                     $SS.Config.set(name, val);
