@@ -216,3 +216,17 @@ test("each slider has a typed field; typing past the slider's range extends it",
     ed.querySelector("a[name=nSave]").click();
     assert.equal(JSON.parse($SS.Config.get("Nav Buttons")).gap, 500);
 });
+
+test("the position editor is painted with the theme's main color like the mascot editor", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    d.querySelector("#main-section a[name=navPosition]").click();
+    assert.ok(d.getElementById("st-nav-editor"));
+    const css = d.getElementById("ch4SS").textContent;
+    const rulesFor = sel => [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].filter(m => m[1].split(",").some(s => s.trim() === sel)).map(m => m[2]);
+    assert.ok(rulesFor("#st-nav-editor").some(b => /background:rgb\(var\(--sc-mainColor-rgb\)\)/.test(b)), "background rule");
+    assert.ok(rulesFor("#st-nav-editor").some(b => /color:var\(--sc-textColor\)/.test(b)), "text color rule");
+    assert.ok(rulesFor("#add-mascot").some(b => /background:rgb\(var\(--sc-mainColor-rgb\)\)/.test(b)), "mascot editor still covered");
+});

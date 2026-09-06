@@ -127,11 +127,13 @@ form[name=post] table td {
 .tab-label,
 #oneechan-options,
 #add-theme,
-#add-mascot {
+#add-mascot,
+#st-nav-editor {
   background: rgb(var(--sc-mainColor-rgb)) !important;
 }
 #add-theme,
-#add-mascot {
+#add-mascot,
+#st-nav-editor {
   color: var(--sc-textColor) !important;
 }
 /* Recolor Even Replies lives in setThemeVariables: its :nth-child(even of ...) selector
