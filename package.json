@@ -4,7 +4,8 @@
   "description": "Customizable themes for holotower.org.",
   "scripts": {
     "lint": "eslint src/",
-    "build": "grunt build"
+    "build": "grunt build",
+    "test": "grunt testbuild && node --test test/"
   },
   "meta": {
     "name": "StyleTower",
@@ -48,7 +49,8 @@
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-cssmin": "^5.0.0",
     "grunt-contrib-uglify": "^5.2.2",
-    "grunt-shell": "~1.1.1"
+    "grunt-shell": "~1.1.1",
+    "jsdom": "^30.0.1"
   },
   "repository": {
     "type": "git",

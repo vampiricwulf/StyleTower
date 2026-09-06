@@ -24,7 +24,11 @@ Open your console with:
 
 ### Build
 
-- Build with `grunt`.
+- Build with `npm run build` (or `npx grunt build`); outputs land in `builds/`.
+
+### Test
+
+- Run `npm test`: it builds the processed script into `tmp/` and runs the jsdom suite under `test/` with Node's built-in test runner.
 
 ### Lint
 
@@ -60,8 +64,8 @@ npx eslint src/ --fix    # auto-fix formatting issues only
 
 ### Release
 
-- Update the version with `grunt patch`, `grunt minor` or `grunt major`.
-- Release with `grunt release`.
+- Bump the version and rebuild with `npx grunt patch`, `npx grunt minor` or `npx grunt major`; each prepends a `### vX` stub to the changelog to fill in.
+- Tag the commit and publish the `builds/` outputs as a GitHub release.
 
 Note: this is only used to release new StyleTower versions, and is **not** needed or wanted in pull requests.
 

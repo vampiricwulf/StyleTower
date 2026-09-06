@@ -30,15 +30,18 @@ module.exports = (grunt) ->
             'src/meta/metadata.min.js'
             'src/script.js'
           ]
+      # Test build: the processed script alone (no userscript header), read by
+      # the jsdom harness under test/
+      testscript:
+        options: concatOptions
+        files:
+          'tmp/<%= pkg.name %>.test.js': 'src/script.js'
       crx:
         options: concatOptions
         files:
           'builds/updates.xml': 'src/meta/updates.xml'
           'builds/crx/manifest.json': 'src/meta/manifest.json'
-          'builds/crx/script.js': [
-            'src/meta/botproc.js'
-            'src/script.js'
-          ]
+          'builds/crx/script.js': 'src/script.js'
 
     cssmin:
       minify:
@@ -89,6 +92,13 @@ module.exports = (grunt) ->
     'concat:userscript'
     'uglify:minify'
     'clean:tmp'
+  ]
+
+  # Leaves tmp/ in place: the tests load tmp/StyleTower.test.js
+  grunt.registerTask 'testbuild', [
+    'concat:style'
+    'cssmin:minify'
+    'concat:testscript'
   ]
 
   grunt.registerTask 'release', [
