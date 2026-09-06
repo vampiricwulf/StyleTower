@@ -87,6 +87,16 @@ function colorToHex(color) {
 function validImageURL(img) {
   return img && typeof img==='string' && !/^url\(\)$/.test(img) && /^(https?:\/\/|url\().+$/i.test(img);
 }
+var KNOWN = ["mainColor","textColor","linkColor","linkHColor","nameColor","tripColor","titleColor","quoteColor","qlColor","blinkColor","brderColor","inputColor","inputbColor","bgColor","postHLColor","quotesYouHLColor","ownPostHLColor","threadHLColor","replybgHLColor","replyslctColor","headerColor","headerBGColor","headerLColor","headerLHColor","boardColor","unreadColor","hoverColor","hoverOutColor","replyOp","navOp","hoverOp","hoverOutOp","bgImg","bgRPA"];
+function copyKnown(data, t) {
+  KNOWN.forEach(function (k) { if (data[k] !== undefined && t[k] === undefined) t[k] = data[k]; });
+}
+// Older formats lack the header/unread keys: derive them, never override
+function fillFallbacks(data, t) {
+  var fb = { unreadColor: data.jlinkColor || data.linkColor, headerColor: data.textColor, headerBGColor: data.mainColor,
+    headerLColor: data.linkColor, headerLHColor: data.linkHColor, boardColor: data.textColor };
+  for (var k in fb) if (t[k] === undefined && fb[k] !== undefined) t[k] = fb[k];
+}
 function convert(fileName) {
   var el = document.getElementById('output');
   var st = document.getElementById('status');
@@ -130,29 +140,15 @@ function convert(fileName) {
       t.authorTrip = '';
       t.replyOp = "1.0"; t.navOp = "0.9";
       t.bgImg = validImageURL(data["bgImg"]) ? data["bgImg"] : false;
-      t.unreadColor = data["jlinkColor"];
-      t.headerColor = data["textColor"];
-      t.headerBGColor = data["mainColor"];
-      t.headerLColor = data["linkColor"];
-      t.headerLHColor = data["linkHColor"];
-      t.boardColor = data["textColor"];
-      ["mainColor","textColor","linkColor","linkHColor","nameColor","tripColor","titleColor","quoteColor","qlColor","blinkColor","brderColor","inputColor","inputbColor","bgColor","postHLColor","quotesYouHLColor","ownPostHLColor","threadHLColor","replybgHLColor","replyslctColor","headerColor","headerBGColor","headerLColor","headerLHColor","boardColor","unreadColor","replyOp","navOp","bgImg"].forEach(function(k){
-        if (data[k] !== undefined && t[k] === undefined) t[k] = data[k];
-      });
+      copyKnown(data, t);
+      fillFallbacks(data, t);
       t.customCSS = data.customCSS||'';
     } else if (data["navOp"] !== undefined) {
       t.name = data.name||'Imported';
       t.authorName = data.authorName||data.author||'';
       t.authorTrip = data.authorTrip||'';
-      t.unreadColor = data["jlinkColor"];
-      t.headerColor = data["textColor"];
-      t.headerBGColor = data["mainColor"];
-      t.headerLColor = data["linkColor"];
-      t.headerLHColor = data["linkHColor"];
-      t.boardColor = data["textColor"];
-      ["mainColor","textColor","linkColor","linkHColor","nameColor","tripColor","titleColor","quoteColor","qlColor","blinkColor","brderColor","inputColor","inputbColor","bgColor","postHLColor","quotesYouHLColor","ownPostHLColor","threadHLColor","replybgHLColor","replyslctColor","replyOp","navOp","bgImg"].forEach(function(k){
-        if (data[k] !== undefined && t[k] === undefined) t[k] = data[k];
-      });
+      copyKnown(data, t);
+      fillFallbacks(data, t);
       t.customCSS = data.customCSS||'';
     } else {
       st.textContent = 'Unknown format. Needs "Theme", "timeColor", or "navOp" key.';
