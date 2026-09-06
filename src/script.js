@@ -1218,7 +1218,7 @@
                 box.style.top = "";
                 box.style.transform = "";
                 box.style.transformOrigin = "";
-                box.style.flexDirection = "";
+                box.classList.remove("st-nav-reversed");
                 box.style.removeProperty("--st-nav-gap");
                 return;
             }
@@ -1229,7 +1229,9 @@
             box.style.top = "auto";
             box.style.transform = s.scale !== 100 ? "scale(" + (s.scale / 100) + ")" : "";
             box.style.transformOrigin = "bottom right";
-            box.style.flexDirection = s.reverse ? "row-reverse" : "";
+            // Swap the two buttons with CSS order: reversing the flex axis
+            // also changes how the row packs and spaces its items
+            box.classList.toggle("st-nav-reversed", s.reverse);
             box.style.setProperty("--st-nav-gap", s.gap + "px");
         },
         initNavButtons: function () {

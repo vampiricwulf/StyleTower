@@ -443,6 +443,9 @@ video.st-thumb-video {
 #scroll-buttons.st-nav-custom {
   gap: var(--st-nav-gap, 0);
 }
+#scroll-buttons.st-nav-reversed > a#nav-to-top {
+  order: 1;
+}
 #scroll-buttons.st-nav-editing {
   z-index: 130 !important;
   cursor: move;

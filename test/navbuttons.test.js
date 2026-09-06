@@ -32,7 +32,8 @@ test("a stored position applies to the buttons at load", async () => {
     assert.equal(box.style.bottom, "60px");
     assert.equal(box.style.getPropertyValue("--st-nav-gap"), "8px");
     assert.equal(box.style.transform, "scale(1.5)");
-    assert.equal(box.style.flexDirection, "row-reverse");
+    assert.ok(box.classList.contains("st-nav-reversed"), "reversed through CSS order, not the flex axis");
+    assert.equal(box.style.flexDirection, "", "the site's row stays a row");
     assert.equal(box.style.display, "flex", "the site's display value is left alone");
 });
 
@@ -86,7 +87,12 @@ test("the editor previews live, saves on Save, and shows the buttons above the o
     const rev = ed.querySelector("input[name=nReverse]");
     rev.checked = true;
     rev.dispatchEvent(new w.Event("change", { bubbles: true }));
-    assert.equal(box.style.flexDirection, "row-reverse");
+    assert.ok(box.classList.contains("st-nav-reversed"));
+    rev.checked = false;
+    rev.dispatchEvent(new w.Event("change", { bubbles: true }));
+    assert.ok(!box.classList.contains("st-nav-reversed"));
+    rev.checked = true;
+    rev.dispatchEvent(new w.Event("change", { bubbles: true }));
     ed.querySelector("a[name=nSave]").click();
     assert.equal(d.getElementById("st-nav-editor"), null, "editor closed");
     assert.ok(!box.classList.contains("st-nav-editing"));
