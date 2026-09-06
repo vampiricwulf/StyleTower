@@ -15,7 +15,6 @@
     "run_at": "document_end"
   }],
   "homepage_url": "<%= meta.page %>",
-  "update_url": "<%= meta.downloads %>updates.xml",
   "permissions": ["storage"],
   "host_permissions": <%= JSON.stringify(meta.matches) %>
 }

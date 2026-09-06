@@ -36,3 +36,16 @@ test("the build has no references to files that do not exist", () => {
     const grunt = fs.readFileSync(path.join(ROOT, "Gruntfile.coffee"), "utf8");
     assert.doesNotMatch(grunt, /botproc/);
 });
+
+test("no dead extension update plumbing: Chrome cannot auto-update an unpacked MV3 zip", () => {
+    const manifest = meta("manifest.json");
+    assert.doesNotMatch(manifest, /update_url/);
+    assert.equal(fs.existsSync(path.join(ROOT, "src", "meta", "updates.xml")), false, "updates.xml template removed");
+    const grunt = fs.readFileSync(path.join(ROOT, "Gruntfile.coffee"), "utf8");
+    assert.doesNotMatch(grunt, /updates\.xml/);
+});
+
+test("the package is private: it is a userscript, not an npm library", () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+    assert.equal(pkg.private, true);
+});
