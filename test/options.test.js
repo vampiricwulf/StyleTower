@@ -119,3 +119,30 @@ test("Escape closes the options panel, and an open editor first", async () => {
     esc();
     assert.equal(d.getElementById("overlay"), null, "panel closed");
 });
+
+test("option descriptions match what the options do", async () => {
+    const w = await load();
+    const dc = w.__ST.defaultConfig;
+    assert.match(dc["Show File Info"][1], /^Shows?\b/, "a Show option must not say Hides");
+    assert.doesNotMatch(dc["System Theming"][1], /NSFW|SFW/, "the NSFW slot is gone");
+    Object.keys(dc).forEach(k => {
+        if (Array.isArray(dc[k]) && typeof dc[k][1] === "string")
+            assert.equal(dc[k][1], dc[k][1].trim(), k + " has stray whitespace");
+    });
+});
+
+test("a parent checkbox reveals and hides its sub-options", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    const parent = d.querySelector("#oneechan-options input[name='Replace Thumbnails']");
+    const sub = d.querySelector("#oneechan-options input[name='Replace GIF']").closest(".option");
+    assert.equal(sub.hasAttribute("hidden"), true, "hidden while the parent is off");
+    parent.checked = true;
+    parent.dispatchEvent(new w.Event("change", { bubbles: true }));
+    assert.equal(sub.hasAttribute("hidden"), false, "revealed when the parent is on");
+    parent.checked = false;
+    parent.dispatchEvent(new w.Event("change", { bubbles: true }));
+    assert.equal(sub.hasAttribute("hidden"), true, "hidden again");
+});

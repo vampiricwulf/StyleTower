@@ -105,3 +105,10 @@ test("theme tiles use no inline event handlers", async () => {
     w.__ST.$SS.options.show();
     assert.equal(w.document.querySelector("#themes-section [onmouseover], #themes-section [onmouseout], #themes-section [onclick]"), null);
 });
+
+test("a stored selection that points at a hidden theme falls back to a visible one at load", async () => {
+    const w = await load({ storage: { "Selected Theme": 2, "Hidden Themes": [2] } });
+    const { $SS } = w.__ST;
+    assert.notEqual($SS.theme.index, 2);
+    assert.equal($SS.theme.hidden, false);
+});

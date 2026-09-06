@@ -57,3 +57,12 @@ test("OneeChan hidden-theme indices are not imported (their list differs)", asyn
     $SS.options.importSettings({ "Version Fix": true, "Hidden Themes": [0, 1] });
     assert.deepEqual(Array.from($SS.Config.get("Hidden Themes")), []);
 });
+
+test("non-primitive values for plain options are not imported", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.importSettings({ "Rounded Corners": { x: 1 }, "Font Size": [14], "Custom Font": null, "Bitmap Font": true });
+    ["Rounded Corners", "Font Size", "Custom Font"].forEach(k =>
+        assert.equal(w.localStorage.getItem("StyleTower." + k), null, k + " must not be stored"));
+    assert.equal($SS.Config.get("Bitmap Font"), true, "a valid value in the same import still lands");
+});

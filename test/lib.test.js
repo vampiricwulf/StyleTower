@@ -71,3 +71,19 @@ test("comment drafts are keyed by thread, not by the URL variant", async () => {
     const c = await load({ url: "https://holotower.org/hlgg/res/101.html" });
     assert.notEqual(a.__ST.$SS.getRememberCommentKey(), c.__ST.$SS.getRememberCommentKey());
 });
+
+test("TS posting controls are not polled for when TS is absent", async () => {
+    let pending = 0;
+    const w = await load({
+        setup(w) {
+            const orig = w.setTimeout;
+            w.setTimeout = function (fn, ms) { if (ms === 500) pending++; return orig.apply(w, arguments); };
+        }
+    });
+    const d = w.document;
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    await sleep(80);
+    assert.equal(pending, 0, "no 500ms retry timers without TS");
+});

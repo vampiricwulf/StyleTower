@@ -92,10 +92,10 @@
         "Auto-Convert Images": [false, "Auto-convert WebP images to JPEG, and convert any image exceeding the board's file size or dimensions limit to JPEG."],
         ":: Replies": ["header", ""],
         "Fit Width": [true, "Replies stretch to the width of the page.", null, true],
-        "Fit Post Menu": [false, "Sets the post menu to the right.", "Fit Width", true, true],
+        "Fit Post Menu": [false, "Moves the post menu button to the right edge of each post.", "Fit Width", true, true],
         "Fit Expanded Images": [false, "Expanded images will better fit to the viewport."],
         "Show Reply Header": [true, "Shows reply header background and line border."],
-        "Show File Info": [true, "Hides filename, dimensions and size info."],
+        "Show File Info": [true, "Shows the filename, size and dimensions line under each file."],
         "Underline QuoteLinks": [false, "Underlines quotelinks only."],
         "Indent OP": [true, "Indents the OP instead of touching the screen."],
         "Allow Wrapping Around OP": [false, "Allow for replies to wrap around OP instead of being forced onto their own line."],
@@ -226,7 +226,7 @@
                 value: "cursive"
             }]
         ],
-        "Custom Font": ["", "Enter a custom font name. Please make sure the font name is exact. Overrides the Font Family option if set. "],
+        "Custom Font": ["", "Enter a custom font name. Please make sure the font name is exact. Overrides the Font Family option if set."],
         "Font Size": [13, "Set the font size of text (in pixels). Default: 13px. Menu elements have a 18px (max) and 9px (min) limit to avoid breaking their layouts."],
         "UI Font Size": [11, "Set the font size of certain QR and button elements (in pixels). Default: 11px."],
         "Backlink Font Size": [10, "Set the font size of backlinks (in pixels). Default: 10px."],
@@ -238,7 +238,7 @@
         "Center Notifications": [false, "Center notifications at the top below the header bar.", "Toast Notifications", true, true],
         "Full Border": [false, "Use a full border to make notifications more visible. Border style follows the Highlight Style and Width options.", "Toast Notifications", true, true],
         ":: Theming": ["header", ""],
-        "System Theming": [false, "Use system color scheme detection to automatically select themes. Overrides NSFW/SFW theme selection.", null, true],
+        "System Theming": [false, "Follow the system color scheme: the Dark and Light themes below replace the selected theme.", null, true],
         "Dark Theme": [0, "Theme to use when system is in dark mode.", "System Theming", true, true],
         "Light Theme": [0, "Theme to use when system is in light mode.", "System Theming", true, true],
         "Use StyleTower Icons": [true, "Replace site icons with themed SVG icons. Disable to use the vanilla icons.", null, true],
@@ -2358,8 +2358,8 @@
             if (!qr.isConnected) return;
             var mainRand = document.querySelector("form[name='post']:not(#quick-reply) input[name=randfn]");
             if (!mainRand) {
-                // TS may not be done yet (or absent); retry briefly
-                if (attempts > 0) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
+                // TS may not be done yet; retry briefly (never without TS)
+                if (attempts > 0 && $SS.isTS()) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
                 return;
             }
             var qrSpoiler = qr.querySelector("input[name=spoiler]");
@@ -3793,6 +3793,9 @@
                             continue;
                         }
                     } else if (!(target in defaultConfig)) {
+                        continue;
+                    } else if (val === null || typeof val === "object") {
+                        // Plain options hold primitives; anything else is junk
                         continue;
                     }
                     $SS.Config.set(target, val);
@@ -5417,7 +5420,13 @@
                     i = $SS.conf["Selected Theme"];
                 }
 
-                var tIndex = $SS.conf["Themes"][i] ? i : 0;
+                var hidden = $SS.conf["Hidden Themes"] || [],
+                    tIndex = $SS.conf["Themes"][i] ? i : 0;
+                // A stored selection can point at a since-hidden default;
+                // show the first theme the list still offers instead
+                if (hidden.indexOf(tIndex) !== -1)
+                    for (var j = 0; j < $SS.conf["Themes"].length; j++)
+                        if (hidden.indexOf(j) === -1) { tIndex = j; break; }
                 $SS.theme = new $SS.Theme(tIndex); // Set the active theme.
                 $SS.setThemeVariables();
 

@@ -17,7 +17,6 @@ Open your console with:
 ### Get started
 
 - Install [node.js](http://nodejs.org/).
-- Install [Grunt's CLI](http://gruntjs.com/) with `npm install -g grunt-cli`.
 - Clone StyleTower.
 - `cd` into it.
 - Install/Update StyleTower dependencies with `npm install`.
