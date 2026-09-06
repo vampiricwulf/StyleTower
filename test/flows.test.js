@@ -131,3 +131,99 @@ test("opening the settings while they are open closes them", async () => {
     $SS.options.show();
     assert.equal(w.document.getElementById("overlay"), null);
 });
+
+test("catalog highlights: Hide older threads hides all but the newest match", async () => {
+    const settings = JSON.stringify({ highlights: [{ name: "Hololive Global", color: "#ff0000" }], pinThreads: true, hideOlderThreads: true, customSearchBar: true });
+    const w = await load({ fixture: "catalog.html", url: "https://holotower.org/hlgg/catalog.html", site: { pinnedThreadSettings: settings } });
+    const d = w.document;
+    assert.equal(d.querySelector("#Grid .mix[data-id='501']").style.display, "");
+    assert.equal(d.querySelector("#Grid .mix[data-id='502']").style.display, "none");
+    assert.equal(d.querySelector("#Grid .mix[data-id='502']").getAttribute("data-thread-highlighter-hidden"), "true");
+    assert.equal(d.querySelector("#Grid .mix[data-id='501']").style.getPropertyValue("--pin-color"), "#ff0000");
+});
+
+test("Holotower settings: Save stores the site's keys, Restore writes them back", async () => {
+    const w = await load({ site: { name: "Wolf", password: "hunter2", own_posts: '{"hlgg":["5"]}' } });
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    w.document.querySelector("#oneechan-options a[name=saveSiteSettings]").click();
+    assert.equal($SS.Config.get("SavedSiteSettings.name"), "Wolf");
+    assert.equal($SS.Config.get("SavedSiteSettings.own_posts"), '{"hlgg":["5"]}');
+    w.localStorage.removeItem("name");
+    w.localStorage.removeItem("own_posts");
+    w.document.querySelector("#oneechan-options a[name=restoreSiteSettings]").click();
+    assert.equal(w.localStorage.getItem("name"), "Wolf");
+    assert.equal(w.localStorage.getItem("own_posts"), '{"hlgg":["5"]}');
+    const notes = [...w.document.querySelectorAll(".styletower-notification-text")].map(n => n.textContent);
+    assert.ok(notes.some(t => /restored/i.test(t)), "got: " + JSON.stringify(notes));
+});
+
+test("themes tab: Restore brings hidden default themes back", async () => {
+    const w = await load({ storage: { "Hidden Themes": [2, 4] } });
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    const d = w.document;
+    assert.equal(d.getElementById("theme2").hasAttribute("hidden"), true);
+    const restore = d.querySelector("#themes-section a[name=restoreThemes]");
+    assert.equal(restore.hasAttribute("hidden"), false, "restore button visible");
+    restore.click();
+    assert.deepEqual(Array.from($SS.Config.get("Hidden Themes")), []);
+    assert.equal(d.getElementById("theme2").hasAttribute("hidden"), false);
+    assert.equal(restore.hasAttribute("hidden"), true, "restore button hidden again");
+});
+
+test("mascot editor: the Advanced Editing switch is remembered", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    $SS.options.showMascotEditor(-1);
+    const d = w.document;
+    const adv = d.querySelector("#add-mascot input[name=mAdvanced]");
+    assert.equal(adv.checked, false);
+    assert.equal(d.querySelector("#add-mascot input[name=mWidth]").closest("label").hasAttribute("hidden"), false);
+    adv.checked = true;
+    adv.dispatchEvent(new w.Event("change", { bubbles: true }));
+    assert.ok(d.getElementById("add-mascot").classList.contains("advanced"));
+    assert.equal($SS.Config.get("Advanced Mascot Editor"), true);
+    d.querySelector("#add-mascot a[name=mCancel]").click();
+    $SS.options.showMascotEditor(-1);
+    assert.ok(d.getElementById("add-mascot").classList.contains("advanced"), "reopens in advanced mode");
+});
+
+test("Reset wipes StyleTower's keys and leaves the site's alone", async () => {
+    const w = await load({ storage: { "Font Size": 15, "Rounded Corners": false }, site: { name: "Wolf" } });
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    w.document.querySelector("#oneechan-options a[name=resetSettings]").click();
+    const left = [];
+    for (let i = 0; i < w.localStorage.length; i++) { const k = w.localStorage.key(i); if (/^StyleTower/.test(k)) left.push(k); }
+    assert.deepEqual(left, []);
+    assert.equal(w.localStorage.getItem("name"), "Wolf");
+    assert.ok(w.__alerts.some(a => /reset/i.test(a)));
+});
+
+test("the theme editor's Export offers the edited theme as a download", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    $SS.options.showTheme(2);
+    const d = w.document;
+    d.querySelector("#add-theme a[name=export]").click();
+    const link = d.querySelector("#add-theme a[download]");
+    assert.ok(link, "download link");
+    assert.equal(link.getAttribute("download"), "Vimyanized Dark [Modded].json", "edited defaults export under a tagged name");
+    const json = JSON.parse(Buffer.from(link.href.split(",")[1], "base64").toString("utf8"));
+    assert.equal(json.mainColor, "0d1114");
+});
+
+test("Dark/Light theme selects follow the theme list after a delete", async () => {
+    const w = await load({ storage: { "Themes": [{ name: "A", mainColor: "000000", textColor: "ffffff" }, { name: "B", mainColor: "000000", textColor: "ffffff" }] } });
+    const { $SS } = w.__ST;
+    $SS.options.show();
+    const d = w.document;
+    const count = () => d.querySelector("#oneechan-options select[name='Dark Theme']").options.length;
+    assert.equal(count(), $SS.Themes.defaults.length + 2);
+    $SS.options.deleteTheme($SS.Themes.defaults.length);
+    assert.equal(count(), $SS.Themes.defaults.length + 1);
+    assert.equal(d.querySelector("#oneechan-options select[name='Dark Theme']").options[count() - 1].textContent, "B");
+});

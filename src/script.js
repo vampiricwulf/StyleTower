@@ -1034,6 +1034,19 @@
             else
                 $(getDocHead()).append($("<style type='text/css' id=ch4SS>").text(css));
 
+            // The theme's custom CSS gets its own element: a syntax slip in
+            // it (an unclosed brace) must not swallow the rest of our
+            // stylesheet, and sitting after it lets the theme's rules win ties
+            var custom = document.getElementById("sc-custom-css");
+            if (!custom) {
+                custom = document.createElement("style");
+                custom.id = "sc-custom-css";
+                var main = document.getElementById("ch4SS");
+                if (main && main.parentNode) main.parentNode.insertBefore(custom, main.nextSibling);
+                else (document.head || document.documentElement).appendChild(custom);
+            }
+            custom.textContent = ($SS.theme && $SS.theme.customCSS) || "";
+
             $SS.disableSiteTheme();
         },
         disableSiteTheme: function () {
@@ -5590,7 +5603,10 @@
                     var b64 = $SS.cleanBase64(this.img);
                     src = "data:image/" + $SS.typeofBase64(b64) + ";base64," + b64;
                 } else
-                    src = this.img;
+                    src = String(this.img).replace(/['"\\()\s]/g, function (c) {
+                        return /\s/.test(c) ? (c === " " ? "%20" : "") :
+                            "%" + c.charCodeAt(0).toString(16).toUpperCase();
+                    });
 
                 return "url('" + src + "')" + (this.RPA !== undefined ? " " + this.RPA : "");
             };
@@ -5729,7 +5745,12 @@
             if (/^(serif|sans-serif|monospace|cursive|system-ui)$/.test(font))
                 return font;
 
-            return "'" + font + "'";
+            return $SS.cssQuote(font);
+        },
+        /* A single-quoted CSS string: quotes and backslashes escaped, line
+           breaks dropped (a stray quote would otherwise end the rule early) */
+        cssQuote: function (s) {
+            return "'" + String(s == null ? "" : s).replace(/[\\']/g, "\\$&").replace(/[\r\n]/g, "") + "'";
         },
         systemFonts: {
             windows: [

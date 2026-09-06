@@ -14,7 +14,7 @@ header h1 {
 }
 /* Base font */
 body {
-  font-family: " + ($SS.conf["Custom Font"] ? "'" + $SS.conf["Custom Font"] + "'" : $SS.formatFont($SS.conf["Font Family"])) + " !important;
+  font-family: " + ($SS.conf["Custom Font"] ? $SS.cssQuote($SS.conf["Custom Font"]) : $SS.formatFont($SS.conf["Font Family"])) + " !important;
   font-size: " + $SS.conf["Font Size"] + "px !important;
 }
 .post-menu {

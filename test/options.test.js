@@ -179,3 +179,9 @@ test("arrow keys step every font-size field", async () => {
         assert.equal(input.value, before + "px", name + " down");
     });
 });
+
+test("a custom font name with a quote is escaped in the stylesheet", async () => {
+    const w = await load({ storage: { "Custom Font": "O'Neil Sans" } });
+    const css = w.document.getElementById("ch4SS").textContent;
+    assert.ok(css.indexOf("font-family:'O\\'Neil Sans'!important") !== -1, "escaped quote expected, got: " + JSON.stringify(css.slice(css.indexOf("Neil") - 20, css.indexOf("Neil") + 30)));
+});

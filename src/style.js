@@ -3,7 +3,6 @@
 <%= grunt.file.read('src/css/General.css') %>
 <%= grunt.file.read('src/css/Colors.css') %>
 <%= grunt.file.read('src/css/Fonts.css') %>
-" + $SS.theme.customCSS + "
 " + ($SS.conf["Sidebar Position"] !== 3 ? "<%= grunt.file.read('src/css/Sidebar.css') %>" : "") + "
 <%= grunt.file.read('src/css/Quickreply.css') %>
 <%= grunt.file.read('src/css/Icons.css') %>

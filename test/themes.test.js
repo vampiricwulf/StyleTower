@@ -112,3 +112,28 @@ test("a stored selection that points at a hidden theme falls back to a visible o
     assert.notEqual($SS.theme.index, 2);
     assert.equal($SS.theme.hidden, false);
 });
+
+test("a theme's custom CSS lives in its own style element so a syntax slip cannot eat the stylesheet", async () => {
+    const w = await load({
+        storage: { "Themes": [{ name: "Broken", mainColor: "202020", textColor: "eeeeee", bgColor: "101010", customCSS: ".custom-marker{color:red" }], "Selected Theme": 27 }
+    });
+    const d = w.document;
+    const main = d.getElementById("ch4SS"), custom = d.getElementById("sc-custom-css");
+    assert.ok(custom, "custom css element");
+    assert.equal(main.nextElementSibling, custom, "placed right after the main stylesheet");
+    assert.match(custom.textContent, /custom-marker/);
+    assert.doesNotMatch(main.textContent, /custom-marker/);
+    assert.match(main.textContent, /#oneechan-options/, "rules after the custom block survive");
+    w.__ST.$SS.Config.set("Selected Theme", 2); // Vimyanized Dark ships no custom CSS
+    w.__ST.$SS.init(true);
+    assert.equal(d.getElementById("sc-custom-css").textContent, "", "cleared when a theme without custom CSS applies");
+});
+
+test("a background image URL with quotes or parentheses cannot break the theme variables", async () => {
+    const w = await load({
+        storage: { "Themes": [{ name: "Q", mainColor: "202020", textColor: "eeeeee", bgColor: "101010", bgImg: "https://example.invalid/a'b (c).png", bgRPA: "repeat top left scroll" }], "Selected Theme": 27 }
+    });
+    const vars = w.document.getElementById("sc-theme-vars").textContent;
+    assert.match(vars, /--sc-bgImg:url\('https:\/\/example\.invalid\/a%27b%20%28c%29\.png'\) repeat top left scroll;/);
+    assert.match(vars, /--sc-icon-options:/, "later variables still present");
+});

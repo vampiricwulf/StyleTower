@@ -35,12 +35,6 @@ StyleTower uses [ESLint](https://eslint.org/) with the flat config format (`esli
 
 **Command line:**
 ```
-npm install eslint --save-dev   # install ESlint
-npx eslint --init               # generate a config file
-```
-
-After that:
-```
 npm run lint                    # check src/ for errors
 npx eslint src/                 # same, without the npm script
 ```
