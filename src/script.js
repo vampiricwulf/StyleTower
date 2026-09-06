@@ -67,6 +67,7 @@
         ],
         "SS-like Sidebar": [false, "Darkens the sidebar and adds a border like 4chan Style Script."],
         "Minimal Sidebar": [false, "Shrinks the sidebar and moves the banner."],
+        "Nav Buttons": ["", "Scale, position, spacing and order of the site's ↑ ↓ navigation buttons on thread pages. Set Position opens the editor; drag the buttons on the page while it is open.", null, null, true],
         ":: Quick Reply": ["header", ""],
         "Autohide Style": [
             0, "Changes how the quick reply is hidden.", [{
@@ -744,6 +745,7 @@
             // Runs on settings reloads too so Replace Thumbnails applies
             // without a page refresh (idempotent per image)
             guard("replaceThumbnails", $SS.replaceThumbnails);
+            guard("navButtons", $SS.initNavButtons);
 
             var div;
             if (reload !== true) {
@@ -1187,6 +1189,55 @@
                     }
                 });
             });
+        },
+        /* The site's ↑ ↓ navigation buttons (navbuttons.js builds
+           #scroll-buttons on thread pages, fixed at right:20px bottom:35px
+           as a flex row): a stored Nav Buttons setting overrides scale,
+           offsets, spacing and order */
+        navButtonDefaults: { scale: 100, x: 20, y: 35, gap: 0, reverse: false },
+        navButtonSettings: function () {
+            var raw = $SS.conf["Nav Buttons"], s;
+            if (!raw) return null;
+            try { s = JSON.parse(raw); } catch (e) { return null; }
+            if (!s || typeof s !== "object") return null;
+            var d = $SS.navButtonDefaults,
+                num = function (v, f) { var n = parseInt(v, 10); return isNaN(n) ? f : n; };
+            return { scale: num(s.scale, d.scale), x: num(s.x, d.x), y: num(s.y, d.y), gap: num(s.gap, d.gap), reverse: s.reverse === true };
+        },
+        applyNavButtons: function (s) {
+            var box = document.getElementById("scroll-buttons");
+            if (!box) return;
+            if (s === undefined) s = $SS.navButtonSettings();
+            var d = $SS.navButtonDefaults;
+            if (!s) {
+                // Back to what navbuttons.js set inline
+                box.classList.remove("st-nav-custom");
+                box.style.right = d.x + "px";
+                box.style.bottom = d.y + "px";
+                box.style.left = "";
+                box.style.top = "";
+                box.style.transform = "";
+                box.style.transformOrigin = "";
+                box.style.flexDirection = "";
+                box.style.removeProperty("--st-nav-gap");
+                return;
+            }
+            box.classList.add("st-nav-custom");
+            box.style.right = s.x + "px";
+            box.style.bottom = s.y + "px";
+            box.style.left = "auto";
+            box.style.top = "auto";
+            box.style.transform = s.scale !== 100 ? "scale(" + (s.scale / 100) + ")" : "";
+            box.style.transformOrigin = "bottom right";
+            box.style.flexDirection = s.reverse ? "row-reverse" : "";
+            box.style.setProperty("--st-nav-gap", s.gap + "px");
+        },
+        initNavButtons: function () {
+            if (!$SS.location.reply) return;
+            if (document.getElementById("scroll-buttons")) { $SS.applyNavButtons(); return; }
+            if ($SS._navWait) return;
+            $SS._navWait = true;
+            $.waitFor("#scroll-buttons", function () { $SS.applyNavButtons(); });
         },
         getActiveFileInput: function () {
             return document.querySelector("#quick-reply input[type=file]") ||
@@ -3126,6 +3177,10 @@
                             }
                             html += "</select></label>";
                             optionsHTML.push(html);
+                        } else if (key === "Nav Buttons") {
+                            optionsHTML.push("<span class='option st-nav-row' data-tower-status='added' title=\"" + des + "\"><span class='option-title'>Navigation Buttons</span>" +
+                                "<a class='options-button' name=navPosition title='Scale, position, spacing and order of the ↑ ↓ buttons; drag them on the page while editing.'>Set Position</a>" +
+                                "<span class='st-nav-status'>" + (val ? "Custom" : "Site default") + "</span></span>");
                         } else if (key === "Enable Mascots") {
                             // The Mascots tab: master toggle + display options render
                             // into it via the generic branches below, then the
@@ -3375,6 +3430,7 @@
                         $SS.options.saveAndClose = false;
                     });
                     $("a[name=cancel]", tOptions).bind("click", $SS.options.close);
+                    $("a[name=navPosition]", tOptions).bind("click", function () { $SS.options.showNavEditor(); });
 
                     // main tab
                     $("input[name='Font Size'], input[name='UI Font Size'], input[name='Backlink Font Size']", tOptions).bind("keydown", function (e) {
@@ -3546,7 +3602,7 @@
                     e.stopPropagation();
                     $SS.options.show();
                 } else if (e.key === "Escape") {
-                    var cancel = document.querySelector("#overlay2 a[name=cancel], #overlay2 a[name=mCancel]");
+                    var cancel = document.querySelector("#overlay2 a[name=cancel], #overlay2 a[name=mCancel], #overlay2 a[name=nCancel]");
                     if (cancel) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -3859,6 +3915,126 @@
                 tmp.innerHTML = $SS.options.mascotGalleryHTML();
                 wrap.parentNode.replaceChild(tmp.firstChild, wrap);
             },
+            /* One slider row of the editor dialogs */
+            sliderRow: function (title, name, val, min, max, unit, tip, modeCls) {
+                return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
+                    "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
+                    "<span class='mascot-opacity-val'>" + val + unit + "</span></label>";
+            },
+            refreshNavStatus: function () {
+                var el = document.querySelector("#oneechan-options .st-nav-status");
+                if (el) el.textContent = $SS.conf["Nav Buttons"] ? "Custom" : "Site default";
+            },
+            /* Navigation buttons editor: sliders plus dragging the buttons on
+               the page; Save persists at once (there is no list to commit) */
+            showNavEditor: function () {
+                // The theme and mascot editors share the #overlay2 id; never allow two
+                $("#overlay2").remove();
+                var d = $SS.navButtonDefaults,
+                    cur = $SS.navButtonSettings() || { scale: d.scale, x: d.x, y: d.y, gap: d.gap, reverse: d.reverse },
+                    maxX = Math.max(200, (window.innerWidth || 1024) - 40),
+                    maxY = Math.max(200, (window.innerHeight || 768) - 40),
+                    slider = $SS.options.sliderRow,
+                    div = $("<div id='st-nav-editor' class='dialog'>").html(
+                        "<label class='add-mascot-label mascot-filter-head'><span class='option-title'>Navigation Buttons</span></label>" +
+                        "<p class='mascot-hint'>Drag the ↑ ↓ buttons on the page to place them, or use the sliders.</p>" +
+                        slider("Scale", "nScale", cur.scale, 25, 300, "%", "Size of the buttons relative to the site's 32px.") +
+                        slider("Horizontal", "nX", cur.x, 0, maxX, "px", "Distance from the right edge of the window.") +
+                        slider("Vertical", "nY", cur.y, 0, maxY, "px", "Distance from the bottom edge of the window.") +
+                        slider("Spacing", "nGap", cur.gap, 0, 64, "px", "Gap between the two buttons.") +
+                        "<label class='add-mascot-label' title='Swap the order of the two buttons.'><span class='option-title'>Reverse Order:</span><input type=checkbox name=nReverse" + (cur.reverse ? " checked" : "") + "></label>" +
+                        "<div id='st-nav-buttons-container'><a class='options-button' name=nDefault title=\"Forget the custom placement and use the site's.\">Use Site Default</a><a class='options-button' name=nSave>Save</a><a class='options-button' name=nCancel>Cancel</a></div>"),
+                    node = div.elems[0],
+                    collect = function () {
+                        var g = function (n) { return parseInt(node.querySelector("[name=" + n + "]").value, 10) || 0; };
+                        return { scale: g("nScale") || 100, x: g("nX"), y: g("nY"), gap: g("nGap"), reverse: node.querySelector("[name=nReverse]").checked };
+                    },
+                    overlay2 = $("<div id=overlay2>").append(div),
+                    box = document.getElementById("scroll-buttons"),
+                    preview = function () { $SS.applyNavButtons(collect()); },
+                    setField = function (n, v) {
+                        var el = node.querySelector("[name=" + n + "]");
+                        if (!el) return;
+                        el.value = v;
+                        var vv = el.parentNode.querySelector(".mascot-opacity-val");
+                        if (vv) vv.textContent = v + (el.getAttribute("data-unit") || "");
+                    },
+                    drag = null, dragged = false,
+                    onMove = function (e) {
+                        if (!drag) return;
+                        // Offsets are measured from the right/bottom edges, so
+                        // moving the pointer left or up grows them
+                        var x = Math.min(Math.max(drag.x - (e.clientX - drag.sx), 0), maxX),
+                            y = Math.min(Math.max(drag.y - (e.clientY - drag.sy), 0), maxY);
+                        if (x !== drag.x || y !== drag.y) dragged = true;
+                        setField("nX", x);
+                        setField("nY", y);
+                        preview();
+                        e.preventDefault();
+                    },
+                    onUp = function () {
+                        document.removeEventListener("mousemove", onMove);
+                        document.removeEventListener("mouseup", onUp);
+                        drag = null;
+                    },
+                    onDown = function (e) {
+                        if (e.button !== 0) return;
+                        var c = collect();
+                        drag = { sx: e.clientX, sy: e.clientY, x: c.x, y: c.y };
+                        dragged = false;
+                        document.addEventListener("mousemove", onMove);
+                        document.addEventListener("mouseup", onUp);
+                        e.preventDefault();
+                    },
+                    // The click that ends a drag must not scroll the page
+                    onClick = function (e) {
+                        if (dragged) { dragged = false; e.preventDefault(); e.stopPropagation(); }
+                    },
+                    closeEditor = function () {
+                        if (box) {
+                            box.classList.remove("st-nav-editing");
+                            box.removeEventListener("mousedown", onDown);
+                            box.removeEventListener("click", onClick, true);
+                        }
+                        onUp();
+                        overlay2.remove();
+                        $("#overlay").removeClass("previewing");
+                        $SS.applyNavButtons();
+                        $SS.options.refreshNavStatus();
+                    };
+                $(document.body).append(overlay2);
+                // Hide the options window while the buttons preview live
+                $("#overlay").addClass("previewing");
+                if (box) {
+                    box.classList.add("st-nav-editing");
+                    box.addEventListener("mousedown", onDown);
+                    box.addEventListener("click", onClick, true);
+                }
+                preview();
+                node.addEventListener("input", function (e) {
+                    var t = e.target;
+                    if (t.type === "range") {
+                        var vv = t.parentNode.querySelector(".mascot-opacity-val");
+                        if (vv) vv.textContent = t.value + (t.getAttribute("data-unit") || "");
+                    }
+                    preview();
+                });
+                node.addEventListener("change", preview);
+                $("a[name=nSave]", div).bind("click", function () {
+                    $SS.conf["Nav Buttons"] = JSON.stringify(collect());
+                    $SS.Config.set("Nav Buttons", $SS.conf["Nav Buttons"]);
+                    closeEditor();
+                });
+                $("a[name=nDefault]", div).bind("click", function () {
+                    $SS.conf["Nav Buttons"] = "";
+                    $SS.Config.set("Nav Buttons", "");
+                    closeEditor();
+                });
+                $("a[name=nCancel]", div).bind("click", closeEditor);
+                overlay2.bind("click", function (e) {
+                    if (e.target === overlay2.elems[0]) closeEditor();
+                });
+            },
             showMascotEditor: function (mIndex) {
                 var bEdit = typeof mIndex === "number" && mIndex >= 0,
                     work = $SS.options._mascotWork || ($SS.options._mascotWork = []),
@@ -3871,11 +4047,7 @@
                     advanced = $SS.conf["Advanced Mascot Editor"] === true,
                     off = parseInt(f(m.offset, 0), 10),
                     hoff = parseInt(f(m.hoffset, 0), 10),
-                    slider = function (title, name, val, min, max, unit, tip, modeCls) {
-                        return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
-                            "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
-                            "<span class='mascot-opacity-val'>" + val + unit + "</span></label>";
-                    },
+                    slider = $SS.options.sliderRow,
                     div = $("<div id='add-mascot' class='dialog" + (advanced ? " advanced" : "") + "'>").html(
                         "<label class='add-mascot-label mascot-mode-row' title='Simple mode keeps the intuitive controls; advanced exposes raw CSS sizes, precise offsets, clipping, page side and per-board lists.'><span class='option-title'>Advanced Editing:</span><input type=checkbox name=mAdvanced" + (advanced ? " checked" : "") + "></label>" +
                         "<label class='add-mascot-label' title='Name shown in the gallery.'><span class='option-title'>Name:</span><input class='mascot-input' type=text name=mName value=\"" + esc(f(m.name, "")) + "\" placeholder='Mascot name'></label>" +

@@ -599,7 +599,23 @@ label.tab-label[data-tower-status='changed']::after {
   border-color: var(--sc-linkColor);
 }
 /* Mascot editor dialog (floats over the page while previewing live) */
-#add-mascot {
+/* Navigation Buttons row: a button where an input would sit */
+.option > a.options-button {
+  float: right;
+  margin-top: .15em;
+}
+.st-nav-status {
+  float: right;
+  opacity: .6;
+  margin-right: .6em;
+  line-height: 1.7em;
+}
+#st-nav-editor .mascot-hint {
+  display: block;
+  margin: 0 0 6px;
+}
+#add-mascot,
+#st-nav-editor {
   display: inline-block;
   vertical-align: middle;
   text-align: left;
@@ -630,25 +646,30 @@ label.tab-label[data-tower-status='changed']::after {
   flex: none;
   width: auto !important;
 }
-#add-mascot .mascot-filter-head {
+#add-mascot .mascot-filter-head,
+#st-nav-editor .mascot-filter-head {
   border-bottom: 1px solid rgba(128,128,128,.35);
   margin-top: 8px !important;
   opacity: .8;
 }
-#add-mascot .mascot-filter-head .option-title {
+#add-mascot .mascot-filter-head .option-title,
+#st-nav-editor .mascot-filter-head .option-title {
   width: auto;
   font-weight: bold;
 }
-:root.rounded-corners #add-mascot {
+:root.rounded-corners #add-mascot,
+:root.rounded-corners #st-nav-editor {
   border-radius: 3px !important;
 }
-#add-mascot .add-mascot-label {
+#add-mascot .add-mascot-label,
+#st-nav-editor .add-mascot-label {
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 4px 0;
 }
-#add-mascot .add-mascot-label > .option-title {
+#add-mascot .add-mascot-label > .option-title,
+#st-nav-editor .add-mascot-label > .option-title {
   width: 125px;
   flex: none;
 }
@@ -669,15 +690,18 @@ label.tab-label[data-tower-status='changed']::after {
   flex: 1;
   text-align: center;
 }
-#add-mascot input[type=range].mascot-opacity {
+#add-mascot input[type=range].mascot-opacity,
+#st-nav-editor input[type=range].mascot-opacity {
   flex: 1;
   width: auto;
 }
-#add-mascot .mascot-opacity-val {
+#add-mascot .mascot-opacity-val,
+#st-nav-editor .mascot-opacity-val {
   width: 38px;
   flex: none;
 }
-#mascot-buttons-container {
+#mascot-buttons-container,
+#st-nav-buttons-container {
   text-align: right;
   margin-top: 8px;
 }

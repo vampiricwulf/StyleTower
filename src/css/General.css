@@ -438,6 +438,20 @@ video.st-thumb-video {
 /* Hover previews and inline clones keep their copied looping video (the
    script re-arms and observes it); the thumb img inside stays hidden via
    the rule above */
+/* Navigation buttons (site navbuttons.js) with a custom placement; the
+   editor floats them above the dialog overlay so they can be dragged */
+#scroll-buttons.st-nav-custom {
+  gap: var(--st-nav-gap, 0);
+}
+#scroll-buttons.st-nav-editing {
+  z-index: 130 !important;
+  cursor: move;
+  outline: 2px dashed var(--sc-linkColor);
+  outline-offset: 4px;
+}
+#scroll-buttons.st-nav-editing a {
+  cursor: move;
+}
 /* Mascots */
 #styletower-mascots {
   position: fixed;
