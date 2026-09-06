@@ -40,8 +40,10 @@ test("theme file import appends, selects and applies the theme", async () => {
     assert.equal(stored.length, 1);
     assert.equal(stored[0].mainColor, "123456");
     assert.equal(stored[0]["default"], undefined, "foreign default flag dropped");
+    assert.ok(w.document.querySelector("#theme" + $SS.Themes.defaults.length + ".selected"), "selected in the panel");
+    assert.equal($SS.Config.get("Selected Theme"), 1, "the selection is live until Save");
+    w.document.querySelector("#oneechan-options a[name=save]").click();
     assert.equal($SS.Config.get("Selected Theme"), $SS.Themes.defaults.length);
-    assert.ok(w.document.querySelector("#theme" + $SS.Themes.defaults.length + ".selected"));
 });
 
 test("theme file import rejects files without the base colors", async () => {

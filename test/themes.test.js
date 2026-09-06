@@ -22,9 +22,11 @@ test("clicking a theme tile selects and applies it", async () => {
     $SS.options.show();
     const tile = w.document.getElementById("theme3");
     tile.click();
-    assert.equal($SS.Config.get("Selected Theme"), 3);
-    assert.equal($SS.theme.name, $SS.conf["Themes"][3].name);
+    assert.equal($SS.theme.name, $SS.conf["Themes"][3].name, "applied at once");
     assert.ok(tile.classList.contains("selected"));
+    assert.equal($SS.Config.get("Selected Theme"), 1, "stored only by Save");
+    w.document.querySelector("#oneechan-options a[name=save]").click();
+    assert.equal($SS.Config.get("Selected Theme"), 3);
 });
 
 test("the editor's live preview ignores a half-typed hex", async () => {

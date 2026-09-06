@@ -956,7 +956,7 @@
                 $SS._initDone = true;
             }
         },
-        init: function (reload) {
+        init: function (reload, overrides) {
             if (!reload) {
                 if (/^about:neterror/.test(document.documentURI)) return;
                 $SS.hasGM = typeof GM_deleteValue !== "undefined";
@@ -998,7 +998,7 @@
                 }
             }
 
-            $SS.Config.init();
+            $SS.Config.init(overrides);
             $SS.Themes.init();
 
             // Set native site theme to mitigate unloaded CSS flashbang #6
@@ -2958,7 +2958,9 @@
 
         /* CONFIG */
         Config: {
-            init: function () {
+            /* overrides: values the open options panel holds that are not
+               stored yet (live preview); they sit on top of storage */
+            init: function (overrides) {
                 var parseVal = function (key, val) {
                     if (key === "Selected Theme" || key === "NSFW Theme")
                         return parseInt(val, 10);
@@ -2979,6 +2981,9 @@
                         $SS.exportOptions[key] = $SS.conf[key];
                     };
                 };
+                if (overrides)
+                    for (var ok in overrides)
+                        if (ok in defaultConfig) $SS.exportOptions[ok] = $SS.conf[ok] = overrides[ok];
 
                 // One-time migration: "Animated GIF Thumbnails" became the
                 // Replace Thumbnails group (GIF-only to preserve behavior)
@@ -3133,6 +3138,13 @@
                     // Working copy for the Mascots tab; serialized on Save
                     try { $SS.options._mascotWork = JSON.parse($SS.conf["Mascots"] || "[]"); }
                     catch (e) { $SS.options._mascotWork = []; }
+                    // Changes apply at once but only Save stores them; the
+                    // reload notice compares against what was stored at open
+                    $SS.options.dirty = false;
+                    $SS.options._baseline = {};
+                    $SS.options.reloadKeys.concat($SS.options.reloadWhenOff).forEach(function (k) {
+                        $SS.options._baseline[k] = $SS.conf[k];
+                    });
 
                     for (key in defaultConfig) {
                         if (/^(Selected|Hidden)+\s(Themes?)+$/.test(key))
@@ -3276,7 +3288,9 @@
                                 "Style Holotower TS Notifications": "changed",
                                 "Margin Between Replies": "changed",
                                 "Autohide Style": "changed",
-                                "Enable Mascots": "changed"
+                                "Enable Mascots": "changed",
+                                "Fit Expanded Images": "changed",
+                                "Follow Cursor": "changed"
                             },
                             rootEl = tOptions.elems[0];
                         if (!rootEl) return;
@@ -3320,7 +3334,8 @@
                                 }
                                 // Close so the open dialog's pre-import state
                                 // can't overwrite the import via a later Save
-                                $SS.options.close();
+                                $SS.options.close(true);
+                                $SS.init(true);
 
                             };
                         })(file);
@@ -3387,8 +3402,22 @@
                                 this.setAttribute("hidden", "");
                             });
                     });
-                    // Mascots tab: gallery interactions on the working copy
+                    // Every setting applies as soon as it changes (typed
+                    // values after a short pause); Save is what stores them
                     var optsNode = tOptions.elems[0];
+                    if (optsNode) {
+                        optsNode.addEventListener("change", function (e) {
+                            if (!$SS.options.isSetting(e.target)) return;
+                            $SS.options.dirty = true;
+                            $SS.options.applyLive();
+                        });
+                        optsNode.addEventListener("input", function (e) {
+                            if (!$SS.options.isSetting(e.target)) return;
+                            $SS.options.dirty = true;
+                            $SS.options.applyLiveSoon();
+                        });
+                    }
+                    // Mascots tab: gallery interactions on the working copy
                     if (optsNode) {
                         optsNode.addEventListener("click", function (e) {
                             var work = $SS.options._mascotWork;
@@ -3401,6 +3430,7 @@
                                 var on = !!e.target.closest(".mascot-select-all");
                                 work.forEach(function (m) { m.enabled = on; });
                                 $SS.options.renderMascotGallery();
+                                $SS.options.touched();
                                 return;
                             }
                             var edit = e.target.closest(".mascot-edit");
@@ -3412,6 +3442,7 @@
                             if (del) {
                                 work.splice(parseInt(del.closest(".mascot-tile").getAttribute("data-idx"), 10), 1);
                                 $SS.options.renderMascotGallery();
+                                $SS.options.touched();
                                 return;
                             }
                             var tile = e.target.closest(".mascot-tile");
@@ -3420,6 +3451,7 @@
                                 if (m) {
                                     m.enabled = m.enabled === false;
                                     tile.classList.toggle("selected", m.enabled);
+                                    $SS.options.touched();
                                 }
                             }
                         });
@@ -3438,6 +3470,7 @@
                         if (isNaN(val) || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
                         e.preventDefault();
                         $(this).val((e.key === "ArrowUp" ? val + 1 : val - 1) + "px");
+                        this.dispatchEvent(new Event("input", { bubbles: true }));
                     });
                     $("input[name='Opacity']", tOptions).bind("input", function () {
                         var v = this.parentNode.querySelector(".mascot-opacity-val");
@@ -3558,6 +3591,9 @@
                                 theme = new $SS.Theme(--index);
                                 div = theme.preview();
                                 $("#overlay #themes-section").append(div);
+                                // The list itself is stored now; the tile
+                                // click below only previews the selection
+                                $SS.options.saveThemeState();
                                 div.fire("click").scrollIntoView(true);
                                 $SS.options.refreshThemeSelects();
                             };
@@ -3593,8 +3629,68 @@
                     themes.append(tTheme.preview());
                 }
             },
-            close: function () {
-                return $("#overlay").remove();
+            /* Closes the panel. Unsaved changes are applied live, so ask
+               first and revert to the stored settings when discarding;
+               force skips the question (Save, import) */
+            close: function (force) {
+                if (force !== true && $SS.options.dirty) {
+                    if (!confirm("Discard unsaved changes?")) return false;
+                    $SS.init(true);
+                }
+                $SS.options.dirty = false;
+                $("#overlay").remove();
+                return true;
+            },
+            /* Panel controls that hold settings (not the tab radios or the
+               import file inputs) */
+            isSetting: function (el) {
+                return !!(el && el.matches && el.matches("input[name]:not(.tab-select):not([type=file]), select"));
+            },
+            /* The panel's current values, parsed the way Save stores them */
+            collect: function () {
+                var out = {};
+                $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
+                    var $this = $(this),
+                        name = $this.attr("name"),
+                        val = $this.val();
+                    if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)) {
+                        val = parseInt(val, 10);
+                        // A size still being typed stays out of the preview
+                        if (isNaN(val) || (/Font Size$/.test(name) && val < 6)) return;
+                    }
+                    out[name] = val;
+                });
+                if ($SS.options._mascotWork)
+                    out["Mascots"] = JSON.stringify($SS.options._mascotWork);
+                var sel = $("#oneechan-options #themes-section>div.selected");
+                if (sel.exists()) {
+                    var idx = parseInt(sel.attr("id").substr(5), 10);
+                    if ($SS.conf["Themes"][idx]) {
+                        out["Selected Theme"] = idx;
+                        out["NSFW Theme"] = idx;
+                    }
+                }
+                return out;
+            },
+            /* Applies the panel's values on top of the stored settings */
+            applyLive: function () {
+                clearTimeout($SS.options._liveTimer);
+                if (!$("#oneechan-options").exists()) return;
+                $SS.init(true, $SS.options.collect());
+            },
+            applyLiveSoon: function () {
+                clearTimeout($SS.options._liveTimer);
+                $SS.options._liveTimer = setTimeout($SS.options.applyLive, 250);
+            },
+            touched: function () {
+                $SS.options.dirty = true;
+                $SS.options.applyLive();
+            },
+            /* Re-applies settings: the panel's live values while it is open,
+               the stored ones otherwise */
+            refresh: function () {
+                if ($("#oneechan-options").exists()) $SS.options.applyLive();
+                else $SS.init(true);
             },
             keydown: function (e) {
                 if (e.ctrlKey && e.key === "F1") {
@@ -3694,31 +3790,19 @@
                 // see nothing and wipe stored state
                 if (!$("#oneechan-options").exists())
                     return;
-                var before = {};
-                $SS.options.reloadKeys.concat($SS.options.reloadWhenOff).forEach(function (k) { before[k] = $SS.conf[k]; });
+                var before = $SS.options._baseline || {},
+                    vals = $SS.options.collect();
                 $SS.Config.failed = [];
 
-                // Save main
-                $("#oneechan-options input[name]:not(.tab-select), #oneechan-options select").each(function () {
-                    var $this = $(this),
-                        name = $this.attr("name"),
-                        val = $this.val();
-
-                    if (/^(Font Size|Custom (Right|Left) Margin|Custom Decoration Width|UI Font Size|Backlink Font Size|Dark Theme|Light Theme|Opacity)$/.test(name)){
-                        val = parseInt(val, 10);
-                    }
-
-                    $SS.Config.set(name, val);
-                });
-
-                // Save Mascots (gallery edits live in the working copy)
-                if ($SS.options._mascotWork)
-                    $SS.Config.set("Mascots", JSON.stringify($SS.options._mascotWork));
+                for (var name in vals)
+                    if (name !== "Selected Theme" && name !== "NSFW Theme")
+                        $SS.Config.set(name, vals[name]);
 
                 $SS.options.saveThemeState();
+                $SS.options.dirty = false;
 
                 if ($SS.options.saveAndClose)
-                    $SS.options.close();
+                    $SS.options.close(true);
 
                 $SS.init(true);
                 $SS.options.noteReloadNeeded(before);
@@ -4168,6 +4252,7 @@
                         if (bEdit) work[mIndex] = obj;
                         else work.push(obj);
                         $SS.options.renderMascotGallery();
+                        $SS.options.touched();
                     }
                     closeEditor();
                 });
@@ -4431,24 +4516,10 @@
                     if (previewThemeIndex !== -1) {
                         $SS.conf["Themes"].splice(previewThemeIndex, 1);
                     }
-                    // Always restore to the originally selected theme (not the theme being edited)
+                    // Back to the selection the panel shows (System Theming
+                    // and the other live values are honored by refresh)
                     $SS.conf["Selected Theme"] = originalSelectedTheme;
-                    // Re-derive the displayed theme the way init does: under
-                    // System Theming the page shows the Dark/Light theme, not
-                    // the selected one
-                    var active;
-                    if ($SS.conf["System Theming"]) {
-                        active = window.matchMedia("(prefers-color-scheme: dark)").matches ?
-                            parseInt($SS.conf["Dark Theme"], 10) : parseInt($SS.conf["Light Theme"], 10);
-                    } else {
-                        active = originalSelectedTheme;
-                    }
-                    if (!$SS.conf["Themes"][active]) active = 0;
-                    $SS.theme = new $SS.Theme(active);
-                    $SS.setThemeVariables();
-                    document.documentElement.classList.toggle("isLight", $SS.theme.textColor.isLight === true);
-                    document.documentElement.classList.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
-                    $SS.insertCSS();
+                    $SS.options.refresh();
                     $("#overlay").removeClass("previewing");
                     $("#overlay2").remove();
                 });
@@ -4505,7 +4576,7 @@
                     // the in-memory selection dangling past the array end;
                     // re-init restores the stored state
                     if (previewIndex !== -1)
-                        $SS.init(true);
+                        $SS.options.refresh();
                     return overlay.remove();
                 }
 
@@ -4605,7 +4676,7 @@
                         $SS.Config.set(slot, tIndex);
                     }
                     $SS.options.saveThemeState();
-                    $SS.init(true);
+                    $SS.options.refresh();
                 }
 
                 // The list may have grown; keep the Dark/Light selects in step
@@ -4636,7 +4707,7 @@
                             }
                         }
                         $SS.options.saveThemeState();
-                        $SS.init(true);
+                        $SS.options.refresh();
                     }
                     return;
                 }
@@ -4664,7 +4735,7 @@
                 }
 
                 $SS.options.saveThemeState();
-                return $SS.init(true);
+                return $SS.options.refresh();
             },
         },
 
@@ -5625,7 +5696,7 @@
                 if (!this._mqListener) {
                     this._mqListener = function () {
                         if ($SS.conf["System Theming"]) {
-                            $SS.init(true);
+                            $SS.options.refresh();
                         }
                     };
                     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this._mqListener);
@@ -5894,10 +5965,8 @@
 
                     $this.parent().children(".selected").removeClass("selected");
                     $this.addClass("selected");
-                    // Theme state only: picking a theme must not commit
-                    // half-edited settings from the other tabs
-                    $SS.options.saveThemeState();
-                    $SS.init(true);
+                    // Applies at once; the panel's Save stores it
+                    $SS.options.touched();
                 });
                 $("a[title=Delete]", div).bind("click", function (e) {
                     e.stopPropagation();
