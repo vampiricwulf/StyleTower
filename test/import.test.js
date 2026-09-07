@@ -66,3 +66,19 @@ test("non-primitive values for plain options are not imported", async () => {
         assert.equal(w.localStorage.getItem("StyleTower." + k), null, k + " must not be stored"));
     assert.equal($SS.Config.get("Bitmap Font"), true, "a valid value in the same import still lands");
 });
+
+test("importing a StyleTower export keeps each mascot's Scale rule marker", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.importSettings({
+        "Mascots": JSON.stringify([
+            { url: "https://example.invalid/a.png", enabled: true, scale: 187, scaleBase: "display" },
+            { url: "https://example.invalid/b.png", enabled: true, scale: 23 }
+        ])
+    });
+    const saved = JSON.parse($SS.Config.get("Mascots"));
+    assert.equal(saved[0].scale, 187);
+    assert.equal(saved[0].scaleBase, "display", "a converted value is not converted again later");
+    assert.equal(saved[1].scale, 23);
+    assert.equal(saved[1].scaleBase, undefined, "an old-rule value stays marked for conversion");
+});

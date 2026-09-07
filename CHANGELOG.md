@@ -1,3 +1,13 @@
+### v1.0.19
+*2026-09-07*
+
+- **Mascot sizing reworked**: Scale is no longer a stored property. The editor shows Width, Height and Max Width as OneeChan does, with a scale tool below them (« ‹ 100% › » ↺: single arrows step 5%, double arrows 10%, and the percent field steps 1 with the arrow keys or 10 with Shift) that resizes Width, Height and the clip values relative to their values at 100%, captured when scaling starts. An auto size scales from the size the mascot shows at, not the raw image; a lone auto side stays auto so the picture keeps its shape; typing a size makes it the new 100%; reset restores the captured values; the percent itself is never saved. Max Width is honored as a 300px window: an auto-sized image scales down to fit it, an exact size shows as typed and anything past the window is clipped out, and Push In moves the image inside the window. Stored Scale values are converted once, from each image's real width, into the Width they produced, so tuned mascots keep their size on screen; imports carry the conversion marker
+- **Editors step with the arrow keys**: in the mascot and Navigation Buttons editors every value moves by 1 per press and 10 with Shift. Sliders take all four arrows and stop at their ends, typed fields take Up and Down, and the Width, Height, offset and clip text fields keep their unit ("20px" to "21px", "40vh" to "50vh") while non-numeric text such as "auto" is left alone. A stored value past a slider's range widens the slider instead of being clamped
+- **Quick reply stays in view**: the form is kept fully inside the window whenever it or the window changes size (a resized comment box, TS rows, file thumbnails, the captcha), moving up or left when it overflows and capping the comment box when the form alone is taller than the window. It remembers where it belongs, the spot it opened at or was last dropped, so a form pushed up to fit returns to its place once it shrinks; a plain click on the title bar leaves that spot alone. Vertical Tabbed keeps its CSS docking
+- **Quick reply autohide survives the file picker**: the OS file dialog takes the window's focus while the field stays the form's active element, which used to collapse the form under the dialog and leave it collapsed; the decision now waits until focus has settled
+- **Export keeps the panel open**: clicking the download link no longer closes the options (which asked "Discard unsaved changes?" and threw the changes away on confirm); the Export button comes back for another export
+- Tests: a quick-reply position suite, ResizeObserver and image-load shims in the harness, and cases for the scale tool, the cap window, the Scale conversion, arrow stepping, Export and the autohide focus rule (161 tests)
+
 ### v1.0.18
 *2026-09-06*
 

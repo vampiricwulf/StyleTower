@@ -230,3 +230,25 @@ test("the position editor is painted with the theme's main color like the mascot
     assert.ok(rulesFor("#st-nav-editor").some(b => /color:var\(--sc-textColor\)/.test(b)), "text color rule");
     assert.ok(rulesFor("#add-mascot").some(b => /background:rgb\(var\(--sc-mainColor-rgb\)\)/.test(b)), "mascot editor still covered");
 });
+
+test("the editor's values step with the arrow keys: 1 per press, 10 with Shift", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    d.querySelector("#main-section a[name=navPosition]").click();
+    const ed = d.getElementById("st-nav-editor");
+    const key = (el, k, shift) => el.dispatchEvent(new w.KeyboardEvent("keydown", { key: k, shiftKey: !!shift, bubbles: true, cancelable: true }));
+    const x = ed.querySelector("input[name=nX]");
+    key(x, "ArrowRight");
+    assert.equal(x.value, "21");
+    key(x, "ArrowUp", true);
+    assert.equal(x.value, "31");
+    assert.equal(x.parentNode.querySelector(".mascot-opacity-num").value, "31", "the typed field follows");
+    assert.equal(d.getElementById("scroll-buttons").style.right, "31px", "live preview follows");
+    const scaleNum = ed.querySelector(".mascot-opacity-num[data-for=nScale]");
+    key(scaleNum, "ArrowDown", true);
+    assert.equal(scaleNum.value, "90");
+    assert.equal(ed.querySelector("input[name=nScale]").value, "90");
+    ed.querySelector("a[name=nCancel]").click();
+});

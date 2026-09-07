@@ -268,7 +268,7 @@
         "Hide Mascots in Catalog": [true, "Hides the mascot when viewing the catalog."],
         "Mascots Overlap Posts": [false, "Render the mascot above posts and threads instead of behind them."],
         "Reduce Mascot Opacity": [false, "Fade the mascot out until it is hovered. Note: the mascot captures the mouse where it overlaps the page."],
-        "Mascot Max Width": [true, "Cap mascots at the 300px sidebar width by default. Each mascot can override this in its editor."],
+        "Mascot Max Width": [true, "Cap mascots at the 300px sidebar width by default: an auto-sized image is scaled down to fit, an exact size is shown as typed and clipped past the cap. Each mascot can override this in its editor."],
         "Advanced Mascot Editor": [false, "Remembered mascot editor mode (set from the editor itself)."],
         "Mascots": ["[]", "Mascot data.", null, null, true],
         "Themes": [],
@@ -740,6 +740,7 @@
             var guard = $SS.guard;
             guard("classes", $SS.classes.init);
             guard("disableSiteTheme", $SS.disableSiteTheme);
+            guard("migrateMascotScale", $SS.migrateMascotScale);
             guard("displayMascots", $SS.displayMascots);
             guard("integrations", $SS.integrations.init);
             // Runs on settings reloads too so Replace Thumbnails applies
@@ -2143,6 +2144,78 @@
                 }
             });
         },
+        // Sidebar-fit width cap for mascots (the #styletower-mascots img max-width)
+        mascotCap: 300,
+        // Whether the cap applies to a mascot: its own Max Width setting, or
+        // the Mascot Max Width option when it has none
+        mascotCapped: function (m) {
+            return m.maxwidth === undefined || m.maxwidth === null ?
+                $SS.conf["Mascot Max Width"] !== false : m.maxwidth !== false;
+        },
+        // Mascots used to carry a Scale percentage. Sizing is Width and Height
+        // now (the editor's scale tool rewrites those), so a stored Scale is
+        // converted once, from the image's real width, into the Width it
+        // produced: natural x scale under the original rule, or the shown
+        // size x scale when marked "display". Nothing changes on screen. An
+        // entry with an exact size already ignored its Scale, which is dropped
+        migrateMascotScale: function () {
+            var list;
+            try { list = JSON.parse($SS.conf["Mascots"] || "[]"); } catch (e) { return; }
+            if (!Array.isArray(list)) return;
+            var hasScale = function (m) {
+                    return !!(m && m.url && parseInt(m.scale, 10) && parseInt(m.scale, 10) !== 100);
+                },
+                sized = function (m) {
+                    return !!((m.width && m.width !== "auto") || (m.height && m.height !== "auto"));
+                },
+                dropStale = function (current) {
+                    var changed = false;
+                    current.forEach(function (m) {
+                        if (!m || !("scale" in m || "scaleBase" in m)) return;
+                        if (hasScale(m) && !sized(m)) return;
+                        delete m.scale;
+                        delete m.scaleBase;
+                        changed = true;
+                    });
+                    return changed;
+                },
+                save = function (current) {
+                    $SS.conf["Mascots"] = JSON.stringify(current);
+                    $SS.Config.set("Mascots", $SS.conf["Mascots"]);
+                },
+                todo = list.filter(function (m) { return hasScale(m) && !sized(m); });
+            if (!todo.length) {
+                if (dropStale(list)) save(list);
+                return;
+            }
+            var widths = {}, left = todo.length;
+            var finish = function () {
+                if (--left) return;
+                var current;
+                try { current = JSON.parse($SS.conf["Mascots"] || "[]"); } catch (e) { return; }
+                if (!Array.isArray(current)) return;
+                var changed = dropStale(current);
+                current.forEach(function (m) {
+                    if (!hasScale(m) || sized(m) || !(m.url in widths)) return;
+                    var natural = widths[m.url],
+                        base = m.scaleBase === "display" && $SS.mascotCapped(m) ? Math.min(natural, $SS.mascotCap) : natural;
+                    m.width = Math.round(base * parseInt(m.scale, 10) / 100) + "px";
+                    delete m.scale;
+                    delete m.scaleBase;
+                    changed = true;
+                });
+                if (changed) save(current);
+            };
+            todo.forEach(function (m) {
+                var img = new Image();
+                img.onload = function () {
+                    if (img.naturalWidth) widths[m.url] = img.naturalWidth;
+                    finish();
+                };
+                img.onerror = finish;
+                img.src = m.url;
+            });
+        },
         mascotFilterCSS: function (m) {
             // Per-mascot image filters; only non-default values contribute
             var f = (m && m.filters) || {},
@@ -2187,14 +2260,20 @@
                 container.id = "styletower-mascots";
                 var side = m.side === "left" || m.side === "right" ? m.side :
                     (document.documentElement.classList.contains("left-sidebar") ? "left" : "right");
-                container.className = "mascots-" + side;
+                // Max Width makes a capped mascot a 300px window (see the
+                // .mascots-capped rule): an auto-sized image is scaled down to
+                // fit it, an exact size shows as typed and anything past the
+                // window is clipped out. Push In moves the image inside the
+                // window, so a negative value hides the pushed-out part
+                var capped = $SS.mascotCapped(m);
+                container.className = "mascots-" + side + (capped ? " mascots-capped" : "");
                 var left = side === "left";
                 var off = parseInt(m.offset, 10) || 0,
                     hoff = parseInt(m.hoffset, 10) || 0;
                 if (off) container.style.bottom = off + "px";
-                if (hoff) container.style[left ? "marginLeft" : "marginRight"] = hoff + "px";
                 var img = document.createElement("img");
                 img.src = m.url;
+                if (hoff) img.style[left ? "marginLeft" : "marginRight"] = hoff + "px";
                 img.style.opacity = (m.opacity == null ? 100 : m.opacity) / 100;
                 if (m.flip) img.style.transform = "scaleX(-1)";
                 // Free CSS sizes like OneeChan ("auto", "300px", "40vh"); bare
@@ -2209,15 +2288,17 @@
                     scale = parseInt(m.scale, 10) || 100;
                 if (wCss) img.style.width = wCss;
                 if (hCss) img.style.height = hCss;
-                // The 300px sidebar-fit cap only applies to fully auto-sized
-                // mascots; any explicit size or scale overrides it. Whether it
-                // applies at all comes from the Mascot Max Width option, which
-                // each mascot can override (true/false; undefined = global)
-                var capped = m.maxwidth === undefined || m.maxwidth === null ?
-                    $SS.conf["Mascot Max Width"] !== false : m.maxwidth !== false;
-                if (wCss || hCss || scale !== 100 || !capped)
-                    img.style.maxWidth = "none";
+                // The img max-width scales an auto-sized image down to the
+                // cap; an exact size shows as typed (the window clips it),
+                // and Natural Size (per mascot, or the option off) is uncapped
+                if (wCss || hCss || !capped) img.style.maxWidth = "none";
                 if (!wCss && !hCss && scale !== 100) {
+                    // A Scale from before the scale tool still renders as it
+                    // did (natural width x percentage, or the shown size x
+                    // percentage when marked "display") until
+                    // migrateMascotScale turns it into a Width
+                    if (m.scaleBase !== "display") img.style.maxWidth = "none";
+                    else if (capped) img.style.maxWidth = Math.round($SS.mascotCap * scale / 100) + "px";
                     var applyScale = function () {
                         if (img.naturalWidth)
                             img.style.width = Math.round(img.naturalWidth * scale / 100) + "px";
@@ -3438,12 +3519,28 @@
 
                         reader.readAsText(file);
                     });
-                    $("a[name=Export]", tOptions).bind("click", function () {
-                        if ($("a[download]", tOptions).exists())
-                            return;
-                        var exportalert = $("<a class='options-button' download='StyleTower v" + VERSION + " Settings.json' href='data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify($SS.exportOptions, null, 2)))) + "'>Save me!").bind("click", $SS.options.close);
-                        return $(this).replace(exportalert);
-                    });
+                    // Export swaps the button for a download link. Clicking
+                    // the link is a plain download: the panel stays open with
+                    // its unsaved changes (closing here used to raise the
+                    // discard prompt, and confirming threw the changes away),
+                    // and the button comes back for another export
+                    var exportTitle = $("a[name=Export]", tOptions).attr("title"),
+                        bindExport = function (btn) {
+                            btn.bind("click", function () {
+                                if ($("a[download]", tOptions).exists())
+                                    return;
+                                var link = $("<a class='options-button' download='StyleTower v" + VERSION + " Settings.json' href='data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify($SS.exportOptions, null, 2)))) + "'>Save me!");
+                                link.bind("click", function () {
+                                    setTimeout(function () {
+                                        var fresh = $("<a class='options-button' title=\"" + exportTitle + "\" name=Export>Export");
+                                        link.replace(fresh);
+                                        bindExport(fresh);
+                                    });
+                                });
+                                $(this).replace(link);
+                            });
+                        };
+                    bindExport($("a[name=Export]", tOptions));
                     // Reset settings
                     $("a[name=resetSettings]", tOptions).bind("click", function () {
                         var confirmReset = confirm('Your current StyleTower settings will be wiped, are you sure?');
@@ -3966,6 +4063,7 @@
                             enabled: m.enabled !== false
                         };
                         if (m.scale) out.scale = num(m.scale);
+                        if (m.scaleBase) out.scaleBase = String(m.scaleBase);
                         // OneeChan marks maxwidth per mascot; keep both states
                         // explicit so our global default can't flip them
                         if (m.maxwidth === false) out.maxwidth = false;
@@ -4097,6 +4195,13 @@
             },
             /* One slider row of the editor dialogs */
             sliderRow: function (title, name, val, min, max, unit, tip, modeCls) {
+                // A stored value past the slider's range widens it (a range
+                // input clamps its value otherwise, and Save reads the range)
+                var v = parseFloat(val);
+                if (!isNaN(v)) {
+                    min = Math.min(min, v);
+                    max = Math.max(max, v);
+                }
                 return "<label class='add-mascot-label" + (modeCls || "") + "' title='" + tip + "'><span class='option-title'>" + title + ":</span>" +
                     "<input type=range name=" + name + " min=" + min + " max=" + max + " value='" + val + "' data-unit='" + unit + "' class='mascot-opacity'>" +
                     "<input type=number class='mascot-opacity-num' data-for='" + name + "' value='" + val + "' step=1>" +
@@ -4117,6 +4222,41 @@
                     if (v < parseInt(range.min, 10)) range.min = v;
                     range.value = v;
                 }
+            },
+            /* Arrow keys step a value field in an editor: 1 per press, 10
+               with Shift. Sliders take all four arrows; typed number fields
+               and data-step text fields only Up/Down, so Left/Right still
+               move the caret. A text value keeps its unit ("20px", "40vh");
+               non-numeric text ("auto") is left alone. Firing input keeps
+               the slider/field pair in sync and the live preview current */
+            stepWithArrows: function (node) {
+                node.addEventListener("keydown", function (e) {
+                    var el = e.target;
+                    if (!el || el.tagName !== "INPUT" || e.ctrlKey || e.altKey || e.metaKey) return;
+                    var isRange = el.type === "range";
+                    if (!isRange && el.type !== "number" && !(el.type === "text" && el.hasAttribute("data-step"))) return;
+                    var dir = e.key === "ArrowUp" || (isRange && e.key === "ArrowRight") ? 1 :
+                        e.key === "ArrowDown" || (isRange && e.key === "ArrowLeft") ? -1 : 0;
+                    if (!dir) return;
+                    var m = /^\s*(-?\d+(?:\.\d+)?)([a-z%]*)\s*$/i.exec(el.value);
+                    if (!m) return;
+                    e.preventDefault();
+                    var v = parseFloat(m[1]) + dir * (e.shiftKey ? 10 : 1);
+                    if (isRange) {
+                        if (el.min !== "" && v < parseFloat(el.min)) v = parseFloat(el.min);
+                        if (el.max !== "" && v > parseFloat(el.max)) v = parseFloat(el.max);
+                    }
+                    el.value = Math.round(v * 100) / 100 + m[2];
+                    el.dispatchEvent(new Event("input", { bubbles: true }));
+                });
+            },
+            /* Rendered size of the mascot being previewed: what the user sees
+               (the img box; a window clip does not change it) */
+            mascotShownSize: function () {
+                var img = document.querySelector("#styletower-mascots img");
+                if (!img) return null;
+                var r = img.getBoundingClientRect();
+                return r.width && r.height ? { width: r.width, height: r.height } : null;
             },
             refreshNavStatus: function () {
                 var el = document.querySelector("#oneechan-options .st-nav-status");
@@ -4211,6 +4351,7 @@
                     $SS.options.syncSlider(e.target);
                     preview();
                 });
+                $SS.options.stepWithArrows(node);
                 node.addEventListener("change", preview);
                 $("a[name=nSave]", div).bind("click", function () {
                     $SS.conf["Nav Buttons"] = JSON.stringify(collect());
@@ -4244,18 +4385,22 @@
                         "<label class='add-mascot-label mascot-mode-row' title='Simple mode keeps the intuitive controls; advanced exposes raw CSS sizes, precise offsets, clipping, page side and per-board lists.'><span class='option-title'>Advanced Editing:</span><input type=checkbox name=mAdvanced" + (advanced ? " checked" : "") + "></label>" +
                         "<label class='add-mascot-label' title='Name shown in the gallery.'><span class='option-title'>Name:</span><input class='mascot-input' type=text name=mName value=\"" + esc(f(m.name, "")) + "\" placeholder='Mascot name'></label>" +
                         "<label class='add-mascot-label' title='Image URL or data URI.'><span class='option-title'>Image:</span><input class='mascot-input' type=text name=mImg value=\"" + esc(f(m.url, "")) + "\" placeholder='https://&hellip; or data:image/&hellip;'></label>" +
-                        slider("Scale", "mScale", parseInt(f(m.scale, 100), 10), 10, 300, "%", "Resize the mascot while keeping its shape. Ignored when an exact Width or Height is set.") +
-                        "<label class='add-mascot-label' title='Cap this mascot at the 300px sidebar width. Default follows the Mascot Max Width option; Natural Size shows the full image.'><span class='option-title'>Max Width:</span><select name=mMaxwidth class='mascot-input'><option value='default'" + (m.maxwidth === undefined || m.maxwidth === null ? " selected" : "") + ">Default</option><option value='on'" + (m.maxwidth === true ? " selected" : "") + ">Capped</option><option value='off'" + (m.maxwidth === false ? " selected" : "") + ">Natural Size</option></select></label>" +
-                        "<label class='add-mascot-label adv-only' title='Exact CSS width (e.g. 500px, 25vw). Use auto to keep the original size and let Scale apply.'><span class='option-title'>Width:</span><input class='mascot-input' type=text name=mWidth value=\"" + esc(f(m.width, "auto")) + "\"></label>" +
-                        "<label class='add-mascot-label adv-only' title='Exact CSS height. Use auto to keep the original size.'><span class='option-title'>Height:</span><input class='mascot-input' type=text name=mHeight value=\"" + esc(f(m.height, "auto")) + "\"></label>" +
+                        "<label class='add-mascot-label' title='Exact CSS width (e.g. 500px, 25vw). Use auto for the image&#39;s own size, scaled down to the cap when capped.'><span class='option-title'>Width:</span><input class='mascot-input' type=text data-step name=mWidth value=\"" + esc(f(m.width, "auto")) + "\"></label>" +
+                        "<label class='add-mascot-label' title='Exact CSS height. Use auto to keep the image&#39;s shape.'><span class='option-title'>Height:</span><input class='mascot-input' type=text data-step name=mHeight value=\"" + esc(f(m.height, "auto")) + "\"></label>" +
+                        "<label class='add-mascot-label' title='Cap this mascot at the 300px sidebar width: an auto-sized image is scaled down to fit, an exact size is shown as typed and anything past the cap is clipped out. Default follows the Mascot Max Width option; Natural Size lifts the cap.'><span class='option-title'>Max Width:</span><select name=mMaxwidth class='mascot-input'><option value='default'" + (m.maxwidth === undefined || m.maxwidth === null ? " selected" : "") + ">Default</option><option value='on'" + (m.maxwidth === true ? " selected" : "") + ">Capped</option><option value='off'" + (m.maxwidth === false ? " selected" : "") + ">Natural Size</option></select></label>" +
+                        "<div class='add-mascot-label mascot-scale-row' title='Resize by percent. The sizes above are the 100% size, taken when you start scaling; an auto size scales from the size the mascot shows at, and the clip values scale with it. Single arrows step 5%, double arrows 10%, and the field itself steps 1% with the arrow keys (10% with Shift). The percent is not saved, the resized values are.'><span class='option-title'>Scale:</span>" +
+                        "<a class='options-button mascot-scale-btn' data-step='-10' title='10% smaller'>&laquo;</a><a class='options-button mascot-scale-btn' data-step='-5' title='5% smaller'>&lsaquo;</a>" +
+                        "<input type=number class='mascot-opacity-num mascot-scale-pct' name=mScalePct value='100' min='1' step='1'><span class='mascot-opacity-val'>%</span>" +
+                        "<a class='options-button mascot-scale-btn' data-step='5' title='5% larger'>&rsaquo;</a><a class='options-button mascot-scale-btn' data-step='10' title='10% larger'>&raquo;</a>" +
+                        "<a class='options-button mascot-scale-btn mascot-scale-reset' title='Back to the 100% size'>&#8634;</a></div>" +
                         slider("Opacity", "mOpacity", parseInt(f(m.opacity, 100), 10), 0, 100, "%", "0 is transparent, 100 is opaque.") +
                         slider("Raise", "mOffsetS", off, -100, 400, "px", "Slide the mascot up from the bottom edge.", " simple-only") +
                         slider("Push In", "mHOffsetS", hoff, -100, 400, "px", "Slide the mascot away from the screen edge toward the center.", " simple-only") +
-                        "<label class='add-mascot-label adv-only' title='Positive values lift the mascot up from the bottom edge; negative push it down.'><span class='option-title'>Vertical Offset:</span><input class='mascot-input' type=text name=mOffset value='" + off + "px'></label>" +
-                        "<label class='add-mascot-label adv-only' title='Positive values push the mascot from the screen edge toward the center; negative push it off-screen.'><span class='option-title'>Horizontal Offset:</span><input class='mascot-input' type=text name=mHOffset value='" + hoff + "px'></label>" +
+                        "<label class='add-mascot-label adv-only' title='Positive values lift the mascot up from the bottom edge; negative push it down.'><span class='option-title'>Vertical Offset:</span><input class='mascot-input' type=text data-step name=mOffset value='" + off + "px'></label>" +
+                        "<label class='add-mascot-label adv-only' title='Positive values push the mascot from the screen edge toward the center; negative push it off-screen.'><span class='option-title'>Horizontal Offset:</span><input class='mascot-input' type=text data-step name=mHOffset value='" + hoff + "px'></label>" +
                         "<label class='add-mascot-label adv-only' title='Which side of the page the mascot sits on. Auto follows the sidebar position.'><span class='option-title'>Side:</span><select name=mSide class='mascot-input'><option value='auto'" + (f(m.side, "auto") === "auto" ? " selected" : "") + ">Auto</option><option value='right'" + (m.side === "right" ? " selected" : "") + ">Right</option><option value='left'" + (m.side === "left" ? " selected" : "") + ">Left</option></select></label>" +
                         "<label class='add-mascot-label adv-only' title='Clip the edges of the image as displayed, in pixels: top, left, bottom, right. Left/right always mean the visible sides, even when the image is flipped.'><span class='option-title'>Clip (T/L/B/R):</span>" +
-                        "<span class='mascot-clip-inputs'><input class='mascot-input mascot-clip' type=text name=mTClip value='" + parseInt(f(clip[0], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mLClip value='" + parseInt(f(clip[1], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mBClip value='" + parseInt(f(clip[2], 0), 10) + "'><input class='mascot-input mascot-clip' type=text name=mRClip value='" + parseInt(f(clip[3], 0), 10) + "'></span></label>" +
+                        "<span class='mascot-clip-inputs'><input class='mascot-input mascot-clip' type=text data-step name=mTClip value='" + parseInt(f(clip[0], 0), 10) + "'><input class='mascot-input mascot-clip' type=text data-step name=mLClip value='" + parseInt(f(clip[1], 0), 10) + "'><input class='mascot-input mascot-clip' type=text data-step name=mBClip value='" + parseInt(f(clip[2], 0), 10) + "'><input class='mascot-input mascot-clip' type=text data-step name=mRClip value='" + parseInt(f(clip[3], 0), 10) + "'></span></label>" +
                         "<label class='add-mascot-label' title='Flip the mascot image horizontally.'><span class='option-title'>Flip Image:</span><input type=checkbox name=mFlip" + (m.flip ? " checked" : "") + "></label>" +
                         "<label class='add-mascot-label mascot-filter-head'><span class='option-title'>Image Filters</span></label>" +
                         slider("Grayscale", "mFGray", parseInt(f(filters.gray, 0), 10), 0, 100, "%", "Desaturate the mascot.") +
@@ -4288,12 +4433,10 @@
                         if (num(g("mFSat")) !== 100) fl.sat = num(g("mFSat"));
                         if (num(g("mFBlur"))) fl.blur = num(g("mFBlur"));
                         var hasFilters = Object.keys(fl).length > 0;
-                        var scaleVal = num(g("mScale")) || 100,
-                            sideVal = g("mSide");
+                        var sideVal = g("mSide");
                         return {
                             name: g("mName").trim(),
                             url: g("mImg").trim(),
-                            scale: scaleVal !== 100 ? scaleVal : undefined,
                             maxwidth: g("mMaxwidth") === "on" ? true :
                                 g("mMaxwidth") === "off" ? false : undefined,
                             width: g("mWidth").trim() || "auto",
@@ -4332,8 +4475,70 @@
                     el.value = val;
                     $SS.options.syncSlider(el);
                 };
+                // Scale tool: rewrites Width, Height and the clip values by a
+                // percentage of their values at 100%, captured when scaling
+                // starts. An auto size scales from the size the mascot shows
+                // at (what the user sees, not the raw image); a lone auto side
+                // stays auto so the image keeps its shape. The percent is
+                // never saved; typing a size by hand makes it the new 100%
+                var clipNames = ["mTClip", "mLClip", "mBClip", "mRClip"],
+                    scaledFields = ["mWidth", "mHeight"].concat(clipNames),
+                    pctField = node.querySelector("[name=mScalePct]"),
+                    scaleBase = null,
+                    readField = function (n) { return node.querySelector("[name=" + n + "]").value; },
+                    captureBase = function () {
+                        scaleBase = {
+                            width: readField("mWidth").trim() || "auto",
+                            height: readField("mHeight").trim() || "auto",
+                            clip: clipNames.map(function (n) { return parseInt(readField(n), 10) || 0; }),
+                            shown: $SS.options.mascotShownSize()
+                        };
+                    },
+                    scaleSize = function (v, pct, shownPx) {
+                        var mt = /^(-?\d+(?:\.\d+)?)([a-z%]*)$/i.exec(v);
+                        if (mt) {
+                            var n = parseFloat(mt[1]) * pct / 100;
+                            return (!mt[2] || mt[2] === "px" ? Math.round(n) : Math.round(n * 100) / 100) + mt[2];
+                        }
+                        return shownPx ? Math.round(shownPx * pct / 100) + "px" : v;
+                    },
+                    applyScale = function (pct) {
+                        pct = Math.max(1, Math.round(pct) || 100);
+                        if (!scaleBase) captureBase();
+                        var b = scaleBase,
+                            autoBoth = b.width === "auto" && b.height === "auto";
+                        pctField.value = pct;
+                        if (pct === 100) {
+                            setField("mWidth", b.width);
+                            setField("mHeight", b.height);
+                        } else {
+                            setField("mWidth", scaleSize(b.width, pct, autoBoth && b.shown ? b.shown.width : 0));
+                            setField("mHeight", b.height === "auto" ? "auto" : scaleSize(b.height, pct, 0));
+                        }
+                        clipNames.forEach(function (n, i) {
+                            setField(n, pct === 100 ? b.clip[i] : Math.round(b.clip[i] * pct / 100));
+                        });
+                        if (pct === 100) scaleBase = null;
+                        preview();
+                    };
+                node.addEventListener("click", function (e) {
+                    var btn = e.target.closest && e.target.closest(".mascot-scale-btn");
+                    if (!btn) return;
+                    e.preventDefault();
+                    if (btn.classList.contains("mascot-scale-reset")) applyScale(100);
+                    else applyScale((parseInt(pctField.value, 10) || 100) + parseInt(btn.getAttribute("data-step"), 10));
+                });
                 node.addEventListener("input", function (e) {
                     var t = e.target;
+                    if (t.name === "mScalePct") {
+                        var pct = parseInt(t.value, 10);
+                        if (pct >= 1) applyScale(pct);
+                        return;
+                    }
+                    if (scaledFields.indexOf(t.name) !== -1) {
+                        scaleBase = null;
+                        pctField.value = 100;
+                    }
                     $SS.options.syncSlider(t);
                     // The simple-mode position sliders and the advanced offset
                     // inputs edit the same values; keep them in sync (the text
@@ -4344,6 +4549,7 @@
                     else if (t.name === "mHOffset") setField("mHOffsetS", parseInt(t.value, 10) || 0);
                     preview();
                 });
+                $SS.options.stepWithArrows(node);
                 node.addEventListener("change", function (e) {
                     if (e.target.name === "mAdvanced") {
                         var adv = e.target.checked;

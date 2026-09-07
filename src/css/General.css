@@ -462,15 +462,24 @@ video.st-thumb-video {
   z-index: -1;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
   pointer-events: none;
 }
 #styletower-mascots.mascots-right {
   right: 10px;
+  align-items: flex-end;
 }
 #styletower-mascots.mascots-left {
   left: 10px;
+  align-items: flex-start;
+}
+/* Max Width: a capped mascot is a 300px window. An auto-sized image is scaled
+   down to fit it (the img max-width below); an exact size shows as typed and
+   anything past the window is clipped out. Push In is a margin on the image,
+   so it moves inside the window */
+#styletower-mascots.mascots-capped {
+  max-width: 300px;
+  overflow: hidden;
 }
 /* Keep mascots inside the 306px sidebar area (border sits at its left edge) */
 :root.right-sidebar #styletower-mascots.mascots-right {

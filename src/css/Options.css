@@ -690,6 +690,28 @@ label.tab-label[data-tower-status='changed']::after {
   flex: 1;
   text-align: center;
 }
+/* Scale tool under the size fields: « ‹ [100] % › » ↺ — the panel's own
+   buttons and typed field, just compact */
+#add-mascot .mascot-scale-row {
+  gap: 4px;
+}
+#add-mascot .mascot-scale-btn {
+  min-width: 0;
+  margin: 0;
+  padding: 0 .5em;
+  line-height: 18px;
+  flex: none;
+  user-select: none;
+}
+#add-mascot .mascot-scale-reset {
+  margin-left: 6px;
+}
+#add-mascot input.mascot-scale-pct {
+  margin: 0 0 0 2px;
+}
+#add-mascot .mascot-scale-row .mascot-opacity-val {
+  min-width: 0;
+}
 #add-mascot input[type=range].mascot-opacity,
 #st-nav-editor input[type=range].mascot-opacity {
   flex: 1;

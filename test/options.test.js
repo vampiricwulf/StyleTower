@@ -185,3 +185,24 @@ test("a custom font name with a quote is escaped in the stylesheet", async () =>
     const css = w.document.getElementById("ch4SS").textContent;
     assert.ok(css.indexOf("font-family:'O\\'Neil Sans'!important") !== -1, "escaped quote expected, got: " + JSON.stringify(css.slice(css.indexOf("Neil") - 20, css.indexOf("Neil") + 30)));
 });
+
+test("Export with unsaved changes keeps the panel open and never asks to discard them", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    let asked = 0;
+    w.confirm = () => { asked++; return true; };
+    $SS.options.show();
+    $SS.options.touched();
+    d.querySelector("#oneechan-options a[name=Export]").click();
+    const link = d.querySelector("#oneechan-options a[download]");
+    assert.ok(link, "the button becomes a download link");
+    assert.equal(d.querySelector("#oneechan-options a[name=Export]"), null);
+    link.dispatchEvent(new w.MouseEvent("click", { bubbles: true, cancelable: true }));
+    await sleep(20);
+    assert.equal(asked, 0, "no discard prompt");
+    assert.ok(d.getElementById("oneechan-options"), "the panel is still open");
+    assert.equal($SS.options.dirty, true, "the unsaved changes are still there");
+    assert.ok(d.querySelector("#oneechan-options a[name=Export]"), "the Export button is back");
+    assert.equal(d.querySelector("#oneechan-options a[download]"), null);
+});
