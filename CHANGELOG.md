@@ -1,3 +1,9 @@
+### v1.0.20
+*2026-09-07*
+
+- The Scale conversion that runs on the first load after v1.0.19 now refreshes the export snapshot as well, so an export taken on that load carries the converted mascot widths instead of the old Scale values (which would only have been converted again on import)
+- Tests: importing a v1.0.18 export converts Scale on the in-page re-init and round-trips through export field by field; an export after the conversion carries the converted list
+
 ### v1.0.19
 *2026-09-07*
 

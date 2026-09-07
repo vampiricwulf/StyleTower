@@ -2182,6 +2182,8 @@
                 save = function (current) {
                     $SS.conf["Mascots"] = JSON.stringify(current);
                     $SS.Config.set("Mascots", $SS.conf["Mascots"]);
+                    // Export reads this snapshot (rebuilt only by Config.init)
+                    if ($SS.exportOptions) $SS.exportOptions["Mascots"] = $SS.conf["Mascots"];
                 },
                 todo = list.filter(function (m) { return hasScale(m) && !sized(m); });
             if (!todo.length) {

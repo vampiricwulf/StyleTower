@@ -278,7 +278,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.19",
+        VERSION = "1.0.20",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
@@ -2182,6 +2182,8 @@
                 save = function (current) {
                     $SS.conf["Mascots"] = JSON.stringify(current);
                     $SS.Config.set("Mascots", $SS.conf["Mascots"]);
+                    // Export reads this snapshot (rebuilt only by Config.init)
+                    if ($SS.exportOptions) $SS.exportOptions["Mascots"] = $SS.conf["Mascots"];
                 },
                 todo = list.filter(function (m) { return hasScale(m) && !sized(m); });
             if (!todo.length) {
