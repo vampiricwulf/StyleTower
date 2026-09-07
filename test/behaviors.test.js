@@ -135,3 +135,44 @@ test("mascot editor sliders have typed fields that stay in sync", async () => {
     range.dispatchEvent(new w.Event("input", { bubbles: true }));
     assert.equal(d.querySelector("#add-mascot .mascot-opacity-num[data-for=mOpacity]").value, "40");
 });
+
+async function dockedQR(w) {
+    const d = w.document;
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    await sleep(60);
+    return qr;
+}
+
+test("autohide quick reply: stays open while the file picker holds the window's focus", async () => {
+    const w = await load({ storage: { "Autohide Style": 1 } });
+    const qr = await dockedQR(w);
+    const file = qr.querySelector("input[type=file]");
+    file.focus();
+    assert.ok(qr.classList.contains("focus"));
+    // The OS file dialog takes the window's focus: focusout fires with no
+    // related target while the input stays the document's active element
+    file.dispatchEvent(new w.FocusEvent("focusout", { bubbles: true, relatedTarget: null }));
+    await sleep(20);
+    assert.equal(w.document.activeElement, file);
+    assert.ok(qr.classList.contains("focus"), "still shown");
+});
+
+test("autohide quick reply: hides when focus really leaves the form", async () => {
+    const w = await load({ storage: { "Autohide Style": 1 } });
+    const qr = await dockedQR(w);
+    const body = qr.querySelector("textarea[name=body]");
+    body.focus();
+    const subject = qr.querySelector("input[name=subject]");
+    subject.focus();
+    await sleep(20);
+    assert.ok(qr.classList.contains("focus"), "moving between its own fields keeps it shown");
+    subject.blur();
+    await sleep(20);
+    assert.ok(!qr.classList.contains("focus"), "hidden after a real blur");
+    body.focus();
+    w.document.querySelector("form[name=post]:not(#quick-reply) input[name=name]").focus();
+    await sleep(20);
+    assert.ok(!qr.classList.contains("focus"), "hidden when another form takes focus");
+});

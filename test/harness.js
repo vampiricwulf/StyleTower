@@ -38,6 +38,13 @@ function shim(w, opts) {
         constructor(cb) { this.cb = cb; w.__io = this; }
         observe() {} unobserve() {} disconnect() {}
     };
+    w.ResizeObserver = class {
+        constructor(cb) { this.cb = cb; this.targets = []; (w.__ro = w.__ro || []).push(this); }
+        observe(el) { this.targets.push(el); }
+        unobserve(el) { this.targets = this.targets.filter(t => t !== el); }
+        disconnect() { this.disconnected = true; this.targets = []; }
+        trigger() { this.cb(this.targets.map(t => ({ target: t })), this); }
+    };
     w.scrollTo = function () { (w.__scrollCalls = w.__scrollCalls || []).push([].slice.call(arguments)); };
     w.DataTransfer = class {
         constructor() { const f = []; this._files = f; this.items = { add(file) { f.push(file); } }; }

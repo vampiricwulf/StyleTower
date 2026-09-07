@@ -882,6 +882,8 @@
                 guard("initRememberComment", $SS.initRememberComment);
                 // Native QR autohide (focus/hover behavior for Normal & Vertical Tabbed)
                 guard("initNativeQRAutohide", $SS.initNativeQRAutohide);
+                // Keep the QR fully inside the window when it or the window changes size
+                guard("initKeepQRInView", $SS.initKeepQRInView);
 
                 guard("limitNameSubject", function () { $SS.limitNameSubject(document); });
 
@@ -2076,7 +2078,16 @@
             });
             document.addEventListener("focusout", function (e) {
                 var qr = e.target.closest && e.target.closest("#quick-reply");
-                if (qr && !qr.contains(e.relatedTarget)) qr.classList.remove("focus");
+                if (!qr || qr.contains(e.relatedTarget)) return;
+                // Decide once focus has settled: a file picker (or another
+                // window) taking the window's focus fires focusout too, but
+                // the field stays the document's active element, and the
+                // form should stay open for the pick
+                setTimeout(function () {
+                    var active = document.activeElement;
+                    if (!qr.isConnected || !active || !qr.contains(active))
+                        qr.classList.remove("focus");
+                });
             });
         },
         localJSON: {
@@ -2387,8 +2398,90 @@
 
             $SS.syncTSPostingControls(qr, 10);
             $SS.restructureQRSubmit(qr);
+            $SS.watchQRSize(qr);
 
             $SS.QRhandled = true;
+        },
+        keepQRInView: function (qr) {
+            // Keep the whole quick reply inside the window. The site only
+            // clamps its saved position when the QR opens; growing it (a
+            // resized comment box, TS rows, file thumbnails, the captcha) or
+            // shrinking the window can push part of it off-screen. Vertical
+            // Tabbed docks it bottom-right by CSS (and hides it with a
+            // translateX), so it is left alone.
+            qr = qr || document.getElementById("quick-reply");
+            if (!qr || !qr.isConnected || qr.style.display === "none") return;
+            var de = document.documentElement;
+            if (de.classList.contains("vertical-qr")) return;
+            var cw = de.clientWidth, ch = de.clientHeight,
+                r = qr.getBoundingClientRect();
+            if (!cw || !ch || !r.width || !r.height) return;
+            // The anchor is where the QR belongs: its spot when it opened,
+            // or where it was last dropped (see initKeepQRInView). Growth is
+            // measured from there, so a form that was pushed up or left to
+            // fit returns to its place once it shrinks again.
+            var a = qr._stAnchor;
+            if (!a) a = qr._stAnchor = { top: r.top, right: cw - r.right };
+            var top = a.top, left = cw - a.right - r.width;
+            if (top + r.height > ch) top = ch - r.height;
+            if (top < 0) top = 0;
+            if (left + r.width > cw) left = cw - r.width;
+            if (left < 0) left = 0;
+            if (Math.abs(top - r.top) > 0.5 || Math.abs(left - r.left) > 0.5) {
+                // The site positions a dragged QR by top/right with left:auto;
+                // keep that convention so its draggable and saved position
+                // keep working
+                qr.style.top = top + "px";
+                qr.style.right = (cw - left - r.width) + "px";
+                qr.style.left = "auto";
+            }
+            // A QR taller than the window can't fit by moving: cap the comment
+            // box at the room left under the rest of the form. The cap tracks
+            // window and form changes, so it only ever bites when needed.
+            var ta = qr.querySelector("textarea[name=body]");
+            if (ta && ta.offsetHeight)
+                ta.style.maxHeight = Math.max(25, ta.offsetHeight + ch - r.height) + "px";
+        },
+        watchQRSize: function (qr) {
+            // Re-clamp whenever the QR's box changes; the observer also fires
+            // (with a zero box) when the QR is closed, which drops the watch
+            if (qr._stSizeWatch || typeof ResizeObserver === "undefined") return;
+            var ro = new ResizeObserver(function () {
+                if (!qr.isConnected) {
+                    ro.disconnect();
+                    qr._stSizeWatch = null;
+                    return;
+                }
+                $SS.keepQRInView(qr);
+            });
+            ro.observe(qr);
+            qr._stSizeWatch = ro;
+        },
+        initKeepQRInView: function () {
+            window.addEventListener("resize", function () { $SS.keepQRInView(); });
+            // A drag by the title bar moves the QR's anchor to where it is
+            // dropped. The site's draggable only starts after 10px, so a
+            // plain click on the handle leaves the anchor alone
+            var press = null;
+            document.addEventListener("mousedown", function (e) {
+                var handle = e.target.closest && e.target.closest("#quick-reply th .handle");
+                press = handle ? { qr: handle.closest("#quick-reply"), x: e.clientX, y: e.clientY } : null;
+            });
+            document.addEventListener("mouseup", function (e) {
+                if (!press) return;
+                var from = press;
+                press = null;
+                if (Math.hypot(e.clientX - from.x, e.clientY - from.y) < 10) return;
+                // the site's drag stop handler writes the dropped position;
+                // read it once that has run
+                setTimeout(function () {
+                    var qr = from.qr;
+                    if (!qr.isConnected) return;
+                    var r = qr.getBoundingClientRect();
+                    qr._stAnchor = { top: r.top, right: document.documentElement.clientWidth - r.right };
+                    $SS.keepQRInView(qr);
+                });
+            });
         },
         restructureQRSubmit: function (qr) {
             // Move the submit button out of the subject row into its own
