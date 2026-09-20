@@ -87,3 +87,21 @@ test("no selector group is declared twice in the same file and media context", (
     });
     assert.deepEqual(dupes, []);
 });
+
+test("every hardcoded style-page.css component (FAQ and the other static pages) is rethemed", () => {
+    // Selectors the site's style-page.css paints with fixed light colors
+    const page = css("Page.css");
+    const components = [
+        ".page-hero", ".page-crumbs", ".page-crumbs-more", ".page-title", ".page-lead",
+        ".page-toc", ".page-toc-label", ".page-toc-sep",
+        ".content-body", ".content-body h3", ".content-body h4", ".content-body code", ".content-body strong",
+        ".answer-box", ".content-table caption", ".content-table td", ".content-table thead th", ".content-table tbody tr:nth-child(2n) td",
+        ".notice", ".notice-title", ".qa-item", ".qa-q",
+        ".route-card", ".route-card-text",
+        ".example-list li", ".example-query", ".example-note",
+        ".page-related", ".page-related-title", ".page-updated"
+    ];
+    const missing = components.filter(sel => !has(page, new RegExp(":root\\.st-home " + sel.replace(/[.()]/g, "\\$&") + "[,{\\s]")));
+    assert.deepEqual(missing, []);
+    assert.equal(has(page, /#[0-9a-f]{3,6}\b/i), false, "no hardcoded colors: everything comes from the theme variables");
+});

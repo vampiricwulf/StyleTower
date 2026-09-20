@@ -1,3 +1,9 @@
+### v1.0.21
+*2026-09-19*
+
+- **FAQ page themed**: the FAQ (and the site's other static pages, which share its stylesheet) is painted with the active theme. The page uses the home layout, so its frame, banner, sidebar and windows were already themed, but its own components came with fixed colors: dark grey body text that was unreadable on a dark theme, a yellow hero and table of contents, white cards and notices, light table headers and rows, and yellow code pills. Headings, breadcrumbs, the "on this page" bar, cards, notices, tables, code and the "last updated" line now take their colors from the theme; notices keep the site's red or green left edge
+- Tests: a FAQ fixture loaded at its real address, a check that every component of the site's page stylesheet has a themed rule with no fixed colors (165 tests)
+
 ### v1.0.20
 *2026-09-07*
 

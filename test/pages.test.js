@@ -136,3 +136,19 @@ test("catalog: mascots stay hidden there by default", async () => {
     const w2 = await load({ fixture: "catalog.html", url: CATALOG, storage: { "Enable Mascots": true, "Mascots": mascots, "Hide Mascots in Catalog": false } });
     assert.ok(w2.document.querySelector("#styletower-mascots img"));
 });
+
+test("faq: the FAQ page is themed as a home-style page and loads cleanly", async () => {
+    const w = await load({ fixture: "faq.html", url: "https://holotower.org/faq.html" });
+    const d = w.document;
+    const root = d.documentElement.classList;
+    assert.ok(root.contains("st-home"), "home root class from body.homepage-standard-mode");
+    assert.ok(!root.contains("right-sidebar") && !root.contains("left-sidebar"), "no sidebar layout on the custom page");
+    assert.ok(d.querySelector("#top-nav, .side-menu"), "the page's own navigation is left in place");
+    assert.deepEqual(w.__errors.map(e => e.message), []);
+    // The page's second stylesheet (style-page.css) paints its own components
+    // with hardcoded light colors; the injected stylesheet must retheme them
+    const css = d.getElementById("ch4SS").textContent;
+    assert.ok(/:root\.st-home \.content-body\{[^}]*color:var\(--sc-textColor\)/.test(css), "content text takes the theme's text color");
+    assert.ok(/:root\.st-home \.page-hero\{[^}]*background:/.test(css), "hero surface rethemed");
+    assert.ok(/:root\.st-home \.content-table (td|th)/.test(css), "table cells rethemed");
+});

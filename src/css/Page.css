@@ -1,0 +1,102 @@
+/* Holotower static pages (FAQ and the like): they share the home page's
+   body class and shell, so Home.css already themes the frame, banner,
+   sidebar and windows; the site's second stylesheet (style-page.css) paints
+   this page-only component set with hardcoded warm-yellow surfaces and dark
+   grey text, which is unreadable on a dark theme. Same :root.st-home scope. */
+/* Hero + breadcrumbs: the page's counterpart of the home skyline */
+:root.st-home .page-hero {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .page-crumbs {
+  color: rgba(var(--sc-textColor-rgb), .7) !important;
+  border-bottom-color: var(--sc-brderColor) !important;
+}
+:root.st-home .page-crumbs-more {
+  border-left-color: var(--sc-brderColor) !important;
+}
+:root.st-home .page-title {
+  color: var(--sc-titleColor) !important;
+}
+:root.st-home .page-lead {
+  color: rgba(var(--sc-textColor-rgb), .8) !important;
+}
+/* "On this page" + related-links bars: the ticker treatment */
+:root.st-home .page-toc,
+:root.st-home .page-related {
+  background: rgba(var(--sc-mainColor-rgb), var(--sc-replyOp)) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .page-toc-label,
+:root.st-home .page-related-title {
+  color: var(--sc-titleColor) !important;
+}
+:root.st-home .page-toc-sep {
+  color: rgba(var(--sc-textColor-rgb), .4) !important;
+}
+/* Window text */
+:root.st-home .content-body {
+  color: var(--sc-textColor) !important;
+}
+:root.st-home .content-body h3,
+:root.st-home .content-body h4,
+:root.st-home .qa-q,
+:root.st-home .notice-title {
+  color: var(--sc-titleColor) !important;
+}
+:root.st-home .content-body strong {
+  color: inherit !important;
+}
+:root.st-home .content-body code,
+:root.st-home .example-query {
+  background: rgba(var(--sc-codeBackground)) !important;
+  border-color: rgba(var(--sc-codeBorder)) !important;
+}
+:root.st-home .content-body pre code {
+  background: none !important;
+  border: 0 !important;
+}
+/* Inset boxes inside a window: the featured-frame treatment. The colored
+   left edge of a notice (red no / green yes) is the site's own semantic
+   accent and is kept, so only the other three sides are recolored */
+:root.st-home .route-card {
+  background: var(--sc-inputColor) !important;
+  border-color: var(--sc-brderColor) !important;
+}
+:root.st-home .notice,
+:root.st-home .answer-box {
+  background: var(--sc-inputColor) !important;
+  border-top-color: var(--sc-brderColor) !important;
+  border-right-color: var(--sc-brderColor) !important;
+  border-bottom-color: var(--sc-brderColor) !important;
+}
+:root.st-home .answer-box {
+  border-left-color: var(--sc-titleColor) !important;
+}
+:root.st-home .route-card-text,
+:root.st-home .example-note {
+  color: rgba(var(--sc-textColor-rgb), .8) !important;
+}
+/* Tables */
+:root.st-home .content-table caption {
+  color: rgba(var(--sc-textColor-rgb), .7) !important;
+}
+:root.st-home .content-table td,
+:root.st-home .content-table th {
+  border-color: rgba(var(--sc-brderColor-rgb), .5) !important;
+}
+:root.st-home .content-table thead th {
+  background: rgba(var(--sc-textColor-rgb), .1) !important;
+  color: var(--sc-titleColor) !important;
+}
+:root.st-home .content-table tbody tr:nth-child(2n) td {
+  background: rgba(var(--sc-textColor-rgb), .05) !important;
+}
+/* Dotted list separators */
+:root.st-home .qa-item,
+:root.st-home .example-list li {
+  border-bottom-color: rgba(var(--sc-brderColor-rgb), .5) !important;
+}
+:root.st-home .page-updated {
+  color: rgba(var(--sc-textColor-rgb), .6) !important;
+}
