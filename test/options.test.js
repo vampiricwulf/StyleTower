@@ -105,6 +105,25 @@ test("the Export button warns that saved site credentials are included", async (
     assert.match(btn.title, /password/i);
 });
 
+test("theme editor: a burst of color input events previews once, on the next frame", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    $SS.options.showTheme(2);
+    const before = d.getElementById("sc-theme-vars").textContent;
+    const mc = d.querySelector("#add-theme input[name=mainColor]");
+    ["#111111", "#222222", "#333333"].forEach(v => {
+        mc.value = v.slice(1);
+        mc.dispatchEvent(new w.Event("input", { bubbles: true }));
+    });
+    assert.equal(d.getElementById("sc-theme-vars").textContent, before, "nothing rewritten per event");
+    await sleep(40);
+    const after = d.getElementById("sc-theme-vars").textContent;
+    assert.notEqual(after, before, "previewed on the frame");
+    assert.match(after, /--sc-mainColor-rgb:51,51,51;/, "with the last value");
+});
+
 test("Escape closes the options panel, and an open editor first", async () => {
     const w = await load();
     const { $SS } = w.__ST;

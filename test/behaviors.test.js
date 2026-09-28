@@ -284,6 +284,30 @@ test("post menu: Toggle You marks and unmarks a post in the site's own_posts sto
     assert.equal($SS.getOwnPosts("hlgg").length, 0);
 });
 
+test("header mirroring: TS's hide-on-scroll flips do not drop the page's top padding", async () => {
+    // TS adds autohide+scroll to the boardlist while scrolling down and
+    // removes them on the way up; mirroring that as the autohide mode would
+    // zero the body's top padding and relayout the page at every turn
+    const w = await load();
+    const d = w.document, root = d.documentElement.classList;
+    const header = d.querySelector("body > .boardlist");
+    header.className = "boardlist fixed";
+    await sleep(30);
+    assert.ok(root.contains("fixed") && root.contains("top-header") && !root.contains("autohide"));
+    header.className = "boardlist fixed autohide scroll";
+    await sleep(30);
+    assert.equal(root.contains("autohide"), false, "a scroll-hidden header keeps the padding");
+    header.className = "boardlist fixed autohide";
+    await sleep(30);
+    assert.equal(root.contains("autohide"), true, "the Auto-hide Header mode frees the space");
+    // With the mode stored, the scroll flips keep the mirrored state too
+    const w2 = await load({ site: { "Thread Settings": JSON.stringify({ headerAutohide: true }) } });
+    const h2 = w2.document.querySelector("body > .boardlist");
+    h2.className = "boardlist fixed autohide scroll";
+    await sleep(30);
+    assert.equal(w2.document.documentElement.classList.contains("autohide"), true);
+});
+
 test("autohide quick reply: the TS keybind shows and hides a docked form", async () => {
     const w = await load({ storage: { "Autohide Style": 1 } });
     const d = w.document;

@@ -90,9 +90,24 @@ pre {
 ::placeholder {
   color: rgba(var(--sc-textColor-rgb),.4) !important;
 }
-/* Backgrounds */
+/* Backgrounds. A fixed-attachment image on the body makes the browser
+   repaint the whole viewport on every scroll frame; a theme with a fixed
+   attachment gets its image on this fixed pseudo-element behind the content
+   instead (--sc-bgImgFixed, the body keeps the color), which composites and
+   scrolls for free. Scrolling images stay on the body */
 body {
   background: var(--sc-bgImg) var(--sc-bgColor) !important;
+}
+:root::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--sc-bgImgFixed);
 }
 /* Reply Opacity only affects post surfaces; UI chrome stays opaque so a
    transparent-reply theme can't blank out dialogs and the post form */
@@ -136,8 +151,13 @@ form[name=post] table td {
 #st-nav-editor {
   color: var(--sc-textColor) !important;
 }
-/* Recolor Even Replies lives in setThemeVariables: its :nth-child(even of ...) selector
-   (needed so TS's injected hover .post.dummy can't flip the parity) is mangled by cssmin. */
+/* Recolor Even Replies: syncThreadMarks keeps st-even on every second real
+   reply. An :nth-child selector would have the browser re-resolve the whole
+   thread on every insertion (TS's hover .post.dummy included), and could
+   only skip that dummy with the `of` syntax cssmin mangles */
+:root.recolor-even .thread>.post.reply.st-even:not(.highlighted):not(:target) {
+  background: rgb(var(--sc-mainColor-shiftM10),var(--sc-replyOp)) !important;
+}
 :root:not(.header-gradient) .boardlist {
   background: rgba(var(--sc-headerBGColor-rgb), var(--sc-navOp)) !important;
 }

@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { load } = require("./harness");
+const { load, sleep } = require("./harness");
 
 test("theme tiles no longer offer the inert NSFW slot", async () => {
     const w = await load();
@@ -40,9 +40,11 @@ test("the editor's live preview ignores a half-typed hex", async () => {
     const base = $SS.conf["Themes"][2].mainColor;
     input.value = "ff";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
+    await sleep(40); // previews run once per frame
     assert.equal($SS.theme.mainColor.hex, "#" + base, "partial input keeps the theme's color");
     input.value = "123456";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
+    await sleep(40);
     assert.equal($SS.theme.mainColor.hex, "#123456", "a complete hex previews");
     d.querySelector("#add-theme a[name=cancel]").click();
     const selected = $SS.conf["Themes"][$SS.conf["Selected Theme"]];
@@ -137,5 +139,20 @@ test("a background image URL with quotes or parentheses cannot break the theme v
     });
     const vars = w.document.getElementById("sc-theme-vars").textContent;
     assert.match(vars, /--sc-bgImg:url\('https:\/\/example\.invalid\/a%27b%20%28c%29\.png'\) repeat top left scroll;/);
+    assert.match(vars, /--sc-bgImgFixed:none;/, "a scrolling image stays on the body");
     assert.match(vars, /--sc-icon-options:/, "later variables still present");
+});
+
+test("a fixed-attachment background moves to the fixed pseudo-element instead of repainting on every scroll", async () => {
+    const w0 = await load();
+    const defaults = w0.__ST.$SS.Themes.defaults;
+    const fixedIdx = defaults.findIndex(t => t.bgImg && / fixed$/.test(t.bgRPA || ""));
+    assert.ok(fixedIdx !== -1, "a default theme with a fixed background exists");
+    const w = await load({ storage: { "Selected Theme": fixedIdx } });
+    const vars = w.document.getElementById("sc-theme-vars").textContent;
+    assert.match(vars, /--sc-bgImg:none;/, "nothing fixed on the body");
+    assert.match(vars, /--sc-bgImgFixed:url\('[^']+'\) repeat top left;/, "image on the pseudo-element, attachment dropped");
+    assert.doesNotMatch(vars, / fixed;/, "no fixed attachment reaches the page");
+    const css = w.document.getElementById("ch4SS").textContent;
+    assert.match(css, /:root::before\{[^}]*position:fixed[^}]*background:var\(--sc-bgImgFixed\)/, "fixed pseudo-element rule");
 });

@@ -151,6 +151,7 @@ test("a window resize re-clamps the QR", async () => {
     const qr = await openQR(w);
     box(qr, { top: 600, left: 100, width: 300, height: 300 });
     w.dispatchEvent(new w.Event("resize"));
+    await sleep(40); // clamped on the next frame
     assert.equal(qr.style.top, "500px");
 });
 

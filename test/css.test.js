@@ -60,6 +60,17 @@ test("every emitted --sc variable is consumed and every consumed one is emitted"
     assert.deepEqual(undef, [], "referenced but never emitted");
 });
 
+test("thread children carry no sibling-positional selectors: the marks come from syncThreadMarks", () => {
+    // :nth-child / :nth-last-child on .thread children make the browser
+    // re-resolve every post in the thread whenever one is inserted or
+    // removed, which TS does on every quote hover (its hidden .post.dummy)
+    const script = fs.readFileSync(path.join(ROOT, "src", "script.js"), "utf8");
+    assert.equal(has(allCSS + script, /\.thread\s*>\s*[^{,"]*:nth-/), false, "nth-* selector on .thread children");
+    assert.equal(has(css("General.css"), /\.thread>\.post\.reply\.st-last-reply/), true, "last-reply margin rule");
+    assert.equal(has(css("General.css"), /:root\.op-background \.thread>\.post\.op\.st-last-post/), true, "last-post OP margin rule");
+    assert.equal(has(css("Colors.css"), /:root\.recolor-even \.thread>\.post\.reply\.st-even/), true, "recolor rule on the even mark");
+});
+
 test("an auto-hidden header leaves no top padding: the zeroing rule outranks the fixed-header ones", () => {
     const original = css("Original.css"), general = css("General.css");
     assert.equal(has(original, /\.fixed\.top-header\.autohide body/), false, "the 2em auto-hide rule is gone");

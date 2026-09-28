@@ -57,6 +57,15 @@ div.post.op {
 :root.op-background .thread>.post.op {
   margin-bottom: " + ($SS.conf["Margin Between Replies"] !== '' ? $SS.conf["Margin Between Replies"] : 4) + "px !important;
 }
+/* The trailing margin comes off the last real reply, or an OP with nothing
+   after it. syncThreadMarks keeps these marks: an :nth-last-child selector
+   here would have the browser re-resolve every post in the thread whenever
+   a child is inserted or removed, which TS does on every quote hover with
+   its hidden .post.dummy */
+.thread>.post.reply.st-last-reply,
+:root.op-background .thread>.post.op.st-last-post {
+  margin-bottom: 0 !important;
+}
 /* Posts inlined elsewhere: TS's Hide Inlined Posts (display:none via its
    iq-hidden-post class) is respected. When TS is NOT hiding them, our own
    st-inlined mark (synced from TS's inline containers in syncInlinedMarks)

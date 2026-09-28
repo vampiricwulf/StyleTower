@@ -139,6 +139,7 @@ test("follow cursor: the current hover preview is positioned on mouse move, incl
     d.body.appendChild(hover);
     await sleep(30);
     move(100, 200);
+    await sleep(40); // placement runs on the next frame
     assert.equal(hover.style.position, "fixed");
     assert.ok(hover.style.top !== "", "top set");
     hover.remove();
@@ -149,6 +150,7 @@ test("follow cursor: the current hover preview is positioned on mouse move, incl
     d.body.appendChild(later);
     await sleep(30);
     move(900, 50);
+    await sleep(40);
     assert.equal(later.style.position, "fixed");
-    assert.ok(later.style.right !== "" || later.style.left !== "", "placed horizontally");
+    assert.ok(later.style.left !== "", "placed horizontally");
 });

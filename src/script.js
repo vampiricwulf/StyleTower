@@ -424,9 +424,19 @@
     $.waitFor = function (selector, cb, timeout) {
         var el = document.querySelector(selector);
         if (el) { cb(el); return; }
-        var timer, obs = new MutationObserver(function () {
-            var el = document.querySelector(selector);
-            if (el) { clearTimeout(timer); obs.disconnect(); cb(el); }
+        // Only an added subtree can hold a new match; querying the whole
+        // document on every mutation would cost a page walk per batch for
+        // as long as the wait lasts
+        var timer, obs = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var nodes = mutations[i].addedNodes;
+                for (var j = 0; j < nodes.length; j++) {
+                    var n = nodes[j];
+                    if (n.nodeType !== 1) continue;
+                    var found = n.matches(selector) ? n : n.querySelector(selector);
+                    if (found) { clearTimeout(timer); obs.disconnect(); cb(found); return; }
+                }
+            }
         });
         obs.observe(document.documentElement, { childList: true, subtree: true });
         timer = setTimeout(function () { obs.disconnect(); }, timeout || $SS.waitTimeout);
@@ -730,6 +740,9 @@
     $SS = {
         waitTimeout: 60000,
         draftDelay: 5000,
+        // Replaced video thumbs on the page: while zero, the observers skip
+        // their per-mutation player checks
+        _videoThumbCount: 0,
         /* Runs one startup feature; a failure is logged and the rest keeps
            going, so a site change that breaks one hook cannot take the
            theme down with it */
@@ -746,6 +759,7 @@
             // Runs on settings reloads too so Replace Thumbnails applies
             // without a page refresh (idempotent per image)
             guard("replaceThumbnails", $SS.replaceThumbnails);
+            guard("threadMarks", $SS.syncThreadMarks);
             guard("navButtons", $SS.initNavButtons);
 
             var div;
@@ -766,18 +780,45 @@
                     return n.nodeType === 1 && ((n.matches && n.matches(".inline-quote-container")) ||
                         (n.querySelector && n.querySelector(".inline-quote-container") != null));
                 };
+                // A .post child of a .thread that takes part in the thread
+                // marks: not a hover clone, TS's hidden dummy or a post
+                // post-hover.js fetched and parked hidden
+                var realPost = function (n, parent) {
+                    var c = n.classList;
+                    return c.contains("post") && !c.contains("post-hover") && !c.contains("dummy") &&
+                        !c.contains("hidden") && parent.nodeType === 1 && parent.classList.contains("thread");
+                };
+                // Every selector the per-node pipeline below can act on
+                // (forms, threads and posts, file blocks and info lines,
+                // omitted summaries, thumbs, menu buttons, intros and
+                // numbers, the site's auto-scroll box, post menus)
+                var INTEREST = "form, #quick-reply, .thread, .post, .files, .fileinfo, span.omitted, " +
+                    "img.post-image, video.st-thumb-video, a.post-btn, p.intro, .post_no, input.auto-scroll, .post-menu";
                 var observer = new MutationObserver(function (mutations) {
-                    var i, j, MAX, _MAX, nodes, node, inlineSync = false;
+                    var i, j, MAX, _MAX, nodes, node, cl, target, inHover, lastVideoTarget = null,
+                        inlineSync = false, threads = [];
 
                     for (i = 0, MAX = mutations.length; i < MAX; ++i) {
+                        target = mutations[i].target;
                         // The site's expand-video player comes and goes inside
                         // a replaced video thumb's file block
-                        $SS.syncVideoThumb(mutations[i].target);
+                        if ($SS._videoThumbCount && target !== lastVideoTarget) {
+                            lastVideoTarget = target;
+                            $SS.syncVideoThumb(target);
+                        }
+                        // Churn inside a hover preview (TS refills it from the
+                        // source post) never changes the page's own state
+                        inHover = target.nodeType === 1 && target.closest(".post-hover") != null;
                         // Containers vanish on collapse; watch removals too
                         nodes = mutations[i].removedNodes;
                         for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
-                            if (!inlineSync && touchesInline(nodes[j])) inlineSync = true;
-                            if (nodes[j] === $SS._hoverEl) $SS._hoverEl = null;
+                            node = nodes[j];
+                            if (node === $SS._hoverEl) $SS._hoverEl = null;
+                            if (inHover || node.nodeType !== 1) continue;
+                            cl = node.classList;
+                            if (cl.contains("post-hover") || (cl.contains("dummy") && cl.contains("post"))) continue;
+                            if (!inlineSync && touchesInline(node)) inlineSync = true;
+                            if (realPost(node, target) && threads.indexOf(target) === -1) threads.push(target);
                         }
 
                         nodes = mutations[i].addedNodes;
@@ -785,13 +826,48 @@
                         for (j = 0, _MAX = nodes.length; j < _MAX; ++j) {
                             node = nodes[j];
                             if (node.nodeType !== 1) continue;
+                            cl = node.classList;
+                            // The site's post-hover.js adds one preview at a
+                            // time: a clone of a post that was processed when
+                            // it arrived (attributes and structure come along),
+                            // so the per-post work below would only repeat
+                            // itself on every hover. Its copied loop video is
+                            // the one thing that needs re-arming
+                            if (cl.contains("post-hover")) {
+                                $SS._hoverEl = node;
+                                $SS.placeHover();
+                                $SS.armClonedVideos(node);
+                                continue;
+                            }
+                            if (inHover) {
+                                $SS.armClonedVideos(node);
+                                continue;
+                            }
+                            // TS's hidden placeholder beside the quoting post
+                            if (cl.contains("dummy") && cl.contains("post")) continue;
                             if (!inlineSync && touchesInline(node)) inlineSync = true;
-                            // The site's post-hover.js adds one preview at a time
-                            if (node.classList.contains("post-hover")) $SS._hoverEl = node;
+                            // TS's inline quote clones: processed originals too
+                            if (cl.contains("inline-cloned-post") || node.closest(".inline-cloned-post")) {
+                                $SS.armClonedVideos(node);
+                                continue;
+                            }
+                            if (realPost(node, target) && threads.indexOf(target) === -1) threads.push(target);
                             var canHavePosts = node.nodeName !== "SCRIPT" && node.nodeName !== "STYLE" &&
                                 node.nodeName !== "LINK" && node.nodeName !== "META" && node.nodeName !== "BR";
+                            // Everything below looks only for the things in
+                            // INTEREST; an added node that neither is nor
+                            // contains one (TS's scroll markers, media hover
+                            // image, notices, effects) skips the dozen
+                            // queries it would otherwise get
+                            if (!canHavePosts || !(node.matches(INTEREST) || node.querySelector(INTEREST))) continue;
 
                             if (canHavePosts) {
+                                // Whole threads arrive too: the hidden one
+                                // post-hover.js prepends to the form for a
+                                // cross-thread preview, TS's fetched wrappers
+                                var ths = cl.contains("thread") ? [node] : node.getElementsByClassName("thread");
+                                for (var k = 0; k < ths.length; ++k)
+                                    if (threads.indexOf(ths[k]) === -1) threads.push(ths[k]);
                                 var formSel = "#quick-reply, form[name='post']";
                                 var forms = node.matches && node.matches(formSel)
                                     ? [node]
@@ -818,6 +894,7 @@
                     }
 
                     if (inlineSync) $SS.syncInlinedMarks();
+                    for (i = 0; i < threads.length; ++i) $SS.syncThreadMarks(threads[i]);
                 });
 
                 // Observe only the body element instead of entire document for better performance
@@ -827,26 +904,18 @@
                     subtree: true
                 });
 
-                // Post hover previews follow the cursor
+                // Post hover previews follow the cursor. The site's own
+                // handler already writes left/top on every mousemove; the
+                // placement itself runs once per frame (placeHover), so a
+                // burst of moves costs one layout read and write, not one
+                // per event. The position is remembered so a preview that
+                // appears under a still cursor (scrolling past quote links)
+                // is placed the moment it is added
                 if ($SS.conf["Follow Cursor"]) {
                     document.addEventListener("mousemove", function (e) {
-                        var img = $SS._hoverEl;
-                        if (!img || !img.isConnected) return;
-                        var cw = document.documentElement.clientWidth;
-                        var ch = document.documentElement.clientHeight;
-                        var h = img.offsetHeight, w = img.offsetWidth;
-                        img.style.position = "fixed";
-                        var top = Math.max(0, e.clientY * (ch - h) / ch);
-                        var threshold = cw / 2;
-                        var marginX = Math.min((e.clientX <= threshold ? e.clientX : cw - e.clientX) + 45, cw - w);
-                        img.style.top = top + "px";
-                        if (e.clientX <= threshold) {
-                            img.style.left = marginX + "px";
-                            img.style.right = "";
-                        } else {
-                            img.style.left = "";
-                            img.style.right = marginX + "px";
-                        }
+                        $SS._mouseX = e.clientX;
+                        $SS._mouseY = e.clientY;
+                        if ($SS._hoverEl) $SS.placeHover();
                     });
                 }
 
@@ -1034,10 +1103,14 @@
 
             css = "<%= grunt.file.read('tmp/style.min.css').replace(/\\(^\")/g, '') %>";
 
-            if (reload)
-                $("#ch4SS").text(css);
-            else
+            // Rewriting the sheet re-parses it and restyles the page even
+            // when the text is the same, which it is for every live change
+            // that only flips root classes or theme variables
+            if (!reload)
                 $(getDocHead()).append($("<style type='text/css' id=ch4SS>").text(css));
+            else if (css !== $SS._lastCSS)
+                $("#ch4SS").text(css);
+            $SS._lastCSS = css;
 
             // The theme's custom CSS gets its own element: a syntax slip in
             // it (an unclosed brace) must not swallow the rest of our
@@ -1050,7 +1123,8 @@
                 if (main && main.parentNode) main.parentNode.insertBefore(custom, main.nextSibling);
                 else (document.head || document.documentElement).appendChild(custom);
             }
-            custom.textContent = ($SS.theme && $SS.theme.customCSS) || "";
+            var customCSS = ($SS.theme && $SS.theme.customCSS) || "";
+            if (custom.textContent !== customCSS) custom.textContent = customCSS;
 
             $SS.disableSiteTheme();
         },
@@ -1060,6 +1134,7 @@
             // mitigation). Once our CSS is inserted the site theme (e.g.
             // tomorrow.css with its blue-grey replies) must stop competing.
             document.querySelectorAll("link#stylesheet").forEach(function (l) {
+                if (l.disabled && l.media === "none") return; // already off
                 l.onload = null;
                 l.media = "none";
                 l.disabled = true;
@@ -1071,6 +1146,12 @@
             var sidebarBgOpacity = !t.mainColor.isLight ? ".9" : ".2",
                 hoverRGB = t.hoverColor ? t.hoverColor.rgb : t.mainColor.shiftRGB(-16),
                 hoverOutRGB = t.hoverOutColor ? t.hoverOutColor.rgb : t.linkColor.rgb,
+                // A fixed-attachment body background is repainted on every
+                // scroll frame; such an image goes on the fixed pseudo-element
+                // in Colors.css (:root::before) instead, with the attachment
+                // dropped since the element itself never scrolls
+                bg = t.bgImg.get(),
+                bgFixed = / fixed$/.test(bg),
                 css = ":root{" +
                 // The disabled site theme used to declare this; without it
                 // native widgets (scrollbars, checkboxes, select dropdowns)
@@ -1127,7 +1208,8 @@
                 "--sc-replyOp:" + t.replyOp + ";" +
                 "--sc-navOp:" + t.navOp + ";" +
                 "--sc-sidebar-bg:rgba(" + t.mainColor.shiftRGB(-18) + "," + sidebarBgOpacity + ");" +
-                "--sc-bgImg:" + t.bgImg.get() + ";" +
+                "--sc-bgImg:" + (bgFixed ? "none" : bg) + ";" +
+                "--sc-bgImgFixed:" + (bgFixed ? bg.replace(/ fixed$/, "") : "none") + ";" +
                 "--sc-icon-backlink:url(\"data:image/svg+xml," + t.icons.backlink + "\");" +
                 "--sc-icon-downArrow:url(\"data:image/svg+xml," + t.icons.downArrow + "\");" +
                 "--sc-icon-navArrow:url(\"data:image/svg+xml," + t.icons.navArrow + "\");" +
@@ -1147,17 +1229,6 @@
                 "}" +
                 // Out-cascades htsu-style's per-site-theme var overrides (e.g. .tomorrow{--ts-hover-color})
                 ":root.oneechan{--ts-hover-color:" + t.linkHColor.hex + ";--ts-mentioned-hover-color:" + t.linkHColor.hex + ";--ts-post-no-hover-color:" + t.linkHColor.hex + "}" +
-                // Kept out of the cssmin pipeline, which mangles the `of` selector syntax.
-                // Counts only real replies so TS's injected hover .post.dummy (and hover
-                // clones / hidden posts) can't flip the even/odd parity.
-                ":root.recolor-even .thread>.post.reply:nth-child(even of .post.reply:not(.post-hover):not(.hidden)):not(.highlighted,:target){" +
-                "background:rgb(var(--sc-mainColor-shiftM10),var(--sc-replyOp))!important" +
-                "}" +
-                // Last-post margin exclusion, counting only real posts so TS's
-                // injected hover .post.dummy can't shift the footer (the `of`
-                // selector syntax must stay out of the cssmin pipeline)
-                ".thread>.post.reply:nth-last-child(1 of .post.reply){margin-bottom:0!important}" +
-                ":root.op-background .thread>.post.op:nth-last-child(1 of .post){margin-bottom:0!important}" +
                 ($SS.conf && $SS.conf["QR Button Image"] ?
                     "a.quick-reply-btn img{display:none}" +
                     "a.quick-reply-btn::before{content:'';display:block;width:64px;height:64px;" +
@@ -1169,6 +1240,9 @@
                 el.id = "sc-theme-vars";
                 (document.head || document.documentElement).appendChild(el);
             }
+            // Unchanged variables (a live change elsewhere) are left alone:
+            // rewriting them restyles the whole page and has TS re-sample
+            if (el.textContent === css) return;
             el.textContent = css;
             // Holotower TS samples post/link colors from computed styles and caches
             // them in its own vars (--ts-link-color etc.); it re-samples on the
@@ -1329,6 +1403,43 @@
                 if (el && !el.closest(".inline-quote-container"))
                     el.classList.add("st-inlined");
             }
+        },
+        /* Sibling-positional pseudo-classes (:nth-child, :nth-last-child) on
+           the thread's posts would make the browser re-resolve every post in
+           the thread each time a child is inserted or removed -- and TS
+           inserts its hidden .post.dummy beside the quoting post on every
+           quote hover, post-hover.js parks fetched posts, the updater
+           appends. The classes those selectors drove are kept by hand
+           instead, from one walk over the thread's children: st-last-reply
+           on the last real reply and st-last-post on an OP with no real post
+           after it (both drop the trailing margin), st-even on every second
+           real reply (Recolor Even Replies; marked only while the option is
+           on, its rule is gated on the root class either way). Hover
+           clones, TS's dummy and posts the site fetched and parked hidden
+           are neither counted nor marked. Called with no argument for every
+           thread on the page */
+        syncThreadMarks: function (thread) {
+            if (!thread || !thread.nodeType) {
+                document.querySelectorAll(".thread").forEach($SS.syncThreadMarks);
+                return;
+            }
+            var even = $SS.conf["Recolor Even Replies"] === true,
+                mark = function (el, cls, on) {
+                    if (el.classList.contains(cls) !== on) el.classList.toggle(cls, on);
+                },
+                replies = 0, lastReply = null, lastPost = null, op = null, el, cl;
+            for (el = thread.firstElementChild; el; el = el.nextElementSibling) {
+                cl = el.classList;
+                if (!cl.contains("post") || cl.contains("post-hover") || cl.contains("dummy") || cl.contains("hidden")) continue;
+                lastPost = el;
+                if (cl.contains("reply")) {
+                    if (even) mark(el, "st-even", ++replies % 2 === 0);
+                    mark(el, "st-last-reply", false);
+                    lastReply = el;
+                } else if (cl.contains("op")) op = el;
+            }
+            if (lastReply) mark(lastReply, "st-last-reply", true);
+            if (op) mark(op, "st-last-post", lastPost === op);
         },
         initIndexPostHiding: function () {
             // The site's post-filter.js only exposes per-post hiding through
@@ -1514,17 +1625,8 @@
             };
             var scope = root && root.querySelectorAll ? root : document;
             // Clones (hover previews, inline expansions) keep the video they
-            // copied: re-arm it -- cloning strips the muted/loop property
-            // state, and an unmuted clone would play sound -- and hand it to
-            // the viewport observer so it plays while the preview is visible
-            scope.querySelectorAll(".post-hover video.st-thumb-video, .inline-cloned-post video.st-thumb-video").forEach(function (v) {
-                if (v._stCloneArmed) return;
-                v._stCloneArmed = true;
-                v.muted = true;
-                v.loop = true;
-                v.playsInline = true;
-                $SS.observeThumbVideo(v);
-            });
+            // copied; it needs re-arming
+            $SS.armClonedVideos(scope);
             scope.querySelectorAll(".file > a > img.post-image").forEach(function (img) {
                 // Never build a second player inside a clone: the original
                 // was already processed and its processed markers are JS
@@ -1570,6 +1672,7 @@
                     video.style.width = img.style.width || (img.width ? img.width + "px" : "");
                     video.style.height = img.style.height || (img.height ? img.height + "px" : "");
                     img.parentNode.insertBefore(video, img.nextSibling);
+                    $SS._videoThumbCount++;
                     $SS.observeThumbVideo(video);
                     if (file) file.classList.add("st-video-thumb");
                     video.addEventListener("click", function (e) {
@@ -1582,6 +1685,15 @@
                     $SS.watchThumbAttributes();
                     return;
                 }
+                if (img._scFullSrc) return; // done on an earlier pass
+                // The full-size file loads only once the post nears the
+                // viewport (the thumb stays on screen until it does) rather
+                // than every image on the page at once, and decodes off the
+                // frame: scrolling, and a hover clone of an off-screen post
+                // (post-hover.js copies the attributes along), would
+                // otherwise wait on a multi-megapixel decode before painting
+                img.setAttribute("loading", "lazy");
+                img.setAttribute("decoding", "async");
                 img._scFullSrc = href;
                 $SS.assertThumbSrc(img);
                 // A lazy loader may overwrite the src with a placeholder and
@@ -1593,6 +1705,50 @@
         assertThumbSrc: function (img) {
             if (img._scFullSrc && !img.classList.contains("full-image") && img.src !== img._scFullSrc)
                 img.src = img._scFullSrc;
+        },
+        /* Hover previews and TS's inline clones copy a replaced video thumb
+           along with the post. Cloning keeps attributes, not property state,
+           so the copy is muted and looped again (an unmuted clone would play
+           sound) and handed to the viewport observer, which plays it while
+           the preview is visible. Nothing to do until a loop video exists */
+        armClonedVideos: function (root) {
+            if (!$SS._videoThumbCount || !root.querySelectorAll) return;
+            var vids = root.matches && root.matches("video.st-thumb-video") ? [root] : root.querySelectorAll("video.st-thumb-video");
+            for (var i = 0; i < vids.length; ++i) {
+                var v = vids[i];
+                if (v._stCloneArmed || !v.closest(".post-hover, .inline-cloned-post")) continue;
+                v._stCloneArmed = true;
+                v.muted = true;
+                v.loop = true;
+                v.playsInline = true;
+                $SS.observeThumbVideo(v);
+            }
+        },
+        /* Follow Cursor: puts the current quote preview beside the cursor, on
+           the roomier side, inside the viewport. Coalesced to one run per
+           frame: the size read forces a layout of the preview after the
+           site's own left/top writes, so it happens once per frame rather
+           than once per mousemove. Only left is written: the site sets left
+           on every move, and a right value alongside it would over-constrain
+           the box and reflow the whole preview twice a frame */
+        placeHover: function () {
+            if (!$SS.conf["Follow Cursor"] || $SS._mouseX == null || $SS._placing) return;
+            $SS._placing = true;
+            requestAnimationFrame(function () {
+                $SS._placing = false;
+                var img = $SS._hoverEl;
+                if (!img || !img.isConnected) return;
+                var de = document.documentElement,
+                    cw = de.clientWidth, ch = de.clientHeight,
+                    x = $SS._mouseX, y = $SS._mouseY,
+                    h = img.offsetHeight, w = img.offsetWidth,
+                    onLeft = x <= cw / 2,
+                    marginX = Math.min((onLeft ? x : cw - x) + 45, cw - w);
+                img.style.position = "fixed";
+                img.style.right = "";
+                img.style.top = Math.max(0, y * (ch - h) / ch) + "px";
+                img.style.left = (onLeft ? marginX : cw - w - marginX) + "px";
+            });
         },
         /* Shows the looping stand-in only while the site's expanded player
            (a div > video it drops beside the thumb) is absent or hidden */
@@ -1617,8 +1773,10 @@
                 for (var i = 0; i < mutations.length; i++) {
                     var t = mutations[i].target;
                     if (mutations[i].attributeName === "src") {
-                        if (t._scFullSrc) setTimeout($SS.assertThumbSrc, 60, t);
-                    } else
+                        // Our own write reports here too; only a foreign
+                        // value needs the re-assert timer
+                        if (t._scFullSrc && t.src !== t._scFullSrc) setTimeout($SS.assertThumbSrc, 60, t);
+                    } else if ($SS._videoThumbCount)
                         $SS.syncVideoThumb(t);
                 }
             });
@@ -2236,12 +2394,12 @@
             // One mascot at a time, OneeChan-style: picked at random from the
             // selected set (or forced by the editor's live preview)
             try {
-                var existing = document.getElementById("styletower-mascots");
-                if (existing) existing.remove();
+                var existing = document.getElementById("styletower-mascots"),
+                    drop = function () { if (existing) existing.remove(); };
                 var m = previewMascot;
                 if (!m) {
-                    if (!$SS.conf["Enable Mascots"]) return;
-                    if ($SS.conf["Hide Mascots in Catalog"] && $SS.location.catalog) return;
+                    if (!$SS.conf["Enable Mascots"]) { drop(); return; }
+                    if ($SS.conf["Hide Mascots in Catalog"] && $SS.location.catalog) { drop(); return; }
                     var mascots = [];
                     try { mascots = JSON.parse($SS.conf["Mascots"] || "[]"); } catch (e) {}
                     var board = $SS.location.board;
@@ -2255,11 +2413,17 @@
                         }
                         return true;
                     });
-                    if (!available.length) return;
-                    m = available.length > 1 ? available[Math.floor(Math.random() * available.length)] : available[0];
+                    if (!available.length) { drop(); return; }
+                    // Random on load, but stable across live settings
+                    // changes (every apply re-runs this): the same mascot
+                    // stays put unless it has left the selected set
+                    var keep = $SS._mascotPick;
+                    m = null;
+                    if (keep) for (var ai = 0; ai < available.length; ai++)
+                        if (available[ai].url === keep) { m = available[ai]; break; }
+                    if (!m) m = available.length > 1 ? available[Math.floor(Math.random() * available.length)] : available[0];
+                    $SS._mascotPick = m.url;
                 }
-                var container = document.createElement("div");
-                container.id = "styletower-mascots";
                 var side = m.side === "left" || m.side === "right" ? m.side :
                     (document.documentElement.classList.contains("left-sidebar") ? "left" : "right");
                 // Max Width makes a capped mascot a 300px window (see the
@@ -2268,6 +2432,15 @@
                 // window is clipped out. Push In moves the image inside the
                 // window, so a negative value hides the pushed-out part
                 var capped = $SS.mascotCapped(m);
+                // Every live settings change renders again; a mascot that
+                // would come out identical is left in place rather than
+                // rebuilt and repainted
+                var sig = JSON.stringify(m) + "|" + side + "|" + capped;
+                if (existing && existing.getAttribute("data-st-sig") === sig) return;
+                drop();
+                var container = document.createElement("div");
+                container.id = "styletower-mascots";
+                container.setAttribute("data-st-sig", sig);
                 container.className = "mascots-" + side + (capped ? " mascots-capped" : "");
                 var left = side === "left";
                 var off = parseInt(m.offset, 10) || 0,
@@ -2541,7 +2714,17 @@
             qr._stSizeWatch = ro;
         },
         initKeepQRInView: function () {
-            window.addEventListener("resize", function () { $SS.keepQRInView(); });
+            // Resize events arrive in bursts while the window is dragged;
+            // one clamp per frame reads the layout once
+            var resizeQueued = false;
+            window.addEventListener("resize", function () {
+                if (resizeQueued) return;
+                resizeQueued = true;
+                requestAnimationFrame(function () {
+                    resizeQueued = false;
+                    $SS.keepQRInView();
+                });
+            });
             // A drag by the title bar moves the QR's anchor to where it is
             // dropped. The site's draggable only starts after 10px, so a
             // plain click on the handle leaves the anchor alone
@@ -4771,6 +4954,19 @@
                     document.documentElement.classList.toggle("dark-captcha", $SS.theme.bgColor.isLight === false);
                 };
 
+                // A color picker drag fires input events faster than frames,
+                // and each preview rewrites the theme variables (a page-wide
+                // restyle): one preview per frame
+                var previewQueued = false,
+                    queuePreview = function () {
+                        if (previewQueued) return;
+                        previewQueued = true;
+                        requestAnimationFrame(function () {
+                            previewQueued = false;
+                            if (document.getElementById("add-theme")) updateLivePreview();
+                        });
+                    };
+
                 // Sync color swatch to hex text input and trigger preview
                 $("input[type='color']", div).bind("input change", function () {
                     var textInput = this.parentNode.querySelector(".color-hex");
@@ -4781,7 +4977,7 @@
                         var rgb = $SS.RGBFromHex(hex);
                         textInput.style.setProperty("color", $SS.isLight(rgb) ? "#000" : "#fff", "important");
                     }
-                    updateLivePreview();
+                    queuePreview();
                 });
 
                 // Live preview on text input / textarea / select changes
@@ -4794,7 +4990,7 @@
                             this.style.setProperty("color", $SS.isLight(rgb) ? "#000" : "#fff", "important");
                         }
                     }
-                    updateLivePreview();
+                    queuePreview();
                 });
 
                 overlay = $("<div id=overlay2>").append(div);
@@ -6094,11 +6290,30 @@
                 // (Holotower TS "Fixed Header" / "Auto-hide Header" toggles); mirror
                 // that state onto :root as the classes the ported CSS keys off.
                 var headerEl = document.querySelector("body > .boardlist:not(.bottom)"),
+                    lastHeaderClass = null,
+                    tsHeaderSetting = function (key) {
+                        try { return JSON.parse(localStorage.getItem("Thread Settings") || "{}")[key] === true; } catch (e) { return false; }
+                    },
                     syncHeader = function () {
-                        var isFixed = headerEl != null && headerEl.classList.contains("fixed");
+                        // TS rewrites the header's classes on every scroll
+                        // event; only an actual change is worth mirroring
+                        var cls = headerEl ? headerEl.className : "";
+                        if (cls === lastHeaderClass) return;
+                        lastHeaderClass = cls;
+                        var hc = headerEl ? headerEl.classList : null,
+                            isFixed = hc != null && hc.contains("fixed"),
+                            // TS's hide-on-scroll adds autohide+scroll while
+                            // the page scrolls down and drops them on the way
+                            // up; the header is only tucked away, so the page
+                            // keeps its top padding rather than jumping by
+                            // the header's height at every direction change.
+                            // The Auto-hide Header mode (autohide on its own,
+                            // or stored as a setting) is what frees the space
+                            autohide = isFixed && hc.contains("autohide") &&
+                                (!hc.contains("scroll") || tsHeaderSetting("headerAutohide"));
                         cl.toggle("fixed", isFixed);
                         cl.toggle("top-header", isFixed);
-                        cl.toggle("autohide", isFixed && headerEl.classList.contains("autohide"));
+                        cl.toggle("autohide", autohide);
                     };
                 // TS only builds its fixed header on thread pages; extend its
                 // stored Fixed/Auto-hide Header preference to the index and
@@ -6119,7 +6334,9 @@
                     $SS._headerObserver = new MutationObserver(syncHeader);
                     $SS._headerObserver.observe(headerEl, { attributes: true, attributeFilter: ["class"] });
                 }
-                $SS.replacePostMenuBtn();
+                // Once: later posts come through the DOM observer, and a
+                // live settings change need not re-query every post
+                if (!$SS._initDone) $SS.replacePostMenuBtn();
             }
         },
 
@@ -6153,6 +6370,12 @@
             this.RPA = RPA;
             this.get = function () {
                 if (!this.img) return "none ";
+                // The theme variables are rebuilt on every live change; an
+                // embedded (base64) background can run to megabytes, and
+                // validating and escaping it each time is regex work over
+                // the whole string. The last result is kept
+                var memo = $SS._imageMemo;
+                if (memo && memo.img === this.img && memo.RPA === this.RPA) return memo.out;
 
                 var src;
                 if ($SS.validBase64(this.img)) {
@@ -6166,7 +6389,9 @@
                             "%" + c.charCodeAt(0).toString(16).toUpperCase();
                     });
 
-                return "url('" + src + "')" + (this.RPA !== undefined ? " " + this.RPA : "");
+                var out = "url('" + src + "')" + (this.RPA !== undefined ? " " + this.RPA : "");
+                $SS._imageMemo = { img: this.img, RPA: this.RPA, out: out };
+                return out;
             };
         },
         Theme: function (index) {
