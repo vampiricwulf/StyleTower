@@ -71,6 +71,23 @@ test("thread children carry no sibling-positional selectors: the marks come from
     assert.equal(has(css("Colors.css"), /:root\.recolor-even \.thread>\.post\.reply\.st-even/), true, "recolor rule on the even mark");
 });
 
+test("stacking below the posts: fixed background, then the sidebar panel, then mascots", () => {
+    // All three are negative so posts stay in front (Mascots Overlap Posts
+    // off); among them the mascot must show in front of the SS-like sidebar
+    // panel, and both in front of a theme's fixed background image
+    const z = (text, re) => {
+        const block = text.match(re);
+        assert.ok(block, "rule found: " + re);
+        const m = block[0].match(/z-index:\s*(-?\d+)/);
+        assert.ok(m, "z-index in " + re);
+        return parseInt(m[1], 10);
+    };
+    const bg = z(css("Colors.css"), /:root::before\s*\{[^}]*\}/);
+    const panel = z(css("Sidebar.css"), /:root\.ss-sidebar body::before\s*\{[^}]*\}/);
+    const mascot = z(css("General.css"), /#styletower-mascots\s*\{[^}]*\}/);
+    assert.ok(bg < panel && panel < mascot && mascot < 0, "order " + bg + " < " + panel + " < " + mascot + " < 0");
+});
+
 test("an auto-hidden header leaves no top padding: the zeroing rule outranks the fixed-header ones", () => {
     const original = css("Original.css"), general = css("General.css");
     assert.equal(has(original, /\.fixed\.top-header\.autohide body/), false, "the 2em auto-hide rule is gone");

@@ -94,7 +94,8 @@ pre {
    repaint the whole viewport on every scroll frame; a theme with a fixed
    attachment gets its image on this fixed pseudo-element behind the content
    instead (--sc-bgImgFixed, the body keeps the color), which composites and
-   scrolls for free. Scrolling images stay on the body */
+   scrolls for free. Scrolling images stay on the body. Lowest of the
+   negative layers: the SS-like sidebar panel (-2) and mascots (-1) sit on it */
 body {
   background: var(--sc-bgImg) var(--sc-bgColor) !important;
 }
@@ -105,7 +106,7 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: -1;
+  z-index: -3;
   pointer-events: none;
   background: var(--sc-bgImgFixed);
 }

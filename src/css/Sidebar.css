@@ -42,7 +42,10 @@
   right: 0 !important;
   left: auto !important;
 }
-/* SS-like Sidebar */
+/* SS-like Sidebar. The panel is page decoration: it sits below the mascot
+   (z-index -1, which keeps mascots behind posts unless Mascots Overlap
+   Posts) and above the theme's fixed background layer (:root::before, -3),
+   so a mascot in the sidebar shows in front of the panel */
 :root.ss-sidebar body::before {
   background: var(--sc-sidebar-bg);
   border-left:2px solid rgba(var(--sc-mainColor-rgb),.9);
@@ -54,6 +57,7 @@
   position:fixed;
   top:0;
   right: 0;
+  z-index: -2;
   pointer-events:none;
 }
 :root.ss-sidebar.left-sidebar body::before {
