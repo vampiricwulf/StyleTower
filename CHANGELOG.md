@@ -1,3 +1,9 @@
+### v1.0.23
+*2026-09-27*
+
+- **Mascots show in front of the SS-like sidebar panel**: the panel painted above every layer below the posts, mascots included, and with a dark theme it is 90% opaque, so a mascot placed in the sidebar was all but hidden unless Mascots Overlap Posts lifted it above the posts as well. The layers under the posts now have a fixed order: the theme's fixed background, then the sidebar panel, then mascots. Mascots Overlap Posts still raises them above the posts
+- Tests: a source check on that stacking order (180 tests)
+
 ### v1.0.22
 *2026-09-27*
 
