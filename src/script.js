@@ -2612,7 +2612,20 @@
                     mainForm + "#upload_settings td > .ts-oekaki-toggle");
             if (!mainRand && !mainButtons.length) {
                 // TS may not be done yet; retry briefly (never without TS)
-                if (attempts > 0 && $SS.isTS()) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
+                if (attempts > 0 && $SS.isTS()) {
+                    var retry = function () { $SS.syncTSPostingControls(qr, attempts - 1); };
+                    // TS patches the form in a double requestAnimationFrame,
+                    // which a background tab holds back: wait for the tab to
+                    // be shown rather than spend the retries while hidden
+                    if (document.hidden) {
+                        var shown = function () {
+                            if (document.hidden) return;
+                            document.removeEventListener("visibilitychange", shown);
+                            setTimeout(retry, 500);
+                        };
+                        document.addEventListener("visibilitychange", shown);
+                    } else setTimeout(retry, 500);
+                }
                 return;
             }
             var qrSpoiler = qr.querySelector("input[name=spoiler]");
@@ -2620,14 +2633,15 @@
             // form, so a copy works in the QR. Copied in the main form's order
             // so the floats line up the same way
             var qrCell = qrSpoiler && qrSpoiler.closest("td");
-            if (qrCell) mainButtons.forEach(function (btn) {
-                var cls = btn.classList.contains("url-upload") ? ".url-upload" : ".ts-oekaki-toggle";
-                if (qr.querySelector(cls)) return;
-                var copy = btn.cloneNode(true);
-                // Cloned mid-fetch, the URL button would carry "Fetching…"
+            // Cloned mid-fetch, the URL button would stay disabled on "Fetching…"
+            var usable = function (copy) {
                 copy.disabled = false;
-                if (cls === ".url-upload") copy.textContent = "URL";
-                qrCell.appendChild(copy);
+                if (copy.classList.contains("url-upload")) copy.textContent = "URL";
+                return copy;
+            };
+            if (qrCell) mainButtons.forEach(function (btn) {
+                if (qr.querySelector(btn.classList.contains("url-upload") ? ".url-upload" : ".ts-oekaki-toggle")) return;
+                qrCell.appendChild(usable(btn.cloneNode(true)));
             });
             if (mainRand && !qr.querySelector("input[name=randfn]") && qrSpoiler) {
                 var lbl = document.createElement("label"),
@@ -2646,6 +2660,7 @@
                 if (spoilerRow) {
                     var row = mainFnRow.cloneNode(true);
                     row.removeAttribute("id");
+                    row.querySelectorAll(".url-upload").forEach(usable);
                     var th = row.querySelector("th");
                     if (th) th.remove();
                     var td = row.querySelector("td");

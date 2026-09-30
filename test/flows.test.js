@@ -181,12 +181,37 @@ test("with Filename Changer on, TS's URL button arrives once, inside the copied 
     d.querySelector("form[name=post] #upload_settings td").appendChild(lbl);
     const row = d.createElement("tr");
     row.id = "upload_filename";
-    row.innerHTML = '<th>Filename</th><td><div class="upload-filename-wrapper"><input type="text" name="filename"><button type="button" class="outline url-upload">URL</button></div></td>';
+    row.innerHTML = '<th>Filename</th><td><div class="upload-filename-wrapper"><input type="text" name="filename"><button type="button" class="outline url-upload" disabled>Fetching…</button></div></td>';
     d.querySelector("form[name=post] #upload_settings").after(row);
     await until(() => qr.querySelector("input[name=filename]"), 2000);
     const urls = qr.querySelectorAll(".url-upload");
     assert.equal(urls.length, 1);
     assert.ok(urls[0].closest(".upload-filename-wrapper"), "in the filename row, not the spoiler cell");
+    assert.equal(urls[0].disabled, false, "a copy taken mid-fetch is usable");
+    assert.equal(urls[0].textContent, "URL");
+});
+
+test("in a background tab, TS's controls are copied once the tab is shown, however long that takes", async () => {
+    const w = await load({ site: { "Thread Settings": "{}" } });
+    const d = w.document;
+    let hidden = true;
+    Object.defineProperty(d, "hidden", { get: () => hidden, configurable: true });
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    await sleep(30);
+    // TS's double rAF only runs once the tab is shown; until then the form is
+    // unpatched, and the sync must not spend its retries waiting
+    await sleep(800);
+    const btn = d.createElement("button");
+    btn.type = "button";
+    btn.className = "outline ts-oekaki-toggle";
+    d.querySelector("form[name=post] #upload_settings td").appendChild(btn);
+    await sleep(700);
+    assert.equal(qr.querySelector(".ts-oekaki-toggle"), null, "no retries ran while hidden");
+    hidden = false;
+    d.dispatchEvent(new w.Event("visibilitychange"));
+    await until(() => qr.querySelector(".ts-oekaki-toggle"), 2000);
 });
 
 test("a quick reply cloned after TS added its Oekaki button keeps a single one", async () => {
