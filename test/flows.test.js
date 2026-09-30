@@ -29,21 +29,28 @@ test("settings import rejects a non-JSON file name", async () => {
     assert.deepEqual(w.__alerts, ["Only JSON files are accepted!"]);
 });
 
-test("theme file import appends, selects and applies the theme", async () => {
+test("theme file import appends and stores the theme without selecting it", async () => {
     const w = await load();
     const { $SS } = w.__ST;
     $SS.options.show();
-    const input = w.document.querySelector("#themes-section #import-link .import-input");
+    const d = w.document;
+    const active = $SS.theme.name;
+    const input = d.querySelector("#themes-section #import-link .import-input");
     pickFile(w, input, "Mine.json", JSON.stringify({ name: "Mine", mainColor: "#123456", textColor: "ffffff", bgColor: "000000", default: true }));
-    await until(() => $SS.theme.name === "Mine", 2000);
+    await until(() => ($SS.Config.get("Themes") || []).length === 1, 2000);
+    await sleep(30);
     const stored = $SS.Config.get("Themes");
-    assert.equal(stored.length, 1);
     assert.equal(stored[0].mainColor, "123456");
     assert.equal(stored[0]["default"], undefined, "foreign default flag dropped");
-    assert.ok(w.document.querySelector("#theme" + $SS.Themes.defaults.length + ".selected"), "selected in the panel");
-    assert.equal($SS.Config.get("Selected Theme"), 1, "the selection is live until Save");
-    w.document.querySelector("#oneechan-options a[name=save]").click();
-    assert.equal($SS.Config.get("Selected Theme"), $SS.Themes.defaults.length);
+    const tile = d.getElementById("theme" + $SS.Themes.defaults.length);
+    assert.ok(tile, "tile added to the panel");
+    assert.equal(tile.classList.contains("selected"), false, "the imported theme is not selected");
+    assert.equal(d.querySelector("#themes-section .theme-preview.selected").id, "theme1", "the selection stays where it was");
+    assert.equal($SS.theme.name, active, "the page keeps its theme");
+    assert.equal($SS.options.dirty, false, "nothing left to save or discard");
+    d.querySelector("#oneechan-options a[name=save]").click();
+    assert.equal($SS.Config.get("Selected Theme"), 1);
+    assert.equal($SS.Config.get("Themes").length, 1, "the imported theme survives Save");
 });
 
 test("theme file import rejects files without the base colors", async () => {
