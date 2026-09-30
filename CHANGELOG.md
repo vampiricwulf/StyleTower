@@ -1,3 +1,9 @@
+### v1.0.25
+*2026-09-30*
+
+- **Shipped themes get real highlight colors**: BakaBT, RedUX, Solarized Light and ピンク in [themes/](themes/) carried black placeholders for the post, quoting-you, own-post and thread highlight colors, and Genergray a near-black for three of them, so their highlight borders painted black. The files now match StyleChan's fixed versions (its v1.9.2). A theme already imported is a stored copy: import the file again to pick up the colors
+- The script itself is unchanged from v1.0.24
+
 ### v1.0.24
 *2026-09-30*
 

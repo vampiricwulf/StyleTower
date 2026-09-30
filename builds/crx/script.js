@@ -277,7 +277,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.24",
+        VERSION = "1.0.25",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
