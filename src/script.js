@@ -262,7 +262,7 @@
         "Watch Thread on Reply": [false, "Automatically adds the thread to the thread watcher when posting a reply."],
         ":: Integrations": ["header", ""],
         "Auto Scroll": [true, "Scroll to new posts only when already at the bottom of the thread. Ported from Holotower Auto Scroll."],
-        "Sauce Links": [true, "Add X/BSKY sauce links to files with matching filenames. Ported from Holotower X/BSKY Sauce."],
+        "Sauce Links": [true, "Add X, Bluesky and pixiv sauce links to files named the way Holotower TS names URL uploads. Ported from Holotower X/BSKY Sauce."],
         "Catalog Highlights": [true, "Highlight and pin catalog threads via the Pin Settings button in the catalog. Ported from Holotower Catalog Highlights and Pin."],
         "Enable Mascots": [false, "Display a mascot image in the bottom corner of the page. Selected mascots rotate randomly on each page load."],
         "Hide Mascots in Catalog": [true, "Hides the mascot when viewing the catalog."],
@@ -1228,7 +1228,10 @@
                 "--highlight-color:rgba(" + t.replyslctColor.rgb + ",.8)" +
                 "}" +
                 // Out-cascades htsu-style's per-site-theme var overrides (e.g. .tomorrow{--ts-hover-color})
-                ":root.oneechan{--ts-hover-color:" + t.linkHColor.hex + ";--ts-mentioned-hover-color:" + t.linkHColor.hex + ";--ts-post-no-hover-color:" + t.linkHColor.hex + "}" +
+                ":root.oneechan{--ts-hover-color:" + t.linkHColor.hex + ";--ts-mentioned-hover-color:" + t.linkHColor.hex + ";--ts-post-no-hover-color:" + t.linkHColor.hex + ";" +
+                // TS's Oekaki panel samples a reply's background, which Reply
+                // Opacity can make translucent over the page; paint it solid
+                "--ts-post-bg-color:" + t.mainColor.hex + ";--ts-post-bg-image:none;--ts-post-text-color:" + t.textColor.hex + ";--ts-post-border-color:1px solid " + t.brderColor.hex + "}" +
                 ($SS.conf && $SS.conf["QR Button Image"] ?
                     "a.quick-reply-btn img{display:none}" +
                     "a.quick-reply-btn::before{content:'';display:block;width:64px;height:64px;" +
@@ -2780,14 +2783,22 @@
             // copy them over. TS's handlers are document-delegated and sync all
             // inputs by name, so the copies stay fully functional.
             if (!qr.isConnected) return;
-            var mainRand = document.querySelector("form[name='post']:not(#quick-reply) input[name=randfn]");
-            if (!mainRand) {
+            var mainForm = "form[name='post']:not(#quick-reply) ";
+            var mainRand = document.querySelector(mainForm + "input[name=randfn]"),
+                mainOekaki = document.querySelector(mainForm + ".ts-oekaki-toggle");
+            if (!mainRand && !mainOekaki) {
                 // TS may not be done yet; retry briefly (never without TS)
                 if (attempts > 0 && $SS.isTS()) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
                 return;
             }
             var qrSpoiler = qr.querySelector("input[name=spoiler]");
-            if (!qr.querySelector("input[name=randfn]") && qrSpoiler) {
+            // TS 2.7's Oekaki button sits in the spoiler cell; its click is
+            // document-delegated and opens the panel for the button's form
+            if (mainOekaki && qrSpoiler && !qr.querySelector(".ts-oekaki-toggle")) {
+                var cell = qrSpoiler.closest("td");
+                if (cell) cell.appendChild(mainOekaki.cloneNode(true));
+            }
+            if (mainRand && !qr.querySelector("input[name=randfn]") && qrSpoiler) {
                 var lbl = document.createElement("label"),
                     cb = document.createElement("input");
                 cb.type = "checkbox";
@@ -2856,27 +2867,33 @@
                 if (I._autoScrollNode) I._autoScrollNode(node);
             },
 
-            /* X/BSKY sauce links on file info (Holotower X/BSKY Sauce) */
+            /* X/BSKY/pixiv sauce links on file info (Holotower X/BSKY Sauce).
+               Matches the names Holotower TS gives URL uploads:
+               @user-statusid (X), @handle-bsky-postid-n (Bluesky) and
+               @user-pixiv-illustid_pN (pixiv). Each ID is matched by its
+               own shape so one site's name never passes for another's (the
+               old loose 13-character ID read "pixiv-1234567" as an X status) */
+            sauceLink: function (name) {
+                var m;
+                if ((m = name.match(/@([a-z0-9.-]+)-bsky-([a-z2-7]{13})(?![a-z0-9]).*\.\w+$/i)))
+                    return { site: "🦋", title: "Bluesky", url: "https://bsky.app/profile/" + m[1] + "/post/" + m[2] };
+                if ((m = name.match(/@.+?-pixiv-(\d+)(?:_p\d+)?(?!\d).*\.\w+$/i)))
+                    return { site: "pixiv", title: "pixiv", url: "https://www.pixiv.net/artworks/" + m[1] };
+                if ((m = name.match(/@(\w+)-(\d{15,20})(?!\d).*\.\w+$/)))
+                    return { site: "𝕏", title: "X", url: "https://x.com/" + m[1] + "/status/" + m[2] };
+                return null;
+            },
             initSauceLinks: function () {
-                var regexAll = /@(?:([a-zA-Z0-9-.]+)-bsky|(\w+))-(\d{19}|\S{13})(-\d)?.*\.\w+$/i;
-
                 function addSauceButton(el, data) {
                     if (el == null) return;
-                    var site, url;
                     var sauceEl = document.createElement("span");
                     sauceEl.className = "sc-sauce-link";
-                    if (data[1]) {
-                        site = "🦋"; /* butterfly */
-                        url = "https://bsky.app/profile/" + data[1] + "/post/" + data[3];
-                    } else {
-                        site = "𝕏"; /* X */
-                        url = "https://x.com/" + data[2] + "/status/" + data[3];
-                    }
                     var a = document.createElement("a");
-                    a.href = url;
+                    a.href = data.url;
                     a.target = "_blank";
                     a.rel = "noopener noreferrer";
-                    a.textContent = site;
+                    a.title = data.title;
+                    a.textContent = data.site;
                     sauceEl.appendChild(document.createTextNode("["));
                     sauceEl.appendChild(a);
                     sauceEl.appendChild(document.createTextNode("]"));
@@ -2889,7 +2906,7 @@
                     scope.querySelectorAll(".fileinfo span.unimportant a").forEach(function (file) {
                         if (!file.hasAttribute("sauced")) {
                             file.setAttribute("sauced", "");
-                            var data = (file.download || "").match(regexAll);
+                            var data = $SS.integrations.sauceLink(file.download || "");
                             if (data) addSauceButton(file, data);
                         }
                     });

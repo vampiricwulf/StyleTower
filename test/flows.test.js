@@ -118,6 +118,36 @@ test("TS posting controls are copied into a quick reply built before TS patched 
     assert.equal(fn.getAttribute("placeholder"), "Filename");
 });
 
+test("TS 2.7's Oekaki button is copied into a pre-built quick reply, even without Randomize Filename", async () => {
+    const w = await load({ site: { "Thread Settings": "{}" } });
+    const d = w.document;
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    // TS adds the button to the main form's spoiler cell after the QR exists
+    const btn = d.createElement("button");
+    btn.type = "button";
+    btn.className = "outline ts-oekaki-toggle";
+    btn.title = "Oekaki";
+    d.querySelector("form[name=post] #upload_settings td").appendChild(btn);
+    await sleep(700);
+    const copies = qr.querySelectorAll(".ts-oekaki-toggle");
+    assert.equal(copies.length, 1, "one button in the QR");
+    assert.ok(copies[0].closest("td").querySelector("input[name=spoiler]"), "in the spoiler cell");
+    assert.equal(qr.querySelector("input[name=randfn]"), null, "no Randomize Filename invented");
+});
+
+test("TS's Oekaki panel is painted with the theme's solid post colors", async () => {
+    const w = await load();
+    const css = w.document.getElementById("sc-theme-vars").textContent;
+    const rule = css.match(/:root\.oneechan\{([^}]*)\}/)[1];
+    const t = w.__ST.$SS.theme;
+    assert.ok(rule.includes("--ts-post-bg-color:" + t.mainColor.hex), rule);
+    assert.ok(rule.includes("--ts-post-bg-image:none"));
+    assert.ok(rule.includes("--ts-post-text-color:" + t.textColor.hex));
+    assert.ok(rule.includes("--ts-post-border-color:1px solid " + t.brderColor.hex));
+});
+
 test("Catalog Links rewrites board links in the board list", async () => {
     const w = await load({ storage: { "Catalog Links": true } });
     const links = [...w.document.querySelectorAll(".boardlist a")].map(a => a.getAttribute("href"));

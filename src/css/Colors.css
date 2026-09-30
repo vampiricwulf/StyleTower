@@ -268,6 +268,7 @@ img.thread-image {
 :root.rounded-corners #options_div,
 :root.rounded-corners #alert_div,
 :root.rounded-corners #pin-settings,
+:root.rounded-corners .ts-oekaki-panel,
 :root.rounded-corners #quick-reply input[type=submit],
 :root.rounded-corners img.post-image {
   border-radius: 3px !important;

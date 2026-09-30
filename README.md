@@ -31,7 +31,7 @@ Open the settings with the **[StyleTower]** link next to the site's **[Options]*
 The following standalone Holotower userscripts are folded into StyleTower and can be toggled under **Options → Misc → Integrations**. If you keep running a standalone copy, disable the matching option here first:
 
 - [Holotower Auto Scroll](https://greasyfork.org/en/scripts/540450-holotower-auto-scroll)
-- [Holotower X/BSKY Sauce](https://greasyfork.org/en/scripts/554505-holotower-x-bsky-sauce)
+- [Holotower X/BSKY Sauce](https://greasyfork.org/en/scripts/554505-holotower-x-bsky-sauce), extended to pixiv: X, Bluesky and pixiv files named by TS's Format Filenames get a link to their source
 - [Holotower Catalog Highlights and Pin](https://greasyfork.org/en/scripts/543156-holotower-catalog-highlights-and-pin)
 
 [Holotower TS](https://greasyfork.org/en/scripts/560097-holotower-ts) is detected and themed automatically:
@@ -39,7 +39,8 @@ The following standalone Holotower userscripts are folded into StyleTower and ca
 - Its fixed/auto-hide header state is mirrored so the page clears the bar correctly
 - Its notifications, inline quotes, archive posts and hover colors follow the active theme through TS's own CSS hooks
 - Its (You)/quoting-you highlight marks are colored by the theme (respecting TS's border-style setting)
-- Its posting controls are restored into the quick reply when another script pre-builds it
+- Its posting controls (Oekaki button included) are restored into the quick reply when another script pre-builds it
+- Its Oekaki panel is painted with the theme's post colors
 
 ## Theming
 

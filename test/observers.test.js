@@ -26,6 +26,17 @@ test("sauce links: present at load and added to posts that arrive later", async 
     assert.equal(later.href, "https://bsky.app/profile/bob.bsky.social/post/3lbcdefghijkl");
 });
 
+test("sauce links: Holotower TS 2.7 upload names map to their own site, and pixiv is not read as X", async () => {
+    const w = await load();
+    const link = w.__ST.$SS.integrations.sauceLink;
+    assert.equal(link("@someone-1234567890123456789.jpg").url, "https://x.com/someone/status/1234567890123456789");
+    assert.equal(link("@bob.bsky.social-bsky-3lbcdefghijkl-0.jpg").url, "https://bsky.app/profile/bob.bsky.social/post/3lbcdefghijkl");
+    assert.equal(link("@SomeArtist-pixiv-123456789_p0.png").url, "https://www.pixiv.net/artworks/123456789");
+    assert.equal(link("@絵師-pixiv-123456789_p2.jpg").url, "https://www.pixiv.net/artworks/123456789", "non-ASCII pixiv names");
+    assert.equal(link("@someone-notastatusid.jpg"), null, "a 13-character tail is no X status");
+    assert.equal(link("Some YouTube Title.mp4"), null);
+});
+
 test("auto scroll: builds its checkbox and scrolls on new posts when at the bottom", async () => {
     const w = await load({ storage: { "Auto Scroll": true } });
     const d = w.document;
