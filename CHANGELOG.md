@@ -1,3 +1,14 @@
+### v1.0.24
+*2026-09-30*
+
+- **Holotower TS 2.7 support**
+  - Sauce Links reads the names TS's new Format Filenames gives URL uploads: X (`@user-statusid`), Bluesky (`@handle-bsky-postid-0`) and, new, pixiv (`@artist-pixiv-illustid_p0`), which gets a [pixiv] link to the artwork
+  - A pixiv name no longer gets a broken 𝕏 link: the old pattern took any 13-character tail as an X status, and "pixiv-1234567" was one
+  - TS's Oekaki button is copied into a quick reply that another script built before TS patched the form, also with Randomize Filename off
+  - The Oekaki panel is painted with the theme's solid post, text and border colors (TS sampled a reply's background, which Reply Opacity can make see-through), and Rounded Corners rounds it
+- **Auto-Convert Images is retired**: TS converts images past the size or dimension limit to JPEG on every upload in a thread, so the option only duplicated it there. A stored value is cleared, and older exports skip it. WebP uploads now stay WebP, and on board index and catalog pages, where TS does not convert, an oversized upload gets the site's own error
+- Tests: Sauce Links cases for each TS filename format (including an artist name that contains "-pixiv-"), the Oekaki button copy with TS's late insertion and without duplicates, the panel colors, and the Auto-Convert retirement (183 tests)
+
 ### v1.0.23
 *2026-09-27*
 
