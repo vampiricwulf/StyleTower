@@ -2697,7 +2697,9 @@
                 var m;
                 if ((m = name.match(/@([a-z0-9.-]+)-bsky-([a-z2-7]{13})(?![a-z0-9]).*\.\w+$/i)))
                     return { site: "🦋", title: "Bluesky", url: "https://bsky.app/profile/" + m[1] + "/post/" + m[2] };
-                if ((m = name.match(/@.+?-pixiv-(\d+)(?:_p\d+)?(?!\d).*\.\w+$/i)))
+                // Greedy name: TS's separator is the last "-pixiv-<id>" (an
+                // artist name may contain one of its own)
+                if ((m = name.match(/@.+-pixiv-(\d+)(?:_p\d+)?(?!\d).*\.\w+$/i)))
                     return { site: "pixiv", title: "pixiv", url: "https://www.pixiv.net/artworks/" + m[1] };
                 if ((m = name.match(/@(\w+)-(\d{15,20})(?!\d).*\.\w+$/)))
                     return { site: "𝕏", title: "X", url: "https://x.com/" + m[1] + "/status/" + m[2] };

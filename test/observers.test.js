@@ -33,7 +33,8 @@ test("sauce links: Holotower TS 2.7 upload names map to their own site, and pixi
     assert.equal(link("@bob.bsky.social-bsky-3lbcdefghijkl-0.jpg").url, "https://bsky.app/profile/bob.bsky.social/post/3lbcdefghijkl");
     assert.equal(link("@SomeArtist-pixiv-123456789_p0.png").url, "https://www.pixiv.net/artworks/123456789");
     assert.equal(link("@絵師-pixiv-123456789_p2.jpg").url, "https://www.pixiv.net/artworks/123456789", "non-ASCII pixiv names");
-    assert.equal(link("@someone-notastatusid.jpg"), null, "a 13-character tail is no X status");
+    assert.equal(link("@Kome-pixiv-1st-pixiv-123456789_p0.png").url, "https://www.pixiv.net/artworks/123456789", "the last -pixiv- is TS's separator");
+    assert.equal(link("@someone-abcdefghijklm.jpg"), null, "a 13-character tail is no X status");
     assert.equal(link("Some YouTube Title.mp4"), null);
 });
 

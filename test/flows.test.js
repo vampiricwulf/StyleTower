@@ -124,17 +124,34 @@ test("TS 2.7's Oekaki button is copied into a pre-built quick reply, even withou
     const qr = d.querySelector("form[name=post]").cloneNode(true);
     qr.id = "quick-reply";
     d.body.appendChild(qr);
+    await sleep(30);
+    assert.equal(qr.querySelector(".ts-oekaki-toggle"), null, "nothing to copy yet");
     // TS adds the button to the main form's spoiler cell after the QR exists
+    // (in a double rAF); the sync retries until it shows up
     const btn = d.createElement("button");
     btn.type = "button";
     btn.className = "outline ts-oekaki-toggle";
     btn.title = "Oekaki";
     d.querySelector("form[name=post] #upload_settings td").appendChild(btn);
-    await sleep(700);
+    await until(() => qr.querySelector(".ts-oekaki-toggle"), 2000);
     const copies = qr.querySelectorAll(".ts-oekaki-toggle");
     assert.equal(copies.length, 1, "one button in the QR");
     assert.ok(copies[0].closest("td").querySelector("input[name=spoiler]"), "in the spoiler cell");
     assert.equal(qr.querySelector("input[name=randfn]"), null, "no Randomize Filename invented");
+});
+
+test("a quick reply cloned after TS added its Oekaki button keeps a single one", async () => {
+    const w = await load({ site: { "Thread Settings": "{}" } });
+    const d = w.document;
+    const btn = d.createElement("button");
+    btn.type = "button";
+    btn.className = "outline ts-oekaki-toggle";
+    d.querySelector("form[name=post] #upload_settings td").appendChild(btn);
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    await sleep(80);
+    assert.equal(qr.querySelectorAll(".ts-oekaki-toggle").length, 1);
 });
 
 test("TS's Oekaki panel is painted with the theme's solid post colors", async () => {
