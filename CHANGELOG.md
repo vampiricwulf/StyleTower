@@ -5,9 +5,11 @@
   - Sauce Links reads the names TS's new Format Filenames gives URL uploads: X (`@user-statusid`), Bluesky (`@handle-bsky-postid-0`) and, new, pixiv (`@artist-pixiv-illustid_p0`), which gets a [pixiv] link to the artwork
   - A pixiv name no longer gets a broken 𝕏 link: the old pattern took any 13-character tail as an X status, and "pixiv-1234567" was one
   - TS's Oekaki button is copied into a quick reply that another script built before TS patched the form, also with Randomize Filename off
+- **TS's URL Upload button in a pre-built quick reply**: with TS's Filename Changer off, the button sits beside Spoiler instead of in the filename row, and a quick reply another script built early never had it; it is now copied, in TS's order next to Oekaki. A copy made while the original was fetching starts usable instead of stuck on "Fetching…"
+- **TS's posting controls reach a pre-built quick reply opened in a background tab**: TS patches the form only once the tab is shown, after the roughly five seconds of retries had run out, so Randomize Filename, the filename row, URL Upload and Oekaki never arrived; the copy now waits for the tab to be shown
   - The Oekaki panel is painted with the theme's solid post, text and border colors (TS sampled a reply's background, which Reply Opacity can make see-through), and Rounded Corners rounds it
 - **Auto-Convert Images is retired**: TS converts images past the size or dimension limit to JPEG on every upload in a thread, so the option only duplicated it there. A stored value is cleared, and older exports skip it. WebP uploads now stay WebP, and on board index and catalog pages, where TS does not convert, an oversized upload gets the site's own error
-- Tests: Sauce Links cases for each TS filename format (including an artist name that contains "-pixiv-"), the Oekaki button copy with TS's late insertion and without duplicates, the panel colors, and the Auto-Convert retirement (183 tests)
+- Tests: Sauce Links cases for each TS filename format (including an artist name that contains "-pixiv-"), the Oekaki and URL Upload copies (late insertion, TS's order, no duplicates, mid-fetch copies, a background tab), the panel colors, and the Auto-Convert retirement (186 tests)
 
 ### v1.0.23
 *2026-09-27*
