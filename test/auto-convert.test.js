@@ -1,77 +1,35 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { load, sleep } = require("./harness");
+const { load, sleep, NAMESPACE } = require("./harness");
 
-function makeFile(w, name, type, size) {
-    return new w.File([new Uint8Array(size || 10)], name, { type });
-}
+test("Auto-Convert Images is gone: Holotower TS converts oversized uploads itself", async () => {
+    const w = await load();
+    assert.equal(w.__ST.defaultConfig["Auto-Convert Images"], undefined);
+    w.__ST.$SS.options.show();
+    assert.ok(w.document.querySelector("#oneechan-options input[name='Sauce Links']"), "panel open");
+    assert.equal(w.document.querySelector("#oneechan-options input[name='Auto-Convert Images']"), null);
+});
 
-function loadConvert(extra) {
-    return load({
-        storage: Object.assign({ "Auto-Convert Images": true }, extra),
-        setup(w) {
-            // jsdom has no bitmap decoder: images decode, anything else fails
-            // like a real browser handed a video
-            w.createImageBitmap = function (file) {
-                return /^image\//.test(file.type) ?
-                    Promise.resolve({ width: 100, height: 100, close() {} }) :
-                    Promise.reject(new TypeError("The source image could not be decoded."));
-            };
-        }
-    });
-}
-
-function select(w, input, file) {
+test("a stored Auto-Convert Images setting is cleared and hooks nothing", async () => {
+    const w = await load({ storage: { "Auto-Convert Images": true } });
+    assert.equal(w.localStorage.getItem(NAMESPACE + "Auto-Convert Images"), null, "old key cleared");
+    assert.equal(w.__ST.$SS.conf["Auto-Convert Images"], undefined);
+    // A picked file reaches the site's own listeners untouched
+    const input = w.document.querySelector("form[name=post] input[type=file]");
+    const file = new w.File([new Uint8Array(10)], "pic.webp", { type: "image/webp" });
     Object.defineProperty(input, "files", { value: [file], writable: true, configurable: true });
+    let seen = null;
+    input.addEventListener("change", () => { seen = input.files[0]; });
     input.dispatchEvent(new w.Event("change", { bubbles: true }));
-}
-
-test("a non-image upload (WEBM) passes through untouched", async () => {
-    const w = await loadConvert();
-    const input = w.document.querySelector("form[name=post] input[type=file]");
-    let seen = 0;
-    input.addEventListener("change", () => seen++);
-    select(w, input, makeFile(w, "clip.webm", "video/webm"));
-    await sleep(60);
-    assert.equal(input.files.length, 1, "the selected file must survive");
-    assert.equal(input.files[0].name, "clip.webm");
-    assert.equal(seen, 1, "the site's own change listener sees the selection once");
-    assert.ok(!input._scConverting, "the input must not stay flagged as converting");
+    await sleep(30);
+    assert.equal(seen, file, "the WebP is not swallowed or swapped for a JPEG");
 });
 
-test("a file with no MIME type passes through untouched", async () => {
-    const w = await loadConvert();
-    const input = w.document.querySelector("form[name=post] input[type=file]");
-    select(w, input, makeFile(w, "mystery.bin", ""));
-    await sleep(60);
-    assert.equal(input.files.length, 1);
-    assert.equal(input.files[0].name, "mystery.bin");
-    assert.ok(!input._scConverting);
-});
-
-test("a small JPEG within limits is re-emitted once, unchanged", async () => {
-    const w = await loadConvert();
-    const input = w.document.querySelector("form[name=post] input[type=file]");
-    let seen = 0;
-    input.addEventListener("change", () => seen++);
-    select(w, input, makeFile(w, "photo.jpg", "image/jpeg"));
-    await sleep(60);
-    assert.equal(input.files.length, 1);
-    assert.equal(input.files[0].name, "photo.jpg");
-    assert.equal(seen, 1);
-    assert.ok(!input._scConverting);
-});
-
-test("a decode failure on an image restores the original selection", async () => {
-    const w = await load({
-        storage: { "Auto-Convert Images": true },
-        setup(w) { w.createImageBitmap = () => Promise.reject(new TypeError("decode failed")); }
-    });
-    const input = w.document.querySelector("form[name=post] input[type=file]");
-    select(w, input, makeFile(w, "broken.webp", "image/webp"));
-    await sleep(60);
-    assert.equal(input.files.length, 1, "the original file is put back");
-    assert.equal(input.files[0].name, "broken.webp");
-    assert.ok(!input._scConverting);
+test("an older export's Auto-Convert Images value is not imported", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    $SS.options.importSettings({ "Auto-Convert Images": true, "Bitmap Font": true });
+    assert.equal(w.localStorage.getItem(NAMESPACE + "Auto-Convert Images"), null);
+    assert.equal($SS.Config.get("Bitmap Font"), true, "the rest of the import lands");
 });

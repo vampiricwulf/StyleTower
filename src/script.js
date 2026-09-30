@@ -90,7 +90,6 @@
         "Animated Transition": [false, "Enables a transition animation for the QR."],
         "Expanding Form Inputs": [true, "Makes certain form elements expand on focus."],
         "Remember Comment Draft": [false, "Will save and restore unsubmitted QR comments (5 second delay). Drafts expire after 24h."],
-        "Auto-Convert Images": [false, "Auto-convert WebP images to JPEG, and convert any image exceeding the board's file size or dimensions limit to JPEG."],
         ":: Replies": ["header", ""],
         "Fit Width": [true, "Replies stretch to the width of the page.", null, true],
         "Fit Post Menu": [false, "Moves the post menu button to the right edge of each post.", "Fit Width", true, true],
@@ -919,10 +918,6 @@
                     });
                 }
 
-                // Auto-convert images on drop
-                if ($SS.conf["Auto-Convert Images"]) {
-                    guard("initImageConvertOnDrop", $SS.initImageConvertOnDrop);
-                }
                 // Normalize OP structure (move .files inside .post.op)
                 guard("moveOPFiles", $SS.moveOPFiles);
                 guard("tidyFileInfo", $SS.tidyFileInfo);
@@ -1321,10 +1316,6 @@
             if ($SS._navWait) return;
             $SS._navWait = true;
             $.waitFor("#scroll-buttons", function () { $SS.applyNavButtons(); });
-        },
-        getActiveFileInput: function () {
-            return document.querySelector("#quick-reply input[type=file]") ||
-                document.querySelector("form[name='post'] input[type=file]");
         },
         moveOPFiles: function (root) {
             // vichan puts the OP file block outside div.post.op; move it inside
@@ -1808,166 +1799,6 @@
             }
             $SS._thumbVideoIO.observe(video);
         },
-        initImageConvertOnDrop: function () {
-            var MAX_BYTES = $SS.location.maxFileSize;
-
-            function notify(msg) {
-                $SS.notify({
-                    type: 'success',
-                    content: msg,
-                    lifetime: 5
-                });
-            }
-
-            // Hands a file to the input and replays the events the site's
-            // listeners missed while ours held the original change
-            function pass(file, input) {
-                try {
-                    var dt = new DataTransfer();
-                    dt.items.add(file);
-                    input.files = dt.files;
-                    input.dispatchEvent(new Event("input", { bubbles: true }));
-                    input.dispatchEvent(new Event("change", { bubbles: true }));
-                } catch (err) { console.warn("Failed to hand the file back:", err); }
-                input._scConverting = false;
-            }
-
-            // Only raster images go through the canvas; videos, PDFs and
-            // files with no MIME type are the site's business
-            function isConvertible(file) {
-                return /^image\//.test(file.type) && file.type !== "image/gif" && file.type !== "image/svg+xml";
-            }
-
-            function convertToJPEG(file, baseName, qrInput) {
-                createImageBitmap(file).then(function (bitmap) {
-                    var canvas = document.createElement("canvas"),
-                        w = bitmap.width, h = bitmap.height,
-                        maxDim = $SS.maxImageDim,
-                        outName = baseName + ".jpg",
-                        wasResized = false,
-                        qualities = [0.99, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.05, 0.01];
-
-                    if (w > maxDim || h > maxDim) {
-                        var scale = Math.min(maxDim / w, maxDim / h);
-                        w = Math.round(w * scale);
-                        h = Math.round(h * scale);
-                        wasResized = true;
-                    }
-                    canvas.width = w;
-                    canvas.height = h;
-                    canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
-                    bitmap.close();
-
-                    function emitFile(blob, q) {
-                        var converted = new File([blob], outName, { type: "image/jpeg" });
-                        var dt = new DataTransfer();
-                        dt.items.add(converted);
-                        qrInput.files = dt.files;
-                        qrInput.dispatchEvent(new Event("input", { bubbles: true }));
-                        qrInput.dispatchEvent(new Event("change", { bubbles: true }));
-                        var msg = "Converted " + file.name + " to " + outName + " (q=" + Math.round(q * 100) + "%)";
-                        if (wasResized) msg += ", resized to " + w + "x" + h;
-                        notify(msg);
-                        qrInput._scConverting = false;
-                    }
-
-                    function tryQuality(index) {
-                        var q = qualities[index];
-                        canvas.toBlob(function (blob) {
-                            if (blob.size <= MAX_BYTES || index === qualities.length - 1) {
-                                emitFile(blob, q);
-                            } else {
-                                tryQuality(index + 1);
-                            }
-                        }, "image/jpeg", q);
-                    }
-
-                    tryQuality(0);
-                }).catch(function (err) {
-                    console.warn("Image conversion failed:", err);
-                    // The selection was cleared for the conversion: put the
-                    // original back rather than lose the upload
-                    pass(file, qrInput);
-                });
-            }
-
-            function shouldConvert(file) {
-                if (file.type === "image/jpeg" || file.type === "image/png") return file.size > MAX_BYTES;
-                return true;
-            }
-
-            function findQRFileInput() {
-                return $SS.getActiveFileInput();
-            }
-
-            function clearSelectedFile(input) {
-                try {
-                    input.files = new DataTransfer().files;
-                } catch (err) { console.warn("Failed to clear file:", err); }
-            }
-
-            function checkAndConvert(file, input) {
-                var baseName = file.name.replace(/\.[^.]+$/, "");
-
-                if (shouldConvert(file)) {
-                    clearSelectedFile(input);
-                    convertToJPEG(file, baseName, input);
-                    return;
-                }
-
-                var maxDim = $SS.maxImageDim;
-
-                createImageBitmap(file).then(function (bitmap) {
-                    var tooBig = bitmap.width > maxDim || bitmap.height > maxDim;
-                    bitmap.close();
-                    if (tooBig) {
-                        clearSelectedFile(input);
-                        convertToJPEG(file, baseName, input);
-                    } else
-                        pass(file, input);
-                }).catch(function (err) {
-                    console.warn("Image dimension check failed:", err);
-                    pass(file, input);
-                });
-            }
-
-            // File picker: intercept change on the QR input
-            function changeHandler(e) {
-                var input = e.target;
-                if (input._scConverting) return;
-                if (input.type !== "file") return;
-                if (!input.closest("#quick-reply, form[name='post']")) return;
-                var file = input.files && input.files[0];
-                if (!file || !isConvertible(file)) return;
-
-                e.stopImmediatePropagation();
-                input._scConverting = true;
-                checkAndConvert(file, input);
-            }
-            window.addEventListener("change", changeHandler, true);
-            $SS._scChangeHandler = changeHandler;
-
-            // Drag and drop
-            function dropHandler(e) {
-                var files = e.dataTransfer && e.dataTransfer.files;
-                if (!files || !files.length) return;
-
-                var file = files[0];
-                if (!isConvertible(file)) return;
-
-                // Find the active file input (quick reply or main form)
-                var qrInput = findQRFileInput();
-                if (!qrInput) return;
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                qrInput._scConverting = true;
-                checkAndConvert(file, qrInput);
-            }
-            window.addEventListener("drop", dropHandler, true);
-            $SS._scDropHandler = dropHandler;
-        },
         getNotificationRoot: function () {
             var root = document.getElementById('styletower-notifications');
 
@@ -2198,17 +2029,6 @@
             }
             var spoiler = form.querySelector("input[name=spoiler]");
             if (spoiler && !spoiler.title) spoiler.title = "Spoiler image";
-            if ($SS.conf["Auto-Convert Images"] && $SS._scChangeHandler) {
-                var fi = form.querySelector("input[type=file]");
-                if (fi && !fi._scHooked) {
-                    fi._scHooked = true;
-                    fi.addEventListener("change", $SS._scChangeHandler, true);
-                }
-                if (!form._scDropHooked) {
-                    form._scDropHooked = true;
-                    form.addEventListener("drop", $SS._scDropHandler, true);
-                }
-            }
         },
         toggleAutohideQR: function () {
             // All three autohide styles expand on the .focus class (maintained
@@ -3389,6 +3209,11 @@
                     this.remove("Relative Post Dates");
                 } catch (e) {}
 
+                // "Auto-Convert Images" duplicated Holotower TS's upload
+                // converter (images past the size or dimension limit to JPEG);
+                // TS is the one that runs on every upload, so drop the key
+                try { this.remove("Auto-Convert Images"); } catch (e) {}
+
                 // Include saved site settings in exports
                 var chanKeys = ["stylesheet", "name", "email", "password", "own_posts", "watch_js", "hidden_threads", "catalog"];
                 chanKeys.forEach(function (key) {
@@ -4158,7 +3983,7 @@
             /* Options wired up once at page load (listeners, form hooks,
                link rewrites) and integrations that cannot be switched off
                without a reload */
-            reloadKeys: ["Follow Cursor", "Auto-Convert Images", "Remember Comment Draft", "Watch Thread on Reply",
+            reloadKeys: ["Follow Cursor", "Remember Comment Draft", "Watch Thread on Reply",
                 "Catalog Links", "Pin Quick Reply", "Autohide Style"],
             reloadWhenOff: ["Auto Scroll", "Sauce Links", "Catalog Highlights", "Replace Thumbnails",
                 "Replace GIF", "Replace JPG", "Replace PNG", "Replace WEBP", "Replace WEBM/MP4"],
@@ -6658,10 +6483,6 @@
         validImageURL: function (img) {
             return /^https?:\/\/.+$/i.test(img);
         },
-        /* Holotower (vichan) upload limits */
-        maxFileSizeDefault: 10485760, /* 10MB */
-        maxImageDim: 10000,
-
         getLocation: function (url) {
             var obj;
 
@@ -6676,7 +6497,6 @@
             return {
                 sub: obj.hostname.split(".")[0],
                 board: /\.(?:php|html)$/.test(pathname[0] || "") ? "" : pathname[0],
-                maxFileSize: $SS.maxFileSizeDefault,
                 reply: pathname[1] === "res",
                 catalog: pathname[1] === "catalog.html",
                 dead: /^404\b|^Not [Ff]ound\b/.test(document.title)

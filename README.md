@@ -23,7 +23,7 @@ Open the settings with the **[StyleTower]** link next to the site's **[Options]*
 - All StyleChan/OneeChan themes, plus a full in-browser theme editor with live preview, import/export, and per-SFW/NSFW or light/dark (system) theme selection
 - Holotower-native styling: fixed header clearance, post menu, posting form, "Posting mode" banner, file-selector dropzone, catalog, thread watcher, scroll arrows and more
 - Layout options: reply fit width, margins, borders, rounded corners, post decoration and highlight styles, sidebar (with mini and Style-Script-like variants), quick reply autohide styles, and a position editor for the site's ↑ ↓ navigation buttons (scale, offsets, spacing, order, or just drag them into place)
-- Quick reply refinements: submit button on its own bottom row, themed posting controls, optional comment draft memory, auto image conversion, auto-watch on reply
+- Quick reply refinements: submit button on its own bottom row, themed posting controls, optional comment draft memory, auto-watch on reply
 - Extras: Replace Thumbnails (sharp full-size JPG/PNG/WEBP thumbnails, animated GIFs, muted looping WEBM/MP4), mascots, custom Quick Reply button image, themed SVG icons, styled scrollbars, toast notifications
 
 ## Built-in integrations
