@@ -3862,10 +3862,11 @@
                                 theme = new $SS.Theme(--index);
                                 div = theme.preview();
                                 $("#overlay #themes-section").append(div);
-                                // The list itself is stored now; the tile
-                                // click below only previews the selection
+                                // The list is stored now. The selection stays
+                                // where it was: importing a theme adds it, and
+                                // picking it is a click on its tile
                                 $SS.options.saveThemeState();
-                                div.fire("click").scrollIntoView(true);
+                                div.scrollIntoView(true);
                                 $SS.options.refreshThemeSelects();
                             };
                         })(file);

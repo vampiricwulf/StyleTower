@@ -2,7 +2,9 @@
 *2026-09-30*
 
 - **Shipped themes get real highlight colors**: BakaBT, RedUX, Solarized Light and ピンク in [themes/](themes/) carried black placeholders for the post, quoting-you, own-post and thread highlight colors, and Genergray a near-black for three of them, so their highlight borders painted black. The files now match StyleChan's fixed versions (its v1.9.2). A theme already imported is a stored copy: import the file again to pick up the colors
-- The script itself is unchanged from v1.0.24
+- **Importing a theme no longer selects it**: the imported theme is added to the list, stored and scrolled into view, and the selection and the page's theme stay as they were; click its tile to use it. The import used to switch the panel to the new theme as an unsaved selection, so the next Save made it the theme (StyleChan made the same change in its v1.9.2)
+- **Three more themes in [themes/](themes/)**, from StyleChan: spx A and spx B by Vertette, and Heimdallr by burningwiththefiresoforc. Their colors apply in full; their custom CSS was written for 4chan and 4chan-X and mostly has nothing to match on Holotower
+- Tests: the theme import case now checks that the selection, the page's theme and the saved selection are left alone (186 tests)
 
 ### v1.0.24
 *2026-09-30*
