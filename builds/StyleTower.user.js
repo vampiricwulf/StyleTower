@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         StyleTower
-// @version      1.0.25
+// @version      1.0.26
 // @namespace    StyleTower
 // @description  Customizable themes for holotower.org.
 // @license      GPL-3.0; https://github.com/vampiricwulf/StyleTower/blob/main/LICENSE
@@ -300,7 +300,7 @@
     },
         NAME = "StyleTower",
         NAMESPACE = "StyleTower.",
-        VERSION = "1.0.25",
+        VERSION = "1.0.26",
         CHANGELOG = "https://github.com/vampiricwulf/StyleTower/releases/latest",
         themeInputs = [{
             dName: "Reply Background",
@@ -5038,14 +5038,17 @@
 
                 if (exp) return tTheme;
 
+                var wasSelected = false;
+
                 if (bEdit && !tEdit.default) {
                     $SS.conf["Themes"][tIndex] = tTheme;
                     tTheme = new $SS.Theme(tIndex);
                     div = $("#theme" + tIndex, $("#overlay"));
+                    wasSelected = div.hasClass("selected");
                     var fresh = tTheme.preview();
                     if (div.exists()) {
                         // replace() returns the detached node; keep the live
-                        // one so the click below lands in the document
+                        // one so the class writes below land in the document
                         div.replace(fresh);
                         div = fresh;
                     } else {
@@ -5063,23 +5066,31 @@
                 }
 
                 if (div && div.exists()) {
-                    // Select the saved theme explicitly rather than firing a
-                    // click on its preview: the click handler's
-                    // already-selected guard reads classes rendered from
-                    // stale mid-preview state and can skip both the
-                    // selection and the save
-                    div.parent().children(".selected").removeClass("selected");
-                    div.addClass("selected");
+                    // Only a theme made with Create takes the selection; a
+                    // saved edit leaves it on the tile that had it. The class
+                    // is set explicitly either way: the tile renders it from
+                    // the in-memory selection, which a live preview leaves
+                    // pointing at the removed preview theme
+                    if (!bEdit) {
+                        div.parent().children(".selected").removeClass("selected");
+                        div.addClass("selected");
+                        // Under System Theming the page displays the Dark/Light
+                        // mapping, not the selection; point the governing slot
+                        // at the new theme so creating one is always visible
+                        if ($SS.conf["System Theming"]) {
+                            var slot = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                                "Dark Theme" : "Light Theme";
+                            $SS.conf[slot] = tIndex;
+                            $SS.Config.set(slot, tIndex);
+                            // The live apply and the panel's Save both read
+                            // the slot from its select: move that along too
+                            $SS.options.refreshThemeSelects();
+                        }
+                    } else if (wasSelected)
+                        div.addClass("selected");
+                    else
+                        div.removeClass("selected");
                     div.scrollIntoView(true);
-                    // Under System Theming the page displays the Dark/Light
-                    // mapping, not the selection; point the governing slot at
-                    // the saved theme so saving is always visible
-                    if ($SS.conf["System Theming"]) {
-                        var slot = window.matchMedia("(prefers-color-scheme: dark)").matches ?
-                            "Dark Theme" : "Light Theme";
-                        $SS.conf[slot] = tIndex;
-                        $SS.Config.set(slot, tIndex);
-                    }
                     $SS.options.saveThemeState();
                     $SS.options.refresh();
                 }

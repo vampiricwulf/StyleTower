@@ -51,6 +51,109 @@ test("the editor's live preview ignores a half-typed hex", async () => {
     assert.equal($SS.theme.mainColor.hex, "#" + selected.mainColor, "cancel restores the selection");
 });
 
+const CUSTOM = [
+    { name: "A", mainColor: "202020", textColor: "eeeeee", bgColor: "101010" },
+    { name: "B", mainColor: "303030", textColor: "eeeeee", bgColor: "101010" }
+];
+
+// Types a color into the open editor the way a user does: the live preview
+// takes over the in-memory selection on the next frame
+async function editColor(w, value) {
+    const input = w.document.querySelector("#add-theme input[name=mainColor]");
+    input.value = value;
+    input.dispatchEvent(new w.Event("input", { bubbles: true }));
+    input.dispatchEvent(new w.Event("change", { bubbles: true }));
+    await sleep(40);
+}
+
+test("saving an edit to a theme that is not selected leaves the selection alone", async () => {
+    const w = await load({ storage: { "Themes": CUSTOM } });
+    const { $SS } = w.__ST;
+    const d = w.document;
+    const idx = $SS.Themes.defaults.length;
+    $SS.options.show();
+    $SS.options.showTheme(idx);
+    await editColor(w, "123456");
+    assert.equal($SS.theme.mainColor.hex, "#123456", "previewed while editing");
+    d.querySelector("#add-theme a[name=edit]").click();
+    assert.equal(d.getElementById("add-theme"), null, "editor closed");
+    assert.equal($SS.Config.get("Themes")[0].mainColor, "123456", "the edit is stored");
+    assert.equal(d.getElementById("theme" + idx).classList.contains("selected"), false, "the edited theme is not selected");
+    assert.equal(d.querySelector("#themes-section .theme-preview.selected").id, "theme1", "the selection stays where it was");
+    assert.equal($SS.theme.index, 1, "the page goes back to the selected theme");
+    assert.equal($SS.Config.get("Selected Theme"), 1);
+    d.querySelector("#oneechan-options a[name=save]").click();
+    assert.equal($SS.Config.get("Selected Theme"), 1);
+});
+
+test("saving an edit to the selected theme keeps it selected and applies the edit", async () => {
+    const idx = (await load()).__ST.$SS.Themes.defaults.length;
+    const w = await load({ storage: { "Themes": CUSTOM, "Selected Theme": idx + 1 } });
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    $SS.options.showTheme(idx + 1);
+    await editColor(w, "654321");
+    d.querySelector("#add-theme a[name=edit]").click();
+    assert.ok(d.getElementById("theme" + (idx + 1)).classList.contains("selected"), "still selected");
+    assert.equal(d.querySelectorAll("#themes-section .theme-preview.selected").length, 1);
+    assert.equal($SS.theme.index, idx + 1);
+    assert.equal($SS.theme.mainColor.hex, "#654321", "the page shows the edit");
+    assert.equal($SS.Config.get("Selected Theme"), idx + 1);
+});
+
+test("editing a default theme adds a [Modded] copy without selecting it", async () => {
+    const w = await load();
+    const { $SS } = w.__ST;
+    const d = w.document;
+    const idx = $SS.Themes.defaults.length;
+    $SS.options.show();
+    $SS.options.showTheme(2);
+    await editColor(w, "123456");
+    d.querySelector("#add-theme a[name=edit]").click();
+    const stored = $SS.Config.get("Themes");
+    assert.equal(stored.length, 1);
+    assert.equal(stored[0].name, $SS.Themes.defaults[2].name + " [Modded]");
+    const tile = d.getElementById("theme" + idx);
+    assert.ok(tile, "copy added to the panel");
+    assert.equal(tile.classList.contains("selected"), false, "the copy is not selected");
+    assert.equal(d.querySelector("#themes-section .theme-preview.selected").id, "theme1", "the selection stays where it was");
+    assert.equal($SS.theme.index, 1);
+    assert.equal($SS.Config.get("Selected Theme"), 1);
+});
+
+test("under System Theming, a saved edit leaves the Dark/Light themes alone", async () => {
+    const w = await load({ storage: { "Themes": CUSTOM, "System Theming": true, "Dark Theme": 2, "Light Theme": 3 } });
+    const { $SS } = w.__ST;
+    const d = w.document;
+    $SS.options.show();
+    $SS.options.showTheme($SS.Themes.defaults.length);
+    await editColor(w, "123456");
+    d.querySelector("#add-theme a[name=edit]").click();
+    assert.equal($SS.Config.get("Light Theme"), 3, "the light slot still points at its theme");
+    assert.equal($SS.theme.index, 3, "and the page still shows it");
+    d.querySelector("#oneechan-options a[name=save]").click();
+    assert.equal($SS.Config.get("Light Theme"), 3);
+});
+
+test("under System Theming, a created theme takes the active Dark/Light slot and survives Save", async () => {
+    const w = await load({ storage: { "Themes": CUSTOM, "System Theming": true, "Dark Theme": 2, "Light Theme": 3 } });
+    const { $SS } = w.__ST;
+    const d = w.document;
+    const idx = $SS.Themes.defaults.length + CUSTOM.length;
+    $SS.options.show();
+    $SS.options.showTheme();
+    d.querySelector("#add-theme input[name=name]").value = "New";
+    await editColor(w, "abcdef");
+    d.querySelector("#add-theme a[name=add]").click();
+    assert.equal($SS.Config.get("Light Theme"), idx, "the light slot points at the new theme");
+    assert.equal($SS.theme.name, "New", "and the page shows it");
+    assert.equal(d.querySelector("#oneechan-options select[name='Light Theme']").value, String(idx), "the panel's select follows");
+    d.querySelector("#oneechan-options a[name=save]").click();
+    assert.equal($SS.Config.get("Light Theme"), idx, "Save keeps the slot");
+    assert.equal($SS.theme.name, "New");
+});
+
 test("every shipped theme file carries the full palette", async () => {
     const fs = require("fs"), path = require("path");
     const { ROOT } = require("./harness");

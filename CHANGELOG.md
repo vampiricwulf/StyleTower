@@ -1,3 +1,10 @@
+### v1.0.26
+*2026-09-30*
+
+- **Saving an edit to a theme no longer selects it**: the edit is stored and the selection stays on the theme that had it, so editing a theme you are not using returns the page to your theme once the editor closes. Editing the selected theme keeps it selected and shows the edit. Editing a default theme still adds a [Modded] copy, which is no longer selected either: click its tile to use it. Only a theme made with Create becomes the selection (StyleChan made the same change in its v1.9.2)
+- **System Theming**: a saved edit no longer points the active Dark or Light theme at the edited theme. A theme made with Create was meant to take the active Dark or Light slot, but the page kept the old theme and the panel's Save put the old slot back; the slot's select now moves with it, so the new theme shows at once and stays after Save
+- Tests: saved edits to an unselected theme, the selected theme and a default theme, and an edit and a created theme under System Theming (191 tests)
+
 ### v1.0.25
 *2026-09-30*
 
