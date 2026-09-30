@@ -2605,19 +2605,30 @@
             if (!qr.isConnected) return;
             var mainForm = "form[name='post']:not(#quick-reply) ";
             var mainRand = document.querySelector(mainForm + "input[name=randfn]"),
-                mainOekaki = document.querySelector(mainForm + ".ts-oekaki-toggle");
-            if (!mainRand && !mainOekaki) {
+                // Buttons TS floats in the spoiler cell: URL Upload (there
+                // when Filename Changer is off; otherwise it rides in the
+                // filename row below) and TS 2.7's Oekaki
+                mainButtons = document.querySelectorAll(mainForm + "#upload_settings td > .url-upload, " +
+                    mainForm + "#upload_settings td > .ts-oekaki-toggle");
+            if (!mainRand && !mainButtons.length) {
                 // TS may not be done yet; retry briefly (never without TS)
                 if (attempts > 0 && $SS.isTS()) setTimeout(function () { $SS.syncTSPostingControls(qr, attempts - 1); }, 500);
                 return;
             }
             var qrSpoiler = qr.querySelector("input[name=spoiler]");
-            // TS 2.7's Oekaki button sits in the spoiler cell; its click is
-            // document-delegated and opens the panel for the button's form
-            if (mainOekaki && qrSpoiler && !qr.querySelector(".ts-oekaki-toggle")) {
-                var cell = qrSpoiler.closest("td");
-                if (cell) cell.appendChild(mainOekaki.cloneNode(true));
-            }
+            // Their clicks are document-delegated and act on the button's own
+            // form, so a copy works in the QR. Copied in the main form's order
+            // so the floats line up the same way
+            var qrCell = qrSpoiler && qrSpoiler.closest("td");
+            if (qrCell) mainButtons.forEach(function (btn) {
+                var cls = btn.classList.contains("url-upload") ? ".url-upload" : ".ts-oekaki-toggle";
+                if (qr.querySelector(cls)) return;
+                var copy = btn.cloneNode(true);
+                // Cloned mid-fetch, the URL button would carry "Fetching…"
+                copy.disabled = false;
+                if (cls === ".url-upload") copy.textContent = "URL";
+                qrCell.appendChild(copy);
+            });
             if (mainRand && !qr.querySelector("input[name=randfn]") && qrSpoiler) {
                 var lbl = document.createElement("label"),
                     cb = document.createElement("input");

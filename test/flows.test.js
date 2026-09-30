@@ -140,6 +140,55 @@ test("TS 2.7's Oekaki button is copied into a pre-built quick reply, even withou
     assert.equal(qr.querySelector("input[name=randfn]"), null, "no Randomize Filename invented");
 });
 
+test("with Filename Changer off, TS's URL button is copied into a pre-built quick reply beside Oekaki", async () => {
+    const w = await load({ site: { "Thread Settings": "{}" } });
+    const d = w.document;
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    await sleep(30);
+    // TS floats URL Upload, then Oekaki, in the main form's spoiler cell
+    const cell = d.querySelector("form[name=post] #upload_settings td");
+    const url = d.createElement("button");
+    url.type = "button";
+    url.className = "outline url-upload";
+    url.textContent = "Fetching…";
+    url.disabled = true;
+    url.style.float = "right";
+    cell.appendChild(url);
+    const oek = d.createElement("button");
+    oek.type = "button";
+    oek.className = "outline ts-oekaki-toggle";
+    cell.appendChild(oek);
+    await until(() => qr.querySelector(".url-upload") && qr.querySelector(".ts-oekaki-toggle"), 2000);
+    const copied = [...qr.querySelectorAll(".url-upload, .ts-oekaki-toggle")];
+    assert.deepEqual(copied.map(b => b.className), ["outline url-upload", "outline ts-oekaki-toggle"], "one each, in TS's order");
+    assert.ok(copied[0].closest("td").querySelector("input[name=spoiler]"), "in the spoiler cell");
+    assert.equal(copied[0].style.float, "right", "keeps TS's float");
+    assert.equal(copied[0].disabled, false, "a copy taken mid-fetch is usable");
+    assert.equal(copied[0].textContent, "URL");
+});
+
+test("with Filename Changer on, TS's URL button arrives once, inside the copied filename row", async () => {
+    const w = await load({ site: { "Thread Settings": "{}" } });
+    const d = w.document;
+    const qr = d.querySelector("form[name=post]").cloneNode(true);
+    qr.id = "quick-reply";
+    d.body.appendChild(qr);
+    await sleep(30);
+    const lbl = d.createElement("label");
+    lbl.innerHTML = '<input type="checkbox" name="randfn"> Randomize Filename';
+    d.querySelector("form[name=post] #upload_settings td").appendChild(lbl);
+    const row = d.createElement("tr");
+    row.id = "upload_filename";
+    row.innerHTML = '<th>Filename</th><td><div class="upload-filename-wrapper"><input type="text" name="filename"><button type="button" class="outline url-upload">URL</button></div></td>';
+    d.querySelector("form[name=post] #upload_settings").after(row);
+    await until(() => qr.querySelector("input[name=filename]"), 2000);
+    const urls = qr.querySelectorAll(".url-upload");
+    assert.equal(urls.length, 1);
+    assert.ok(urls[0].closest(".upload-filename-wrapper"), "in the filename row, not the spoiler cell");
+});
+
 test("a quick reply cloned after TS added its Oekaki button keeps a single one", async () => {
     const w = await load({ site: { "Thread Settings": "{}" } });
     const d = w.document;
