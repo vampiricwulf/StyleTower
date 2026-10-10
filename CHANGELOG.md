@@ -1,3 +1,9 @@
+### v1.0.27
+*2026-10-09*
+
+- **Streamable embeds no longer fill the post**: the site renders a Streamable link as a box that is as wide as the post and 90% as tall, with the player inside, so with Fit Width (replies stretched to the page) the player took the whole page width and more than a screen of height, most of it the player's white and black padding around the clip. The box is now 480×270, 16:9 at the height of the site's own [Embed] players, and inset like a thumbnail
+- Tests: the embed rule, its selector on the site's markup, and that a post body carrying the site's inline padding is left alone (192 tests)
+
 ### v1.0.26
 *2026-09-30*
 

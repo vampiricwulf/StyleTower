@@ -93,6 +93,19 @@ div.post.op {
 div.body {
   margin: " + $SS.conf["Margin Post Message"] + " !important;
 }
+/* Server-side embeds (Streamable): the site wraps the iframe in a responsive
+   box (inline width:100%, height:0, padding-bottom:90%) that takes the post's
+   width and 90% of it as height, so a block-level reply (Fit Width) made it
+   page-wide and taller than the viewport. Pinned to 16:9 at the 270px height
+   the site's own [Embed] iframes use, inset like a thumbnail; !important
+   because the sizes are inline */
+div.post > div[style*="padding-bottom"]:has(> iframe) {
+  width: 480px !important;
+  max-width: calc(100% - 13px) !important;
+  height: 270px !important;
+  padding-bottom: 0 !important;
+  margin: 2px 0 0 13px !important;
+}
 /* Fit Expanded Images option: an expanded image never exceeds the viewport
    (the site only caps its width at 98%) */
 :root.fit-eximg .full-image {

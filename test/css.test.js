@@ -133,3 +133,35 @@ test("every hardcoded style-page.css component (FAQ and the other static pages) 
     assert.deepEqual(missing, []);
     assert.equal(has(page, /#[0-9a-f]{3,6}\b/i), false, "no hardcoded colors: everything comes from the theme variables");
 });
+
+test("a server-side embed is pinned to the site's embed height instead of scaling with the post", async () => {
+    // The site renders a Streamable link as a responsive box (inline
+    // width:100%, height:0, padding-bottom:90%) around an absolutely placed
+    // iframe, so the box is as wide as the post and 90% as tall: under Fit
+    // Width (block replies) that was 1360x1224 on a 1702px window. The
+    // rule overrides the inline sizes, 16:9 at the 270px height the site's
+    // own [Embed] iframes use, and insets it like a thumbnail
+    const SELECTOR = 'div.post > div[style*="padding-bottom"]:has(> iframe)';
+    const rule = css("General.css").match(/div\.post > div\[style\*="padding-bottom"\]:has\(> iframe\)\s*\{([^}]*)\}/);
+    assert.ok(rule, "embed wrapper rule in General.css");
+    const decl = rule[1];
+    assert.equal(has(decl, /\bwidth:\s*480px\s*!important/), true, "width");
+    assert.equal(has(decl, /\bheight:\s*270px\s*!important/), true, "height");
+    assert.equal(has(decl, /padding-bottom:\s*0\s*!important/), true, "inline padding-bottom overridden");
+    assert.equal(has(decl, /max-width:[^;]*!important/), true, "never wider than the post");
+    assert.equal(has(decl, /margin:[^;]*\b13px\s*!important/), true, "thumbnail inset");
+
+    const w = await load();
+    const d = w.document, post = d.querySelector(".post.reply");
+    post.querySelector("p.intro").insertAdjacentHTML("afterend",
+        '<div style="position:relative; width:100%; height:0px; padding-bottom:90%">' +
+        '<iframe style="position: absolute; left:0; top:0; overflow:hidden;" width="100%" height="100%" ' +
+        'frameborder="0" src="https://streamable.com/e/nl2hfj" allowfullscreen=""></iframe></div>');
+    assert.equal(d.querySelectorAll(SELECTOR).length, 1, "selector finds the wrapper");
+    // The site also puts an inline padding-bottom on some div.body elements
+    const body = post.querySelector(".body");
+    body.style.paddingBottom = "0.3em";
+    assert.equal(body.matches(SELECTOR), false, "a div.body with inline padding-bottom is left alone");
+    assert.equal(has(d.getElementById("ch4SS").textContent,
+        /div\.post\s*>\s*div\[style\*=["']?padding-bottom["']?\]:has\(\s*>\s*iframe\)\s*\{/), true, "rule in the injected stylesheet");
+});
