@@ -33,6 +33,7 @@ The following standalone Holotower userscripts are folded into StyleTower and ca
 - [Holotower Auto Scroll](https://greasyfork.org/en/scripts/540450-holotower-auto-scroll)
 - [Holotower X/BSKY Sauce](https://greasyfork.org/en/scripts/554505-holotower-x-bsky-sauce), extended to pixiv: X, Bluesky and pixiv files named by TS's Format Filenames get a link to their source
 - [Holotower Catalog Highlights and Pin](https://greasyfork.org/en/scripts/543156-holotower-catalog-highlights-and-pin)
+- Holotower emote changes: hovering an emote shows it enlarged beside the cursor with its `:code:`; clicking one in a post types the code into the quick reply where the caret is (opening it first in a thread) and/or copies it to the clipboard
 
 [Holotower TS](https://greasyfork.org/en/scripts/560097-holotower-ts) is detected and themed automatically:
 

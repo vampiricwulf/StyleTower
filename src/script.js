@@ -263,6 +263,9 @@
         "Auto Scroll": [true, "Scroll to new posts only when already at the bottom of the thread. Ported from Holotower Auto Scroll."],
         "Sauce Links": [true, "Add X, Bluesky and pixiv sauce links to files named the way Holotower TS names URL uploads. Ported from Holotower X/BSKY Sauce."],
         "Catalog Highlights": [true, "Highlight and pin catalog threads via the Pin Settings button in the catalog. Ported from Holotower Catalog Highlights and Pin."],
+        "Emote Previews": [true, "Hover an emote to see it enlarged beside the cursor, with its :code:. Clicking one in a post can paste or copy the code (options below). Ported from Holotower emote changes.", null, true],
+        "Click to Paste Emote": [true, "Clicking an emote in a post types its :code: into the quick reply where the caret is, opening the quick reply first in a thread; on index pages, into one that is already open.", "Emote Previews", true, true],
+        "Click to Copy Emote": [false, "Clicking an emote in a post copies its :code: to the clipboard.", "Emote Previews", true, true],
         "Enable Mascots": [false, "Display a mascot image in the bottom corner of the page. Selected mascots rotate randomly on each page load."],
         "Hide Mascots in Catalog": [true, "Hides the mascot when viewing the catalog."],
         "Mascots Overlap Posts": [false, "Render the mascot above posts and threads instead of behind them."],
@@ -966,11 +969,7 @@
                         openQR = function () {
                             if (qrOpened) return;
                             qrOpened = true;
-                            var btn = document.querySelector("a.quick-reply-btn");
-                            if (btn) btn.click();
-                            // Some scripts pre-build the QR hidden; reveal it
-                            var qr = document.getElementById("quick-reply");
-                            if (qr && qr.style.display === "none") qr.style.display = "";
+                            $SS.openQuickReply();
                         };
                     $.waitFor("a.quick-reply-btn, #quick-reply", function () {
                         setTimeout(openQR, 50);
@@ -2030,10 +2029,10 @@
             var spoiler = form.querySelector("input[name=spoiler]");
             if (spoiler && !spoiler.title) spoiler.title = "Spoiler image";
         },
-        toggleAutohideQR: function () {
-            // All three autohide styles expand on the .focus class (maintained
-            // by initNativeQRAutohide's focus delegation), so showing = focus
-            // the comment box and hiding = blur it
+        /* The quick reply, opened through the site's floating button when it
+           is closed; one that a script pre-built hidden is revealed. Null
+           when the page has none and nothing to open it with */
+        openQuickReply: function () {
             var qr = document.getElementById("quick-reply");
             if (!qr || qr.style.display === "none") {
                 var btn = document.querySelector("a.quick-reply-btn");
@@ -2041,6 +2040,13 @@
                 qr = document.getElementById("quick-reply");
                 if (qr && qr.style.display === "none") qr.style.display = "";
             }
+            return qr;
+        },
+        toggleAutohideQR: function () {
+            // All three autohide styles expand on the .focus class (maintained
+            // by initNativeQRAutohide's focus delegation), so showing = focus
+            // the comment box and hiding = blur it
+            var qr = $SS.openQuickReply();
             if (!qr) return;
             if (qr.classList.contains("focus")) {
                 var active = document.activeElement;
@@ -2681,6 +2687,7 @@
            - Holotower X/BSKY Sauce (MIT, KanashiiWolf)
            - Holotower Auto Scroll (MIT)
            - Holotower Catalog Highlights and Pin (CC0, anonymous)
+           - Holotower emote changes (anonymous)
            Inline quoting, custom fixes, soundposts and imgops links live in Holotower TS.
            Disable the matching option before running a standalone copy alongside. */
         integrations: {
@@ -2704,6 +2711,10 @@
                 if ($SS.conf["Auto Scroll"] && $SS.location.reply && !I._autoScroll) { I._autoScroll = true; I.initAutoScroll(); }
                 if ($SS.conf["Sauce Links"] && !I._sauce) { I._sauce = true; I.initSauceLinks(); }
                 if ($SS.conf["Catalog Highlights"] && $SS.location.catalog && !I._catalog) { I._catalog = true; I.initCatalogHighlights(); }
+                if ($SS.conf["Emote Previews"] && !I._emotes) { I._emotes = true; I.initEmotePreviews(); }
+                // Switched off live: the listeners stay (they read the option
+                // per event) but a preview that is up comes down now
+                if (!$SS.conf["Emote Previews"] && I._emoteHide) I._emoteHide();
             },
             /* Called by the main DOM observer for each added element; the
                integrations hook in here instead of observing on their own */
@@ -3180,6 +3191,192 @@
                 highlightLatestThreads();
                 var sortBy = document.getElementById("sort_by");
                 if (sortBy) sortBy.addEventListener("change", function () { highlightLatestThreads(); });
+            },
+
+            /* The :code: an emote image stands for */
+            emoteCode: function (img) {
+                var alt = (img.getAttribute("alt") || "").trim();
+                if (!alt) return "";
+                return /^:.+:$/.test(alt) ? alt : ":" + alt + ":";
+            },
+            /* Enlarged emote beside the cursor on hover, its :code: pasted
+               or copied on click (Holotower emote changes). One set of
+               delegated listeners serves every emote on the page: those in
+               posts that arrive later, in TS's hover previews and inline
+               quotes, and in catalog teasers, with nothing to observe. The
+               options are read per event, so the panel switches them live */
+            initEmotePreviews: function () {
+                var I = $SS.integrations,
+                    box = null, img = null, code = null,
+                    current = null, x = 0, y = 0, placing = false, scrolled = false;
+
+                function isEmote(el) {
+                    return !!el && el.nodeType === 1 && el.tagName === "IMG" && el.classList.contains("c_emoji");
+                }
+                // A click on this emote has something to do: it sits in a post
+                // (a catalog card opens its thread on click; the posting
+                // forms' emote pickers insert on their own), the plain button
+                // is used and a click action is on
+                function actionable(e) {
+                    var emote = e.target;
+                    return isEmote(emote) && !!$SS.conf["Emote Previews"] &&
+                        !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) &&
+                        (!!$SS.conf["Click to Paste Emote"] || !!$SS.conf["Click to Copy Emote"]) &&
+                        emote.closest(".post") != null && !!I.emoteCode(emote);
+                }
+                function build() {
+                    box = document.createElement("div");
+                    box.id = "st-emote-preview";
+                    box.setAttribute("hidden", "");
+                    img = document.createElement("img");
+                    img.alt = "";
+                    code = document.createElement("span");
+                    code.className = "st-emote-code";
+                    box.appendChild(img);
+                    box.appendChild(code);
+                    getDocBody().appendChild(box);
+                }
+                function conceal() {
+                    if (box) box.setAttribute("hidden", "");
+                }
+                function hide() {
+                    current = null;
+                    scrolled = false;
+                    conceal();
+                }
+                function under(el) {
+                    var r = el.getBoundingClientRect();
+                    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+                }
+                // Above and to the right of the cursor (the text being read
+                // runs on below it), flipped to the other side when that
+                // would leave the viewport; once per frame for a burst of moves
+                function place() {
+                    if (placing) return;
+                    placing = true;
+                    requestAnimationFrame(function () {
+                        placing = false;
+                        if (!current || !box) return;
+                        // The emote went with its hover preview or inline quote
+                        if (!current.isConnected) { hide(); return; }
+                        var root = document.documentElement,
+                            vw = root.clientWidth, vh = root.clientHeight,
+                            w = box.offsetWidth, h = box.offsetHeight, gap = 12,
+                            left = x + gap, top = y - h - gap;
+                        if (left + w > vw) left = Math.max(0, x - gap - w);
+                        if (top < 0) top = Math.min(y + gap, Math.max(0, vh - h));
+                        box.style.left = left + "px";
+                        box.style.top = top + "px";
+                    });
+                }
+                function show(emote) {
+                    if (!box) build();
+                    if (current !== emote) {
+                        current = emote;
+                        img.src = emote.currentSrc || emote.src;
+                        code.textContent = I.emoteCode(emote);
+                        code.hidden = !code.textContent;
+                    }
+                    scrolled = false;
+                    box.removeAttribute("hidden");
+                    place();
+                }
+
+                I._emoteHide = hide;
+
+                document.addEventListener("mouseover", function (e) {
+                    if (isEmote(e.target) && $SS.conf["Emote Previews"]) {
+                        x = e.clientX;
+                        y = e.clientY;
+                        show(e.target);
+                    } else if (current) hide();
+                });
+                document.addEventListener("mousemove", function (e) {
+                    if (!current) return;
+                    x = e.clientX;
+                    y = e.clientY;
+                    // After a scroll the emote may or may not still be under
+                    // the cursor: one rect read decides, then back to normal
+                    if (scrolled) {
+                        if (!current.isConnected || !under(current)) { hide(); return; }
+                        show(current);
+                    } else place();
+                });
+                // Leaving the window fires no mouseover on anything else
+                document.addEventListener("mouseout", function (e) {
+                    if (current && e.target === current && !e.relatedTarget) hide();
+                });
+                // The page moved under a still cursor (wheel, Auto Scroll,
+                // the updater): the preview comes down, and the next move
+                // brings it back if the emote is still there
+                window.addEventListener("scroll", function () {
+                    if (current) { scrolled = true; conceal(); }
+                }, { passive: true, capture: true });
+
+                // Keep the focus (and its caret) in the comment box across
+                // the click: the autohide styles collapse the quick reply
+                // on blur, so without this it would fold and unfold
+                document.addEventListener("mousedown", function (e) {
+                    if (e.button === 0 && actionable(e)) e.preventDefault();
+                });
+                document.addEventListener("click", function (e) {
+                    if (!actionable(e)) return;
+                    e.preventDefault();
+                    var text = I.emoteCode(e.target);
+                    if ($SS.conf["Click to Paste Emote"]) I.insertComment(text);
+                    if ($SS.conf["Click to Copy Emote"]) I.copyText(text);
+                });
+            },
+            /* Types text into the comment box at its caret. In a thread: the
+               quick reply's, opened first when it is closed; with none to
+               open (or one still being built), the page's own reply form,
+               unless Show Original Form hides that. On index and catalog
+               pages the page form starts a new thread and the site opens no
+               quick reply of its own, so only one already open is written
+               to. Returns the textarea written to, or null */
+            insertComment: function (text) {
+                var thread = $SS.location.reply === true,
+                    qr = thread ? $SS.openQuickReply() : document.getElementById("quick-reply"),
+                    inQR = qr && qr.style.display !== "none" && qr.querySelector("textarea[name=body]"),
+                    box = inQR;
+                if (!box && thread && $SS.conf["Show Original Form"] !== false)
+                    box = document.querySelector("form[name=post]:not(#quick-reply) textarea[name=body]");
+                if (!box) {
+                    $SS.notify({ type: "info", lifetime: 3, content: thread ?
+                        "Open the quick reply to paste " + text + " into it." :
+                        "Open the thread to paste " + text + " into its quick reply." });
+                    return null;
+                }
+                var start = box.selectionStart, end = box.selectionEnd;
+                // No caret yet (a quick reply just cloned from the page form
+                // reports 0 in front of a restored draft): go to the end
+                if (typeof start !== "number" || typeof end !== "number" ||
+                    (box !== document.activeElement && start === 0 && end === 0))
+                    start = end = box.value.length;
+                box.value = box.value.slice(0, start) + text + box.value.slice(end);
+                box.selectionStart = box.selectionEnd = start + text.length;
+                // input is what typing fires (drafts, TS, the site's quick
+                // reply <-> form sync); change for anything keyed to it
+                box.dispatchEvent(new Event("input", { bubbles: true }));
+                box.dispatchEvent(new Event("change", { bubbles: true }));
+                box.focus({ preventScroll: true });
+                // The page's form is likely off-screen: say where the text went
+                if (!inQR) $SS.notify({ type: "info", lifetime: 2, content: "Typed " + text + " into the posting form." });
+                return box;
+            },
+            /* Clipboard write with a toast either way: the click gives no
+               other sign that anything happened */
+            copyText: function (text) {
+                var failed = function () {
+                    $SS.notify({ type: "warning", lifetime: 4, content: "Could not copy " + text + " to the clipboard." });
+                };
+                // Absent outside secure contexts; a sandboxed wrapper can
+                // throw instead of rejecting
+                try {
+                    navigator.clipboard.writeText(text).then(function () {
+                        $SS.notify({ type: "success", lifetime: 2, content: "Copied " + text });
+                    }, failed);
+                } catch (e) { failed(); }
             }
         },
 
@@ -3512,6 +3709,9 @@
                                 "Auto Scroll": "added",
                                 "Sauce Links": "added",
                                 "Catalog Highlights": "added",
+                                "Emote Previews": "added",
+                                "Click to Paste Emote": "added",
+                                "Click to Copy Emote": "added",
                                 "Hide Mascots in Catalog": "added",
                                 "Mascots Overlap Posts": "added",
                                 "Reduce Mascot Opacity": "added",

@@ -1,3 +1,10 @@
+### v1.0.28
+*2026-10-13*
+
+- **Emote Previews** (Options → Misc → Integrations, on by default): hovering an emote shows it enlarged beside the cursor with its `:code:`, in the quote hover preview's colors. Clicking one in a post types the code into the quick reply where the caret is, opening it first in a thread (on an index page, into one already open), and/or copies it to the clipboard; each is a sub-option (Click to Paste Emote on, Click to Copy Emote off). Ported from the Holotower emote changes userscript and reworked: one set of delegated listeners covers emotes in posts that arrive later, in TS's inline quotes and in catalog teasers, with nothing to observe; the preview stays inside the viewport, comes down on a scroll and returns if the emote is still under the cursor; a copy reports success or failure in a toast; a click no longer folds and unfolds an autohide quick reply, and a quick reply the site builds after the click no longer breaks it; the options switch on and off live, without a reload
+- The three places that open the quick reply (Pin Quick Reply, the autohide keybind, and now the emote paste) share one helper
+- Tests: hover, placement and flipping at the viewport edges, later posts, scroll and removal, caret insertion and the never-focused clone case, quick reply opening, the thread/index/catalog page rules, clipboard success, refusal and absence, the pickers, live on/off, and the panel rows (211 tests)
+
 ### v1.0.27
 *2026-10-09*
 

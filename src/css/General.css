@@ -427,6 +427,42 @@ div.pages a.selected {
 .post-hover {
   z-index: 75 !important;
 }
+/* Emote Previews: the enlarged emote beside the cursor, dressed like the
+   quote hover preview and above the site's quick reply (z-index 100), which
+   a cursor near it would otherwise tuck the preview under. The font size
+   sits on the box: Fonts.css forces span to inherit */
+#st-emote-preview {
+  position: fixed;
+  z-index: 101;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  font-size: " + $SS.conf["UI Font Size"] + "px;
+  line-height: 1.2;
+  color: var(--sc-textColor);
+  background: rgba(var(--sc-hoverColor-rgb), var(--sc-hoverOp));
+  outline: 2px solid rgba(var(--sc-hoverOutColor-rgb), var(--sc-hoverOutOp));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+#st-emote-preview[hidden] {
+  display: none;
+}
+#st-emote-preview img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+#st-emote-preview .st-emote-code {
+  white-space: nowrap;
+  opacity: .8;
+}
+:root.rounded-corners #st-emote-preview {
+  border-radius: 3px;
+}
 /* Thumb Opacity */
 :root.thumb-opacity .file > a img:not(.full-image) {
   opacity: .5;
