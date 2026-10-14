@@ -2687,7 +2687,7 @@
            - Holotower X/BSKY Sauce (MIT, KanashiiWolf)
            - Holotower Auto Scroll (MIT)
            - Holotower Catalog Highlights and Pin (CC0, anonymous)
-           - Holotower emote changes (anonymous)
+           - Holotower emote changes (Anonymous (You))
            Inline quoting, custom fixes, soundposts and imgops links live in Holotower TS.
            Disable the matching option before running a standalone copy alongside. */
         integrations: {
