@@ -1,3 +1,10 @@
+### v1.0.29
+*2026-10-29*
+
+- **Toggle You is gone from the post menu**: Holotower TS 2.8 adds a (You) checkbox to every post's triangle menu, backed by the same `own_posts` store StyleTower's item wrote to, so the two sat side by side in each menu. Own-post and quoting-you highlights now rest solely on the `.you`/`.quoting-you` classes the site and TS write; the StyleChan-era `yourPost`/`hasQuoteYou` selectors, which nothing set any more, are dropped
+- **Holotower TS 2.8 checked against every StyleTower hook**, nothing else needed changing: the oekaki toggle's new anchor markup still copies into the quick reply, TS adds its own outbox button and draft row to the quick reply, TS now marks posts on index pages too, and its wider highlight rules (OPs, inline quotes) stay beneath StyleTower's themed ones. The reviewed build, its diff from 2.7.2 and the procedure for checking the next release live in `reference/holotower-ts/`
+- Tests: the Toggle You test now asserts the item is absent and the Delete submenu still appears (211 tests)
+
 ### v1.0.28
 *2026-10-13*
 
