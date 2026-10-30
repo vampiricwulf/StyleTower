@@ -16,15 +16,11 @@
   outline: 2px solid rgba(var(--sc-hoverOutColor-rgb),var(--sc-hoverOutOp)) !important;
 }
 /* Posts Quoting You (marked by the site/TS; .oneechan boosts specificity over TS's hardcoded colors) */
-:root.oneechan.highlight-you .hasQuoteYou.post.op,
-:root.oneechan.highlight-you .hasQuoteYou.post.reply,
 :root.oneechan.highlight-you .quoting-you.post.op,
 :root.oneechan.highlight-you .quoting-you.post.reply {
   border-left: " + $SS.conf["Width Decoration"] + "px solid rgba(var(--sc-quotesYouHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;
 }
 /* Your Posts */
-:root.oneechan.highlight-own .yourPost.post.op,
-:root.oneechan.highlight-own .yourPost.post.reply,
 :root.oneechan.highlight-own .post.op.you,
 :root.oneechan.highlight-own .post.reply.you {
   border-left: " + $SS.conf["Width Decoration"] + "px dashed rgba(var(--sc-ownPostHLColor-rgb)," + (($SS.conf["Opacity"] || 100) / 100) + ") !important;

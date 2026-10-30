@@ -1,0 +1,4290 @@
+--- ts-2.7.2.user.js	2026-10-29 22:21:12.345829700 -0700
++++ ts-current.user.js	2026-10-29 22:20:20.700545900 -0700
+@@ -1,7 +1,7 @@
+ // ==UserScript==
+ // @name         Holotower TS
+ // @namespace    Holotower-TS
+-// @version      2.7.2
++// @version      2.8
+ // @author       Anonymous
+ // @license      MIT
+ // @description  Adds various features to Holotower
+@@ -13,7 +13,8 @@
+ // @grant        GM_xmlhttpRequest
+ // @grant        GM.xmlHttpRequest
+ // @run-at       document-end
+-// @downloadURL none
++// @downloadURL https://update.greasyfork.org/scripts/560097/Holotower%20TS.user.js
++// @updateURL https://update.greasyfork.org/scripts/560097/Holotower%20TS.meta.js
+ // ==/UserScript==
+ 
+ 
+@@ -106,11 +107,17 @@
+   const hashNavigation = settings.hashNavigation ?? false;
+   const enableOekaki = settings.enableOekaki ?? true;
+   const formatFilenames = settings.formatFilenames ?? true;
++  const resizeMedia = settings.resizeMedia ?? true;
++  const postOutbox = settings.postOutbox ?? true;
++  const kbPostOutbox = settings.kbPostOutbox || { ctrl: false, alt: true, shift: false, key: "n" };
+ 
+   const FAVICON_URL = window.location.hostname === 'boards.holotower.org'
+   ? 'https://boards.holotower.org/favicon.gif'
+   : 'https://holotower.org/favicon.gif';
+   let alertState = 'none';
++  let requestedFaviconState = 'none';
++  let pendingFaviconState = null;
++  let faviconRequestToken = 0;
+   const notifyPostColor = settings.notifyPostColor || "white";
+   const notifyYouColor = settings.notifyYouColor || "red";
+ 
+@@ -118,6 +125,7 @@
+   const updaterCheckbox = document.getElementById('auto_update_status');
+   const hiddenSet = new Set();
+   const unreadSet = new Set();
++  const sessionUnreadPostIds = new Set();
+   const postPlacementMap = new Map();
+   let placementToPostId = [];
+ 
+@@ -162,14 +170,29 @@
+     if (!link.parentNode) document.head.appendChild(link);
+   }
+ 
++  function restoreFavicon() {
++    requestedFaviconState = 'none';
++    pendingFaviconState = null;
++    ++faviconRequestToken;
++    alertState = 'none';
++    setFavicon(FAVICON_URL);
++  }
++
+   function updateFavicon(color) {
+-    if (alertState === color) return;
++    if (requestedFaviconState === color && (alertState === color || pendingFaviconState === color)) return;
++
++    requestedFaviconState = color;
++    pendingFaviconState = color;
++    const requestToken = ++faviconRequestToken;
+ 
+     const drawColor = color === 'red' ? notifyYouColor : notifyPostColor;
+     const archived = isThreadArchived;
+ 
+     const img = new Image();
+     img.onload = () => {
++      if (requestToken !== faviconRequestToken) return;
++      pendingFaviconState = null;
++
+       const canvas = document.createElement('canvas');
+       canvas.width = img.width;
+       canvas.height = img.height;
+@@ -191,6 +214,12 @@
+       setFavicon(canvas.toDataURL('image/x-icon'));
+       alertState = color;
+     };
++    img.onerror = () => {
++      if (requestToken === faviconRequestToken && requestedFaviconState === color) {
++        pendingFaviconState = null;
++        requestedFaviconState = alertState;
++      }
++    };
+     img.src = FAVICON_URL;
+   }
+ 
+@@ -198,9 +227,13 @@
+     if (!changeFaviconOnArchive) return;
+ 
+     isThreadArchived = true;
++    const requestToken = ++faviconRequestToken;
++    pendingFaviconState = null;
+ 
+     const img = new Image();
+     img.onload = () => {
++      if (requestToken !== faviconRequestToken) return;
++
+       const canvas = document.createElement('canvas');
+       canvas.width = img.width;
+       canvas.height = img.height;
+@@ -212,13 +245,13 @@
+       ctx.fillRect(0, 0, canvas.width, canvas.height);
+       ctx.globalCompositeOperation = 'source-over';
+ 
+-      if (alertState === 'red') {
++      if (requestedFaviconState === 'red' || alertState === 'red') {
+         const drawColor = notifyYouColor;
+         ctx.beginPath();
+         ctx.arc(canvas.width - 16, 16, 5, 0, 2 * Math.PI);
+         ctx.fillStyle = drawColor;
+         ctx.fill();
+-      } else if (alertState === 'white') {
++      } else if (requestedFaviconState === 'white' || alertState === 'white') {
+         const drawColor = notifyPostColor;
+         ctx.beginPath();
+         ctx.arc(canvas.width - 16, 16, 5, 0, 2 * Math.PI);
+@@ -232,13 +265,16 @@
+   }
+ 
+   function revertFavicon() {
+-    if (alertState !== 'none') {
++    if (alertState === 'none' && requestedFaviconState === 'none') return;
++
++    if (isThreadArchived) {
++      requestedFaviconState = 'none';
++      pendingFaviconState = null;
++      ++faviconRequestToken;
+       alertState = 'none';
+-      if (isThreadArchived) {
+-        updateFaviconArchived();
+-      } else {
+-        setFavicon(FAVICON_URL);
+-      }
++      updateFaviconArchived();
++    } else {
++      restoreFavicon();
+     }
+   }
+ 
+@@ -331,7 +367,7 @@
+ 
+     if (unreadSet.size === 0) {
+       revertFavicon();
+-    } else if (alertState === 'red') {
++    } else if (requestedFaviconState === 'red' || alertState === 'red') {
+       let youRemaining = false;
+       for (const id of unreadSet) {
+         if (youPostIds.has(id)) {
+@@ -387,6 +423,7 @@
+ 
+   window.addEventListener('scroll', () => {
+     if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
++      sessionUnreadPostIds.clear();
+       revertFavicon();
+       removeUnreadLine();
+     }
+@@ -452,7 +489,72 @@
+     }, timeout);
+   }
+ 
+-  async function checkImageConversion(file) {
++  const imageConversionButtonStates = new WeakMap();
++
++  function getConversionForm(context) {
++    const source = context && context.nodeType === 1 ? context : null;
++    const form = source && (source.tagName === 'FORM' ? source : source.closest('form'));
++    if (form) return form;
++
++    if (typeof mobileInput !== 'undefined' && mobileInput) {
++      return document.getElementById('mbReplyForm') || document.querySelector('form[name="post"]');
++    }
++    return document.querySelector('#quick-reply') || document.querySelector('form[name="post"]');
++  }
++
++  function getButtonLabel(button) {
++    return button.tagName === 'INPUT' ? button.value : button.innerHTML;
++  }
++
++  function setButtonLabel(button, label) {
++    if (button.tagName === 'INPUT') button.value = label;
++    else button.innerHTML = label;
++  }
++
++  function lockPostButtons(context) {
++    const scope = getConversionForm(context);
++    if (!scope) return () => {};
++
++    const buttons = scope.querySelectorAll('#mbSend, input[type="submit"], button[type="submit"]');
++    const states = [];
++    for (let i = 0; i < buttons.length; i++) {
++      const button = buttons[i];
++      let state = imageConversionButtonStates.get(button);
++      if (!state) {
++        if (button.disabled) continue;
++        state = {
++          count: 0,
++          originalDisabled: button.disabled,
++          originalLabel: getButtonLabel(button)
++        };
++        imageConversionButtonStates.set(button, state);
++        button.disabled = true;
++        setButtonLabel(button, 'Converting…');
++      }
++      state.count++;
++      states.push([button, state]);
++    }
++
++    let released = false;
++    return () => {
++      if (released) return;
++      released = true;
++      for (let i = 0; i < states.length; i++) {
++        const [button, state] = states[i];
++        if (imageConversionButtonStates.get(button) !== state) continue;
++        state.count--;
++        if (state.count > 0) continue;
++
++        if (button.isConnected && getButtonLabel(button) === 'Converting…') {
++          setButtonLabel(button, state.originalLabel);
++          if (button.disabled) button.disabled = state.originalDisabled;
++        }
++        imageConversionButtonStates.delete(button);
++      }
++    };
++  }
++
++  async function checkImageConversion(file, context = null) {
+     const isImage = file.type && file.type.startsWith('image/');
+     if (!isImage) return file;
+ 
+@@ -475,26 +577,10 @@
+       if (file.size > MAX_FILE_SIZE) shouldConvert = true;
+     }
+ 
+-    let lockedInputs = null;
+-    let previousValues = null;
++    let releasePostButtonLock = null;
+ 
+     if (shouldConvert && CONVERTIBLE_EXTS.has(ext)) {
+-      const mobileFilenameInput = typeof mobileInput !== 'undefined' && mobileInput
+-      ? document.querySelector('#mbReplyForm input[name="filename"]')
+-      : null;
+-
+-      const filenameInputs = mobileFilenameInput
+-      ? [mobileFilenameInput]
+-      : Array.from(document.querySelectorAll('input[name="filename"]'));
+-
+-      lockedInputs = filenameInputs.filter(Boolean);
+-      previousValues = lockedInputs.map(i => i.value);
+-
+-      for (let i = 0; i < lockedInputs.length; i++) {
+-        lockedInputs[i].value = 'Converting…';
+-        lockedInputs[i].disabled = true;
+-        lockedInputs[i].style.opacity = '0.6';
+-      }
++      releasePostButtonLock = lockPostButtons(context);
+     }
+ 
+     try {
+@@ -518,13 +604,7 @@
+     } catch (e) {
+       showMessageNotification('Image conversion failed; using original file.');
+     } finally {
+-      if (lockedInputs) {
+-        for (let i = 0; i < lockedInputs.length; i++) {
+-          lockedInputs[i].disabled = false;
+-          lockedInputs[i].style.opacity = '';
+-          lockedInputs[i].value = previousValues[i] || '';
+-        }
+-      }
++      if (releasePostButtonLock) releasePostButtonLock();
+ 
+       if (bitmap && bitmap.close) bitmap.close();
+     }
+@@ -692,22 +772,30 @@
+       const input = e.target;
+       if (input.tagName !== 'INPUT' || input.type !== 'file') return;
+       if (mobileInput) return;
++      if (outboxRestoringFile) return;
+ 
+       const file = input.files?.[0];
+       if (!file) return;
+ 
+       (async () => {
+-        const converted = await checkImageConversion(file);
+-        if (converted === file) return;
++        syncDraftFile();
++        const conversionPostId = captureDraftId(file, input);
++        const converted = await checkImageConversion(file, input);
++        if (converted === file) { syncDraftFile(); return; }
++        replaceConvertedFile(file, converted, conversionPostId);
++
++        if (input.files?.[0] !== file) { syncDraftFile(); return; }
+ 
+         const dt = new DataTransfer();
+         dt.items.add(converted);
+         input.files = dt.files;
++        syncDraftFile();
+       })();
+     });
+ 
+     if (thumbs) {
+       const observer = new MutationObserver((mutations) => {
++        syncDraftFile();
+         for (let i = 0; i < mutations.length; i++) {
+           const { addedNodes } = mutations[i];
+ 
+@@ -722,11 +810,21 @@
+             if (!file) continue;
+ 
+             (async () => {
++              if (outboxRestoringFile) return;
+               const wasClipboard = isClipboardFile(file);
++              const conversionPostId = captureDraftId(file, node);
+ 
+-              const converted = await checkImageConversion(file);
+-              if (converted === file) return;
+-
++              const converted = await checkImageConversion(file, node);
++              if (converted === file) { syncDraftFile(); return; }
++              if (outboxRestoringFile) return;
++              replaceConvertedFile(file, converted, conversionPostId);
++
++              if (!node.isConnected) {
++                if (!syncConvertedFile(file, converted, conversionPostId)) {
++                  syncDraftFile();
++                }
++                return;
++              }
+               const dropzone = node.closest('.dropzone, .dropzone-wrap, form');
+               if (!dropzone) return;
+ 
+@@ -738,6 +836,7 @@
+               }
+ 
+               simDragDrop(dropzone, converted);
++              syncDraftFile();
+             })();
+           }
+         }
+@@ -749,11 +848,15 @@
+     if (thumbs && !checkMobile()) {
+       document.addEventListener('drop', (e) => {
+         if (!thumbs.querySelector('.tmb-container')) return;
++        const outboxList = e.target?.closest?.('#outbox-list, #mb-outbox-list');
++        if (outboxDragSession && outboxList === outboxDragSession.list) return;
+         if (!e.target.closest || !e.target.closest('.dropzone')) {
+           e.stopImmediatePropagation();
+           e.preventDefault();
+           return;
+         }
++        const droppedFiles = Array.from(e.dataTransfer?.files || []);
++        if (!droppedFiles.some((file) => /^image\//i.test(file.type) || /^video\//i.test(file.type))) return;
+         const removeBtn = thumbs.querySelector('.remove-btn');
+         if (removeBtn) removeBtn.click();
+       }, true);
+@@ -802,12 +905,25 @@
+           if (!file) return;
+ 
+           (async () => {
+-            const converted = await checkImageConversion(file);
+-            if (converted === file) return;
++            if (outboxRestoringFile) return;
++            syncDraftFile();
++            const conversionPostId = captureDraftId(file, mbFileInput);
++            const converted = await checkImageConversion(file, mbFileInput);
++            if (converted === file) { syncDraftFile(); return; }
++            replaceConvertedFile(file, converted, conversionPostId);
++            if (mbFileInput.files?.[0] !== file) { syncDraftFile(); return; }
+ 
+             const dt = new DataTransfer();
+             dt.items.add(converted);
+             mbFileInput.files = dt.files;
++            const filenameInput = mbFileInput.form?.querySelector('input[name="filename"]');
++            const filename = filenameInput?.value;
++            mbFileInput.dispatchEvent(new Event('change', { bubbles: true }));
++            if (filenameInput) {
++              filenameInput.value = filename;
++              filenameInput.dispatchEvent(new Event('input', { bubbles: true }));
++            }
++            syncDraftFile();
+           })();
+         });
+       });
+@@ -855,6 +971,19 @@
+ 
+   const appendedPostIds = new Set();
+ 
++  function isQuoteYouSpan(node) {
++    return node?.tagName === 'SPAN' && node.textContent === ' (You)';
++  }
++
++  function appendQuoteLabel(link, label) {
++    if (!link || (link.textContent || '').includes(label)) return;
++    const suffix = ` ${label}`;
++    const inlineYouLabel = Array.from(link.children).find(isQuoteYouSpan);
++    const textNode = document.createTextNode(suffix);
++    if (inlineYouLabel) link.insertBefore(textNode, inlineYouLabel);
++    else link.appendChild(textNode);
++  }
++
+   function appendPosts(post, body, smallTags) {
+     if (!body) return;
+ 
+@@ -864,7 +993,7 @@
+     for (let j = 0; j < smallTags.length; j++) {
+       const small = smallTags[j];
+       const label = small.textContent.trim();
+-      if (label !== '(You)' && label !== '(OP)') continue;
++      if (label !== '(OP)') continue;
+ 
+       let target = small.previousSibling;
+       while (target && (target.nodeType !== 1 || target.tagName !== 'A')) {
+@@ -874,9 +1003,7 @@
+       if (target?.tagName !== 'A') continue;
+ 
+       small.setAttribute('style', 'display: none !important;');
+-      if (!target.textContent.includes(label)) {
+-        target.textContent += ` ${label}`;
+-      }
++      appendQuoteLabel(target, label);
+     }
+ 
+     const links = body.querySelectorAll('a[href*="/res/"]');
+@@ -889,16 +1016,21 @@
+       const linkThreadId = match[1];
+       const quotedPostId = match[2];
+ 
+-      const hasFollowingSmall = link.nextSibling &&
+-            link.nextSibling.nodeType === 1 &&
+-            link.nextSibling.tagName === 'SMALL';
++      let following = link.nextSibling;
++      while (following && following.nodeType === Node.TEXT_NODE && !following.textContent.trim()) {
++        following = following.nextSibling;
++      }
++      const hasFollowingSmall = following &&
++            following.nodeType === 1 &&
++            following.tagName === 'SMALL' &&
++            following.textContent.trim() !== '(You)';
+ 
+       if (quotedPostId === currentThreadId && !hasFollowingSmall && !link.textContent.includes('(OP)')) {
+-        link.textContent += ' (OP)';
++        appendQuoteLabel(link, '(OP)');
+       }
+ 
+       if (linkThreadId !== currentThreadId && !hasFollowingSmall && !link.textContent.includes('→') && !link.textContent.includes('(Cross-thread)')) {
+-        link.textContent += appendCrossThread ? ' (Cross-thread)' : ' →';
++        appendQuoteLabel(link, appendCrossThread ? '(Cross-thread)' : '→');
+       }
+     }
+   }
+@@ -1064,6 +1196,7 @@
+   const iconTwitch = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAuIgAALiIBquLdkgAAAB5QTFRFR3BMZEGlZEGlZEGlZEGlZEGlZEGlZEGlZEGlZEGlVumfBAAAAAl0Uk5TABAlQFV/o8vvnShU+QAAAFRJREFUeNpjYJkJBhMY2KeFAkH4BAbOyQxAwApmKDMYQRiRDFMJMoCADcbILGDgnGosaGw6XYCBc+ZM95kzCxlAjM6ZQAEGZuPMGc6GDCAQ2cSADAD/Qx99Dm+XMQAAAABJRU5ErkJggg==';
+   const iconTwitter = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAuIgAALiIBquLdkgAAAC1QTFRFR3BMHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHyHaHy+JamXQAAAA50Uk5TAAQQHDVMXnaIn8DS4vLdwynJAAAAYUlEQVR42o3OQQ6AMAhE0V8s2NbC/Y9rImqauPHtGIYEPmQjtYguWjHPpMfF0AgFtpxdEY84jJrBDiW7/lygsarAWOZZAFmSBqyV/IA6PJKRyt3Zc9+P96eLtOnuc1jhpxP+pwcBWPTPAQAAAABJRU5ErkJggg==';
+   const iconX = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAuIgAALiIBquLdkgAAAJ9JREFUeNqFkcENhCAUROdoC5ZhLGUr2AJswAZswg6sgwaILXDn6mmWDE5icKOZAxPyCA8+MCB2xJ90RMQARPAhEV2lletp7wMEJx7KSihL6ZvhuqxMnJk5nXggHJfAXdiXubT+DoxM3Bh4MJWOOwCdnYWhBZzAbJMWsHuSSebYAnbvT5O9BT52V1uuJn6B3H2VUk381c2YFLX3Yb2N+wd00i149msMYgAAAABJRU5ErkJggg==';
++  const iconHoloplus = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAKlBMVEVHcEw6jfRBnfkvv/81q/soxv81q/sxrvtGrP0nxP89nPglxf8mxf8/nPjFGi9WAAAADHRSTlMA/s1pH8pWP/2fluPxrm40AAAAeUlEQVQI12NgYGA+M50BDGzOnAkHM/ZM3nMmDEiznDFgjzkTAGKkaLnvOQliGPVe5zwNZihdAjKYm/cYsF3KOcxg0RwDYkxgiFCICQ0TdGBg6FhQcwbMWNHkMrUcxGC6e6mADcRgSLp7KUsQbFfRRUEpiPVFggsYGADMUyhH5HbGtwAAAABJRU5ErkJggg==';
+ 
+   (function addStyle() {
+     if (location.pathname === '/') {
+@@ -1107,11 +1240,7 @@
+         border-style: inherit !important;
+         border-left: none !important;
+       }
+-      .threadingContainer .reply.hide-button {
+-        margin-left: 2px !important;
+-        position: relative;
+-        left: 1px;
+-      }
++      .threadingContainer .reply.hide-button,
+       .threadingContainer .reply.show-button {
+         margin-left: 2px !important;
+         position: relative;
+@@ -1136,18 +1265,14 @@
+       .hidden-post {
+         display: none !important;
+       }
+-      .hidden-post.post-hover {
+-        display: inline-block !important;
+-      }
++      .hidden-post.post-hover,
+       .hidden-post.inline-cloned-post {
+         display: inline-block !important;
+       }
+       :root.reply-fit-width .post.reply.hidden-post {
+         display: none !important;
+       }
+-      :root.reply-fit-width .post.reply.hidden-post.post-hover {
+-        display: inline-block !important;
+-      }
++      :root.reply-fit-width .post.reply.hidden-post.post-hover,
+       :root.reply-fit-width .post.reply.hidden-post.inline-cloned-post {
+         display: inline-block !important;
+       }
+@@ -1219,10 +1344,6 @@
+         background: inherit;
+         max-width: 550px;
+       }
+-      html:is(.mobile-style, .mobile-style-new):not(.desktop-floating-mode) .twt-embed,
+-      html:is(.mobile-style, .mobile-style-new):not(.desktop-floating-mode) .twt-threadwrapper {
+-        max-width: 100%;
+-      }
+       .twt-header {
+         display: flex;
+         gap: 8px;
+@@ -1311,16 +1432,7 @@
+         text-decoration: none;
+         color: inherit;
+       }
+-      .twt-quote {
+-        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+-        border-radius: 12px;
+-        max-width: 100%;
+-        padding: 6px;
+-      }
+       .twt-threadwrapper {
+-        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+-        border-radius: 12px;
+-        padding: 6px;
+         display: flex;
+         flex-direction: column;
+         gap: 12px;
+@@ -1395,6 +1507,71 @@
+         opacity: 0.6;
+         gap: 8px;
+       }
++      html:is(.mobile-style, .mobile-style-new):not(.desktop-floating-mode) .twt-embed,
++      html:is(.mobile-style, .mobile-style-new):not(.desktop-floating-mode) .twt-threadwrapper,
++      .twt-quote {
++        max-width: 100%;
++      }
++      .twt-quote,
++      .twt-threadwrapper,
++      .holoplus-embed {
++        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
++        border-radius: 12px;
++        padding: 6px;
++      }
++      .holoplus-voice-audio {
++        display: block;
++        width: 100%;
++        height: 28px;
++      }
++      .holoplus-voice-audio + .holoplus-voice-audio,
++      .holoplus-media {
++        margin-top: 6px;
++      }
++      .holoplus-title {
++        font-weight: 700;
++        overflow-wrap: anywhere;
++      }
++      .holoplus-meta {
++        margin-bottom: 6px;
++        font-size: 11px;
++      }
++      .holoplus-meta-text {
++        opacity: .65;
++      }
++      .holoplus-meta .hp-sep {
++        opacity: 1 !important;
++      }
++      .holoplus-text {
++        white-space: normal;
++        overflow-wrap: anywhere;
++      }
++      .holoplus-translation {
++        margin-top: 6px;
++        font-size: 12px;
++      }
++      .holoplus-translation summary {
++        cursor: pointer;
++        opacity: .7;
++      }
++      .holoplus-translation-title {
++        margin: 4px 0;
++        font-weight: 700;
++      }
++      .holoplus-chips {
++        display: flex;
++        flex-wrap: wrap;
++        gap: 4px;
++        margin-top: 6px;
++      }
++      .holoplus-chips a {
++        padding: 1px 6px;
++        border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
++        border-radius: 4px;
++        color: inherit;
++        font-size: 11px;
++        text-decoration: none;
++      }
+       .embed-active {
+         font-weight: bolder;
+         text-decoration: underline dotted;
+@@ -1404,6 +1581,7 @@
+       div.post i.fa-pixiv,
+       div.post i.fa-twt,
+       div.post i.fa-x,
++      div.post i.fa-holoplus,
+       div.post i.fa-vocaroo,
+       div.post i.fa-twitchtv,
+       div.post i.fa-image,
+@@ -1447,15 +1625,18 @@
+         background: transparent url('data:image/png;base64,${iconX}') center left no-repeat !important;
+         padding-left: 16px;
+       }
++      .fa-holoplus::before {
++        content: "";
++        background: transparent url('data:image/png;base64,${iconHoloplus}') center left no-repeat !important;
++        padding-left: 16px;
++      }
+       div.post i.fa-music {
+         margin-right: 6px;
+       }
+       div.post i.fa-film {
+         top: 1px !important;
+       }
+-      span.spoiler:hover span.embed-button {
+-        color: inherit !important;
+-      }
++      span.spoiler:hover span.embed-button,
+       span.spoiler span.embed-button {
+         color: inherit !important;
+       }
+@@ -1644,7 +1825,9 @@
+         color: transparent;
+       }
+       .music-seek::-ms-fill-lower,
+-      .music-seek::-ms-fill-upper {
++      .music-seek::-ms-fill-upper,
++      .music-volume::-ms-fill-lower,
++      .music-volume::-ms-fill-upper {
+         background-color: #fff6c0;
+       }
+       .music-seek::-ms-thumb {
+@@ -1728,10 +1911,6 @@
+         border-color: transparent;
+         color: transparent;
+       }
+-      .music-volume::-ms-fill-lower,
+-      .music-volume::-ms-fill-upper {
+-        background-color: #fff6c0;
+-      }
+       .music-volume::-ms-thumb {
+         width: 10px;
+         height: 12px;
+@@ -1739,7 +1918,9 @@
+         border: 1px solid #996600;
+       }
+       div.post.reply.hidden,
+-      .ts-oekaki-panel[hidden] {
++      .ts-oekaki-panel[hidden],
++      .outbox-comment:empty,
++      body.outbox-locked .outbox-item.outbox-selected .outbox-remove {
+         display: none;
+       }
+       .post-menu .post-item:hover,
+@@ -1998,6 +2179,154 @@
+         cursor: se-resize;
+         background: rgba(128, 128, 128, 0.35);
+       }
++      #outbox-button,
++      .ts-oekaki-toggle {
++        float: right;
++        margin: 0 2px;
++        color: inherit;
++        cursor: pointer;
++        opacity: 0.7;
++        transition: opacity 0.2s;
++      }
++      #outbox-button:hover,
++      .ts-oekaki-toggle:hover {
++        opacity: 1;
++      }
++      #outbox-row td {
++        border-bottom: none;
++        padding: 2px 0 0;
++      }
++      #outbox-container,
++      #mb-outbox-container {
++        display: none;
++        position: relative;
++        overflow-y: hidden;
++        margin-top: 1px;
++      }
++      body.outbox-has-posts #outbox-container,
++      body.outbox-has-posts #mb-outbox-container {
++        display: block;
++      }
++      #outbox-list,
++      #mb-outbox-list {
++        overflow: auto;
++        white-space: nowrap;
++        width: 100%;
++        max-height: 280px;
++        min-height: 90px;
++        display: flex;
++        flex-wrap: wrap;
++        gap: 2px;
++        counter-reset: outbox-thumbnails;
++      }
++      .outbox-item {
++        box-sizing: border-box;
++        counter-increment: outbox-thumbnails;
++        cursor: move;
++        display: inline-block;
++        height: 90px;
++        width: 90px;
++        padding: 2px;
++        opacity: 0.5;
++        position: relative;
++        text-shadow: 0 0 2px #000;
++        transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
++        vertical-align: top;
++        background-size: cover;
++        background-position: center;
++        background-origin: border-box;
++        background-color: rgba(0, 0, 0, 0.15);
++        border: 2px solid transparent;
++        flex: none;
++      }
++      .outbox-item:hover,
++      .outbox-item:focus {
++        opacity: 0.9;
++      }
++      .outbox-item.outbox-selected {
++        opacity: 1;
++        border-color: var(--ts-hover-color, inherit);
++      }
++      .outbox-drag-active .outbox-item {
++        transform: scale(0.9);
++      }
++      .outbox-item.outbox-drag {
++        opacity: 0.5;
++        transform: scale(0.8);
++        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
++      }
++      .outbox-item.outbox-over {
++        border-color: #fff;
++        transform: scale(1);
++        opacity: 0.9;
++        z-index: 10;
++      }
++      body.outbox-locked .outbox-item.outbox-selected,
++      body.outbox-locked #outbox-button,
++      body.outbox-locked #mbDFOutboxBtn {
++        pointer-events: none;
++        opacity: 0.55;
++      }
++      .outbox-item .outbox-remove {
++        cursor: pointer;
++      }
++      .outbox-item::before {
++        content: counter(outbox-thumbnails);
++        color: #fff;
++        position: absolute;
++        top: 3px;
++        right: 3px;
++        text-shadow: 0 0 3px #000, 0 0 8px #000;
++        font-size: 12px;
++        font-weight: bold;
++        z-index: 1;
++      }
++      .outbox-comment {
++        color: #fff;
++        position: absolute;
++        bottom: -2px;
++        left: -2px;
++        right: -2px;
++        padding: 2px 4px;
++        background: rgba(0, 0, 0, 0.7);
++        font-size: 10px;
++        white-space: nowrap;
++        overflow: hidden;
++        text-overflow: ellipsis;
++        pointer-events: none;
++      }
++      .outbox-item.outbox-selected .outbox-comment {
++        bottom: 0;
++        left: 0;
++        right: 0;
++      }
++      .outbox-remove {
++        background: none;
++        color: #fff;
++        position: absolute;
++        top: 0px;
++        left: 2px;
++        z-index: 2;
++        display: none;
++        text-shadow: 0 0 3px #000, 0 0 8px #000;
++        cursor: pointer;
++        border: none;
++        font-size: 13px;
++      }
++      .outbox-item:hover .outbox-remove {
++        display: block;
++      }
++      .outbox-item.outbox-spoiler::after {
++        content: '';
++        position: absolute;
++        inset: 0;
++        background: url('/static/spoiler-vt2.png') center/cover no-repeat;
++        opacity: 0.3;
++        pointer-events: none;
++      }
++      #mb-outbox-list {
++        max-height: 180px;
++      }
+     `;
+ 
+     if (showSpoilerText) {
+@@ -2021,17 +2350,63 @@
+ 
+     if (highlightPosts) {
+       css += `
+-        div.post.reply.you:has(span.own_post),
++        div.post.you:has(span.own_post),
+         .inline-quote-container > .inline-cloned-post.you:has(span.own_post) {
+           border-left: 5px var(--you-border-style, dashed) #00b8e6 !important;
+         }
+-        div.post.reply.quoting-you,
++        div.post.quoting-you,
+         .inline-quote-container > .inline-cloned-post.quoting-you {
+           border-left: 5px var(--you-border-style, dashed) #ff3d3d !important;
+         }
+       `;
+     }
+ 
++    if (resizeMedia) {
++      css += `
++        .ts-resize-media-youtube {
++          position: relative !important;
++          display: block !important;
++          width: fit-content !important;
++          vertical-align: top;
++          overflow: visible !important;
++          margin-top: 10px !important;
++        }
++        .ts-resize-media-youtube > iframe.embed {
++          display: block !important;
++          margin: 0 !important;
++        }
++        body :is(div, span):has(> video[controls]) {
++          position: relative !important;
++          inset: auto !important;
++          width: fit-content;
++          overflow: visible !important;
++        }
++        body :is(div, span) > video[controls] {
++          width: auto !important;
++          height: auto !important;
++          vertical-align: bottom;
++        }
++        .ts-resize-media-youtube::after,
++        body :is(div, span):has(> video[controls])::after {
++          content: '';
++          position: absolute !important;
++          right: -16px !important;
++          bottom: -16px !important;
++          width: 20px !important;
++          height: 20px !important;
++          box-sizing: border-box !important;
++          padding: 0 !important;
++          margin: 0 !important;
++          border: 0 !important;
++          background: transparent !important;
++          pointer-events: auto !important;
++          touch-action: none !important;
++          cursor: se-resize !important;
++          z-index: 2 !important;
++        }
++      `;
++    }
++
+     checkDate();
+     if (isChristmas) {
+       if (persistentEffect) {
+@@ -2830,6 +3205,10 @@
+ 
+   const TWEET_LINK_RE = /^https?:\/\/(?:\w+\.)?(?:twitter|x)\.com\/([^\/]+)\/status\/(\d+)/i;
+   const API_PREFIX = 'https://api.fxtwitter.com/';
++  const HOLOPLUS_UUID_RE = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
++  const HOLOPLUS_PAGE_CACHE_LIMIT = 10;
++  const holoplusPageCache = new Map();
++  const holoplusPageRequests = new Map();
+   const YT_LINK_RE = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+   const YT_PLAYLIST_RE = /youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/i;
+   const STREAMABLE_LINK_RE = /streamable\.com(?:\/e)?\/([a-zA-Z0-9]+)/i;
+@@ -2852,6 +3231,93 @@
+   const isMobileTheme = !document.documentElement.classList.contains('desktop-style') && !document.documentElement.classList.contains('desktop-floating-mode');
+   const gmRequest = (typeof GM !== 'undefined' && GM?.xmlHttpRequest) || (typeof GM_xmlhttpRequest !== 'undefined' && GM_xmlhttpRequest);
+ 
++  function getHoloplusPost(url) {
++    let parsed;
++    try {
++      parsed = new URL(url);
++    } catch (e) {
++      return null;
++    }
++
++    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.port) return null;
++
++    let postId = null;
++    if (parsed.hostname === 'holotower.org' || parsed.hostname === 'www.holotower.org') {
++      if (parsed.pathname !== '/holoplus.php') return null;
++      postId = parsed.searchParams.get('post');
++    } else if (parsed.hostname === 'holoplus.com' || parsed.hostname === 'www.holoplus.com') {
++      const match = parsed.pathname.match(/^\/app\/threads\/([^/]+)\/?$/i);
++      if (match) postId = match[1];
++    } else {
++      return null;
++    }
++
++    if (!postId || !HOLOPLUS_UUID_RE.test(postId)) return null;
++    return { id: postId, url: `https://holotower.org/holoplus.php?post=${postId}` };
++  }
++
++  async function fetchHoloplusHtml(url) {
++    try {
++      const response = await fetch(url, { credentials: 'include' });
++      if (!response.ok) throw new Error('HTTP ' + response.status);
++      return await response.text();
++    } catch (e) {
++      if (!gmRequest) throw e;
++    }
++
++    return new Promise((resolve, reject) => {
++      gmRequest({
++        method: 'GET',
++        url,
++        responseType: 'text',
++        timeout: 15000,
++        onload: (response) => {
++          if (response.status >= 200 && response.status < 300 && response.responseText) {
++            resolve(response.responseText);
++          } else {
++            reject(new Error('HTTP ' + response.status));
++          }
++        },
++        onerror: () => reject(new Error('holoplus request failed')),
++        ontimeout: () => reject(new Error('holoplus request timed out'))
++      });
++    });
++  }
++
++  function fetchHoloplusPage(post) {
++    const cachedPage = holoplusPageCache.get(post.url);
++    if (cachedPage) {
++      holoplusPageCache.delete(post.url);
++      holoplusPageCache.set(post.url, cachedPage);
++      return Promise.resolve(cachedPage);
++    }
++    if (holoplusPageRequests.has(post.url)) return holoplusPageRequests.get(post.url);
++
++    const promise = fetchHoloplusHtml(post.url).then((html) => {
++      if (typeof html !== 'string') throw new Error('Invalid holoplus response');
++      const page = new DOMParser().parseFromString(html, 'text/html');
++      if (!page.querySelector('article.hp-post')) throw new Error('holoplus post not found');
++
++      const pageUrl = page.querySelector('meta[property="og:url"]')?.getAttribute('content');
++      const pagePost = pageUrl && getHoloplusPost(pageUrl);
++      if (pagePost && pagePost.id.toLowerCase() !== post.id.toLowerCase()) {
++        throw new Error('holoplus post did not match the requested ID');
++      }
++
++      holoplusPageCache.delete(post.url);
++      holoplusPageCache.set(post.url, page);
++      while (holoplusPageCache.size > HOLOPLUS_PAGE_CACHE_LIMIT) {
++        holoplusPageCache.delete(holoplusPageCache.keys().next().value);
++      }
++      return page;
++    }).finally(() => {
++      holoplusPageRequests.delete(post.url);
++    });
++
++    holoplusPageRequests.set(post.url, promise);
++    return promise;
++  }
++
+   function makeEmbedButton(originalUrl) {
+     const wrapper = document.createElement('span');
+     wrapper.className = 'embed-container';
+@@ -3005,6 +3471,25 @@
+       .replace(/^\.+/, '');
+   }
+ 
++  function getOembedTitle(data) {
++    const title = typeof data?.title === 'string' ? data.title.trim() : '';
++    if (title && sanitizeFilenamePart(title).replace(/[. ]+$/, '')) return title;
++    if (typeof data?.html !== 'string') return null;
++
++    try {
++      const iframeTitle = new DOMParser()
++        .parseFromString(data.html, 'text/html')
++        .querySelector('iframe[title]')
++        ?.getAttribute('title')
++        ?.trim();
++      return iframeTitle && sanitizeFilenamePart(iframeTitle).replace(/[. ]+$/, '')
++        ? iframeTitle
++        : null;
++    } catch (e) {
++      return null;
++    }
++  }
++
+   function makeFailEmbed(replyContext) {
+     const embed = document.createElement('div');
+     embed.className = 'twt-embed';
+@@ -3015,6 +3500,276 @@
+     return embed;
+   }
+ 
++  function holoplusTitle(page) {
++    const metaTitle = page.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim();
++    if (metaTitle) return metaTitle.slice(0, 300);
++    const articleTitle = page.querySelector('article.hp-post .window-title')?.textContent?.trim();
++    if (articleTitle) return articleTitle.slice(0, 300);
++    return (page.title || 'Holoplus post').replace(/\s+-\s+holoplus\s+-\s+Holotower$/i, '').trim().slice(0, 300);
++  }
++
++  function appendHoloplusContent(source, target) {
++    if (!source) return;
++
++    for (const child of source.childNodes) {
++      if (child.nodeType === 3) {
++        target.appendChild(document.createTextNode(child.nodeValue || ''));
++        continue;
++      }
++      if (child.nodeType !== 1) continue;
++
++      const tag = child.tagName.toLowerCase();
++      if (tag === 'br') {
++        target.appendChild(document.createElement('br'));
++        continue;
++      }
++      if (['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button'].includes(tag)) continue;
++      if (tag === 'a') {
++        const href = child.getAttribute('href');
++        if (!href) {
++          target.appendChild(document.createTextNode(child.textContent || ''));
++          continue;
++        }
++        const link = document.createElement('a');
++        link.href = href;
++        link.target = '_blank';
++        link.rel = 'noopener noreferrer nofollow';
++        link.referrerPolicy = 'no-referrer';
++        link.textContent = child.textContent || href;
++        target.appendChild(link);
++        continue;
++      }
++
++      const block = ['div', 'p', 'li', 'blockquote'].includes(tag);
++      if (block && target.lastChild && target.lastChild.nodeName !== 'BR') {
++        target.appendChild(document.createElement('br'));
++      }
++      appendHoloplusContent(child, target);
++      if (block && child.nextSibling && target.lastChild && target.lastChild.nodeName !== 'BR') {
++        target.appendChild(document.createElement('br'));
++      }
++    }
++  }
++
++  function renderHoloplus(page, post, replyContext) {
++    const article = page.querySelector('article.hp-post');
++    if (!article) throw new Error('holoplus post not found');
++
++    const embed = document.createElement('div');
++    embed.className = 'twt-embed holoplus-embed';
++    const margin = computeEmbedMargin(replyContext);
++    if (margin) embed.style.marginLeft = margin;
++
++    const title = holoplusTitle(page);
++    const header = document.createElement('a');
++    header.className = 'twt-header holoplus-title';
++    header.href = post.url;
++    header.target = '_blank';
++    header.rel = 'noopener noreferrer';
++    header.referrerPolicy = 'no-referrer';
++    header.textContent = title;
++    embed.appendChild(header);
++
++    const meta = article.querySelector('.hp-meta');
++    if (meta?.textContent?.trim()) {
++      const metaLine = document.createElement('div');
++      metaLine.className = 'holoplus-meta';
++      for (const child of meta.childNodes) {
++        if (child.nodeType === 1 && child.matches('.hp-sep')) {
++          const separator = document.createElement('span');
++          separator.className = 'hp-sep';
++          separator.textContent = child.textContent;
++          metaLine.appendChild(separator);
++        } else {
++          const text = document.createElement('span');
++          text.className = 'holoplus-meta-text';
++          text.textContent = child.textContent || '';
++          metaLine.appendChild(text);
++        }
++      }
++      embed.appendChild(metaLine);
++    }
++
++    const body = article.querySelector('.hp-body');
++    if (body) {
++      const text = document.createElement('div');
++      text.className = 'twt-text holoplus-text';
++      appendHoloplusContent(body, text);
++      embed.appendChild(text);
++    }
++
++    const translationSource = article.querySelector('details.hp-translation');
++    if (translationSource) {
++      const translationBody = translationSource.querySelector('.hp-body');
++      const translationTitle = translationSource.querySelector('p > strong')?.textContent?.trim();
++      if (translationBody || translationTitle) {
++        const details = document.createElement('details');
++        details.className = 'holoplus-translation';
++        details.open = true;
++        const summary = document.createElement('summary');
++        summary.textContent = translationSource.querySelector('summary')?.textContent?.trim() || 'Translation';
++        details.appendChild(summary);
++        if (translationTitle) {
++          const title = document.createElement('div');
++          title.className = 'holoplus-translation-title';
++          title.textContent = translationTitle;
++          details.appendChild(title);
++        }
++        if (translationBody) {
++          const translated = document.createElement('div');
++          translated.className = 'holoplus-text';
++          appendHoloplusContent(translationBody, translated);
++          details.appendChild(translated);
++        }
++        embed.appendChild(details);
++      }
++    }
++
++    const sourceImages = article.querySelectorAll('.hp-media img[src]');
++    if (sourceImages.length) {
++      const media = document.createElement('div');
++      media.className = `holoplus-media photos-grid${sourceImages.length === 1 ? ' single' : ''}`;
++      for (const sourceImage of sourceImages) {
++        const src = sourceImage.getAttribute('src');
++        if (!src) continue;
++
++        const img = document.createElement('img');
++        img.className = 'photo-img';
++        img.src = src;
++        img.alt = sourceImage.getAttribute('alt') || title;
++        img.loading = 'lazy';
++        img.referrerPolicy = 'no-referrer';
++        img.dataset.expanded = '0';
++        img.onerror = () => {
++          const unavailable = document.createElement('span');
++          unavailable.textContent = 'Image unavailable';
++          img.replaceWith(unavailable);
++        };
++
++        const sourceLink = sourceImage.closest('a[href]');
++        const href = sourceLink && sourceLink.getAttribute('href');
++        const link = document.createElement('a');
++        link.className = 'photo-link';
++        link.href = href || src;
++        link.target = '_blank';
++        link.rel = 'noopener noreferrer';
++        link.referrerPolicy = 'no-referrer';
++        link.appendChild(img);
++        media.appendChild(link);
++      }
++      if (media.childElementCount) {
++        bindPhotoGrid(media);
++        embed.appendChild(media);
++      }
++    }
++
++    const sourceAudios = article.querySelectorAll('audio.hp-voice[src]');
++    if (sourceAudios.length) {
++      const voices = document.createElement('div');
++      voices.className = 'holoplus-media holoplus-voices';
++      const seenAudioSources = new Set();
++      for (const sourceAudio of sourceAudios) {
++        const src = sourceAudio.getAttribute('src');
++        if (!src || seenAudioSources.has(src)) continue;
++        seenAudioSources.add(src);
++
++        const audio = document.createElement('audio');
++        audio.className = 'holoplus-voice-audio';
++        audio.controls = true;
++        audio.preload = 'metadata';
++        audio.referrerPolicy = 'no-referrer';
++        audio.src = src;
++        const label = sourceAudio.closest('.hp-player')?.querySelector('.hp-player-label')?.textContent?.trim();
++        audio.setAttribute('aria-label', label || 'Voice clip');
++        voices.appendChild(audio);
++      }
++      if (voices.childElementCount) embed.appendChild(voices);
++    }
++
++    const sourceChips = article.querySelectorAll('.hp-chips a.hp-chip[href]');
++    if (sourceChips.length) {
++      const chips = document.createElement('div');
++      chips.className = 'holoplus-chips';
++      for (const sourceChip of sourceChips) {
++        const href = sourceChip.getAttribute('href');
++        const label = sourceChip.textContent?.trim();
++        if (!href || !label) continue;
++
++        const link = document.createElement('a');
++        link.href = href;
++        link.textContent = label;
++        const title = sourceChip.getAttribute('title')?.trim();
++        if (title) link.title = title;
++        chips.appendChild(link);
++      }
++      if (chips.childElementCount) embed.appendChild(chips);
++    }
++
++    const footer = document.createElement('div');
++    footer.className = 'twt-footer';
++    const openLink = document.createElement('a');
++    openLink.href = `https://www.holoplus.com/app/threads/${encodeURIComponent(post.id)}`;
++    openLink.target = '_blank';
++    openLink.rel = 'noopener noreferrer';
++    openLink.referrerPolicy = 'no-referrer';
++    openLink.textContent = 'Open in holoplus';
++    footer.appendChild(openLink);
++    const editedMatch = article.querySelector('.hp-actions')?.textContent?.match(/\bEdited\s+[^\r\n]+/i);
++    if (editedMatch) {
++      const edited = document.createElement('span');
++      edited.className = 'holoplus-edited';
++      const separator = document.createElement('span');
++      separator.className = 'hp-sep';
++      separator.textContent = '|';
++      edited.appendChild(separator);
++      edited.appendChild(document.createTextNode(` ${editedMatch[0].trim()}`));
++      footer.appendChild(edited);
++    }
++    embed.appendChild(footer);
++    return embed;
++  }
++
++  function bindPhotoGrid(grid) {
++    const allImagesArray = Array.from(grid.querySelectorAll('img.photo-img'));
++    grid.addEventListener('click', (e) => {
++      const t = e.target;
++      const img = t && (t.matches && t.matches('img.photo-img') ? t : t.closest && t.closest('img.photo-img'));
++      if (!img || !grid.contains(img)) return;
++      e.preventDefault();
++
++      const expanded = img.dataset.expanded === '1';
++      if (!expanded) {
++        img.classList.add('expanded');
++        img.dataset.expanded = '1';
++        for (let j = 0; j < allImagesArray.length; j++) {
++          const iel = allImagesArray[j];
++          if (iel !== img) iel.style.display = 'none';
++        }
++        grid.style.gridTemplateColumns = '1fr';
++      } else {
++        img.classList.remove('expanded');
++        img.dataset.expanded = '0';
++        for (let j = 0; j < allImagesArray.length; j++) {
++          allImagesArray[j].style.removeProperty('display');
++        }
++        grid.style.removeProperty('grid-template-columns');
++      }
++    });
++  }
++
++  async function insertHoloplus(post, replyContext, insertionPoint) {
++    if (!insertionPoint?.parentNode) return;
++    try {
++      const page = await fetchHoloplusPage(post);
++      if (!insertionPoint.parentNode) return;
++      insertionPoint.parentNode.insertBefore(renderHoloplus(page, post, replyContext), insertionPoint.nextSibling);
++    } catch (e) {
++      if (insertionPoint.parentNode) {
++        insertionPoint.parentNode.insertBefore(makeFailEmbed(replyContext), insertionPoint.nextSibling);
++      }
++    }
++  }
++
+   async function fetchGMBlob(url) {
+     if (!gmRequest) throw new Error('GM.xmlHttpRequest not available');
+ 
+@@ -3333,33 +4088,7 @@
+           grid.appendChild(a);
+         }
+ 
+-        const allImagesArray = Array.from(grid.querySelectorAll('img.photo-img'));
+-
+-        grid.addEventListener('click', (e) => {
+-          const t = e.target;
+-          const img = t && (t.matches && t.matches('img.photo-img') ? t : t.closest && t.closest('img.photo-img'));
+-          if (!img || !grid.contains(img)) return;
+-          e.preventDefault();
+-
+-          const expanded = img.dataset.expanded === '1';
+-          if (!expanded) {
+-            img.classList.add('expanded');
+-            img.dataset.expanded = '1';
+-            for (let j = 0; j < allImagesArray.length; j++) {
+-              const iel = allImagesArray[j];
+-              if (iel !== img) iel.style.display = 'none';
+-            }
+-            grid.style.gridTemplateColumns = '1fr';
+-          } else {
+-            img.classList.remove('expanded');
+-            img.dataset.expanded = '0';
+-            for (let j = 0; j < allImagesArray.length; j++) {
+-              const iel = allImagesArray[j];
+-              iel.style.removeProperty('display');
+-            }
+-            grid.style.removeProperty('grid-template-columns');
+-          }
+-        });
++        bindPhotoGrid(grid);
+ 
+         fragment.appendChild(grid);
+       }
+@@ -3554,6 +4283,17 @@
+     return wrap;
+   }
+ 
++  function isYouTubeUrl(value) {
++    if (!value) return false;
++    try {
++      const host = new URL(value, location.href).hostname.toLowerCase();
++      return host === 'youtube-nocookie.com' || host.endsWith('.youtube-nocookie.com') ||
++             host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be';
++    } catch (e) {
++      return false;
++    }
++  }
++
+   function createImageEmbed(container, src) {
+     const wrap = makeEmbedWrapper(container);
+ 
+@@ -3605,6 +4345,8 @@
+     if (!btn) return;
+     const url = btn.getAttribute('data-embedurl');
+     if (!url) return;
++    const isYouTubeEmbed = isYouTubeUrl(url);
++    if (resizeMedia && isYouTubeEmbed) ev.stopImmediatePropagation?.();
+ 
+     const container = btn.closest('.embed-container') || btn;
+     const nextEmbed = container?.nextElementSibling;
+@@ -3635,6 +4377,14 @@
+         return;
+       }
+ 
++      const holoplusPost = getHoloplusPost(url);
++      if (holoplusPost) {
++        await insertHoloplus(holoplusPost, replyContext, insertionPoint);
++        if (!isLink) btn.textContent = 'Remove';
++        delete btn.dataset.loading;
++        return;
++      }
++
+       if (IMAGE_RE.test(url) || TWIMG_RE.test(url)) {
+         createImageEmbed(container, url);
+         if (!isLink) btn.textContent = 'Remove';
+@@ -3657,8 +4407,12 @@
+       iframe.width = 360;
+       iframe.height = 270;
+       iframe.frameBorder = 0;
+-      iframe.style.margin = '10px 0 0 0';
+       iframe.allowFullscreen = true;
++      if (isYouTubeEmbed && resizeMedia) {
++        iframe.classList.add('embed');
++      } else {
++        iframe.style.margin = '10px 0 0 0';
++      }
+ 
+       if (url.includes('vocaroo.com')) {
+         iframe.height = 75;
+@@ -3669,6 +4423,10 @@
+       }
+ 
+       embedWrapper.appendChild(iframe);
++      if (isYouTubeEmbed && resizeMedia) {
++        iframe.classList.add('ts-resize-media-youtube-frame');
++        embedWrapper.classList.add('ts-resize-media-youtube');
++      }
+       container.parentNode.insertBefore(embedWrapper, container.nextSibling);
+       if (!isLink) btn.textContent = 'Remove';
+     } catch (e) {
+@@ -3690,7 +4448,7 @@
+   }
+ 
+   function processLinks(links, queue = false) {
+-    if (!linkEmbed && !linkIcon && !linkTitle) return;
++    if (!linkEmbed && !linkIcon && !linkTitle && !resizeMedia) return;
+ 
+     const oembedCache = new Map();
+ 
+@@ -3733,10 +4491,37 @@
+       }
+     }
+ 
++    function queueHoloplusTitle(link, post) {
++      const task = async () => {
++        try {
++          const page = await fetchHoloplusPage(post);
++          const title = holoplusTitle(page);
++          if (!title || !link.isConnected) return;
++          link.replaceChildren();
++          if (linkIcon) {
++            const icon = document.createElement('i');
++            icon.className = 'fa fa-holoplus';
++            link.appendChild(icon);
++          }
++          link.appendChild(document.createTextNode(`[holoplus] ${title}`));
++          link.style.textDecoration = 'none';
++          link.dataset.decorated = '1';
++        } catch (e) {}
++      };
++
++      if (queue) {
++        fetchTasks.push(task);
++        if (!fetchProcessing) fetchQueue(5);
++      } else {
++        task();
++      }
++    }
++
+     function applyOembed(link, data, label, iconName) {
+-      if (!data || !data.title) return;
++      const title = getOembedTitle(data);
++      if (!title) return;
+       const iconHTML = linkIcon ? `<i class="fa fa-${iconName}"></i>` : "";
+-      link.innerHTML = `${iconHTML}${label} ${data.title}`;
++      link.innerHTML = `${iconHTML}${label} ${escapeHtml(title)}`;
+       link.style.textDecoration = "none";
+       link.dataset.decorated = '1';
+     }
+@@ -3752,22 +4537,38 @@
+     }
+ 
+     for (let i = 0; i < links.length; i++) {
+-      const a = links[i];
++      let a = links[i];
+       if (!a.href || !a.href.startsWith('http')) continue;
+ 
+       let host = a.hostname;
+       let match;
++      const holoplusPost = getHoloplusPost(a.href);
+ 
+       if (rerouteCatbox && CATBOX_HOSTS.includes(host)) {
+         a.href = rerouteCatboxUrl(a.href);
+         host = a.hostname;
+       }
+ 
+-      if ((linkEmbed && a.dataset.embedBound) && ((linkIcon || linkTitle) && a.dataset.decorated)) continue;
+-
+       const maybeNext = a.nextElementSibling;
+-      if (linkEmbed && maybeNext && maybeNext.classList?.contains('embed-container')) {
+-        const existingBtn = maybeNext.querySelector('.embed-button');
++      const existingBtn = maybeNext?.classList?.contains('embed-container')
++        ? maybeNext.querySelector('.embed-button')
++        : null;
++
++      if (resizeMedia && existingBtn && !a.dataset.embedBound && isYouTubeUrl(existingBtn.getAttribute('data-embedurl'))) {
++        const embedUrl = existingBtn.getAttribute('data-embedurl') || a.href;
++        if (linkEmbed && directButton) {
++          a.classList.add('embed-button');
++          a.setAttribute('data-embedurl', embedUrl);
++          a.addEventListener('click', onEmbedClick);
++          a.dataset.embedBound = '1';
++          maybeNext.remove();
++        } else {
++          const resizeButton = makeEmbedButton(embedUrl).querySelector('.embed-button');
++          existingBtn.replaceWith(resizeButton);
++          resizeButton.addEventListener('click', onEmbedClick);
++          a.dataset.embedBound = '1';
++        }
++      } else if (linkEmbed && maybeNext && maybeNext.classList?.contains('embed-container')) {
+ 
+         if (existingBtn && (IMAGE_RE.test(a.href) || TWIMG_RE.test(a.href) || MEDIA_FILE_RE.test(a.href))) {
+           if (directButton) {
+@@ -3807,10 +4608,20 @@
+         }
+       }
+ 
++      if ((linkEmbed && a.dataset.embedBound) && ((linkIcon || linkTitle) && a.dataset.decorated)) continue;
++
+       if (linkEmbed && a.classList.contains('embed-button')) {
+         a.dataset.embedBound = '1';
+       }
+ 
++      if (holoplusPost) {
++        if (linkEmbed && !a.dataset.embedBound) bindEmbed(a, holoplusPost.url);
++        if (linkIcon) prependIcon(a, 'holoplus');
++        if (linkTitle) queueHoloplusTitle(a, holoplusPost);
++        a.dataset.decorated = a.dataset.decorated || '1';
++        continue;
++      }
++
+       if ((host.includes('youtube.com') || host === 'youtu.be')) {
+         if ((match = a.href.match(YT_LINK_RE))) {
+           const videoId = match[1];
+@@ -3957,34 +4768,832 @@
+   const youPostIds = new Set();
+   const ownPostIds = new Set();
+ 
+-  function trackYouPost(post, smallTags) {
+-    const postId = post.id.split('_')[1];
++  const OWN_POSTS_STORAGE_KEY = 'own_posts';
++  let ownershipSnapshot = null;
++  const ownershipInitialPosts = new WeakSet();
++  const ownershipMenuIdentities = new WeakMap();
++  const ownershipNavInstalled = { mobile: false, desktop: false };
+ 
+-    for (let i = 0; i < smallTags.length; i++) {
+-      if (smallTags[i].textContent.trim() === '(You)') {
+-        if (!youPostIds.has(postId)) {
+-          youPostIds.add(postId);
+-          scheduleRailRebuild();
+-          if (postsInitialized && desktopNotifications) {
+-            showYouNotification(post);
++  function normalizePostId(value) {
++    const id = String(value ?? '').trim();
++    return /^\d+$/.test(id) ? id : null;
++  }
++
++  function normalizeOwnershipBoard(value) {
++    const board = String(value ?? '').trim();
++    return /^[a-zA-Z0-9_-]+$/.test(board) ? board : null;
++  }
++
++  function parseOwnPosts(value) {
++    const byBoard = new Map();
++    let stored = {};
++
++    if (value !== null && value !== undefined) {
++      try {
++        stored = JSON.parse(value) || {};
++      } catch (e) {
++        return byBoard;
++      }
++    }
++
++    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) {
++      return byBoard;
++    }
++
++    for (const [board, values] of Object.entries(stored)) {
++      const normalizedBoard = normalizeOwnershipBoard(board);
++      if (!normalizedBoard || !Array.isArray(values)) continue;
++      const ids = byBoard.get(normalizedBoard) || new Set();
++      for (const value of values) {
++        const id = normalizePostId(value);
++        if (id) ids.add(id);
++      }
++      byBoard.set(normalizedBoard, ids);
++    }
++
++    return byBoard;
++  }
++
++  function readOwnPosts() {
++    return parseOwnPosts(localStorage.getItem(OWN_POSTS_STORAGE_KEY));
++  }
++
++  function makeOwnershipKey(board, id) {
++    return `${board}\u0000${id}`;
++  }
++
++  function updateOwnershipSnapshot(board, id, owned) {
++    if (!ownershipSnapshot) return;
++    const ids = ownershipSnapshot.get(board) || new Set();
++    if (owned) ids.add(id);
++    else ids.delete(id);
++    if (ids.size) ownershipSnapshot.set(board, ids);
++    else ownershipSnapshot.delete(board);
++  }
++
++  function findAffectedPosts(board, id) {
++    const posts = new Set();
++    const postCandidates = document.querySelectorAll('.post.op, .post.reply');
++    for (let i = 0; i < postCandidates.length; i++) {
++      const post = postCandidates[i];
++      const identity = getPostIdentity(post);
++      const sourceMatches = normalizeOwnershipBoard(identity?.board) === board &&
++        normalizePostId(identity?.id) === id;
++      const quoteMatches = getOwnershipQuotes(post, identity).some(target =>
++        target.board === board && target.id === id
++      );
++      if (sourceMatches || quoteMatches) {
++        posts.add(post);
++      }
++    }
++
++    return posts;
++  }
++
++  function reconcileOwnershipChange(board, id, previousOwnPostsByBoard, ownPostsByBoard) {
++    const targetPosts = findAffectedPosts(board, id);
++    const menuItem = document.querySelector('.post-menu #ts-mark-you');
++    const menuIdentity = menuItem ? ownershipMenuIdentities.get(menuItem) : null;
++    const menuRelevant = !!menuItem &&
++      normalizeOwnershipBoard(menuIdentity?.board) === board &&
++      normalizePostId(menuIdentity?.id) === id;
++    const quoteCache = new Map();
++    let navigationChanged = false;
++    let faviconChanged = false;
++    let staleMembershipChanged = false;
++    const unreadIds = rememberLastRead ? unreadSet : sessionUnreadPostIds;
++
++    if (board === currentBoard && (ownPostIds.has(id) || youPostIds.has(id))) {
++      const hasSourcePost = Array.from(targetPosts).some(post => {
++        const identity = getPostIdentity(post);
++        return isSourcePost(post, identity) && identity.board === board && identity.id === id;
++      });
++      if (!hasSourcePost) {
++        const sourcePost = getNavigationPost(id);
++        if (sourcePost) {
++          targetPosts.add(sourcePost);
++        } else {
++          const wasYou = youPostIds.delete(id);
++          const wasOwn = ownPostIds.delete(id);
++          if (wasYou || wasOwn) {
++            navigationChanged = true;
++            staleMembershipChanged = true;
++            if (wasYou && enableFaviconChanges && notifyNewYou && unreadIds.has(id)) faviconChanged = true;
+           }
+         }
+-        if (highlightPosts) post.classList.add('quoting-you');
+-        return;
+       }
+     }
++
++    if (!targetPosts.size && !menuRelevant && !staleMembershipChanged) return;
++
++    const changedKey = makeOwnershipKey(board, id);
++    for (const post of targetPosts) {
++      const identity = getPostIdentity(post);
++      const sourcePost = isSourcePost(post, identity);
++      const quotes = getOwnershipQuotes(post, identity);
++      quoteCache.set(post, quotes);
++      if (sourcePost && identity) {
++        const board = normalizeOwnershipBoard(identity.board);
++        const id = normalizePostId(identity.id);
++        if (board && id) {
++          const previousOwn = !!previousOwnPostsByBoard.get(board)?.has(id);
++          const nextOwn = !!ownPostsByBoard.get(board)?.has(id);
++          if (previousOwn !== nextOwn) navigationChanged = true;
++
++          let previousYou = false;
++          let nextYou = false;
++          let previousYouPost = false;
++          let nextYouPost = false;
++          for (const target of quotes) {
++            const previous = !!previousOwnPostsByBoard.get(target.board)?.has(target.id);
++            const next = !!ownPostsByBoard.get(target.board)?.has(target.id);
++            previousYouPost ||= previous;
++            nextYouPost ||= next;
++            if (target.board !== board || target.id !== id) {
++              previousYou ||= previous;
++              nextYou ||= next;
++            }
++          }
++          if (previousYou !== nextYou) navigationChanged = true;
++          if (enableFaviconChanges && notifyNewYou && unreadIds.has(id) && previousYouPost !== nextYouPost) {
++            faviconChanged = true;
++          }
++        }
++      }
++      updateOwnership(post, ownPostsByBoard, false, changedKey, quotes);
++    }
++
++    if (menuRelevant) refreshOwnershipMenu(ownPostsByBoard);
++    const layoutPostAffected = Array.from(targetPosts).some(post => post.isConnected);
++    if (currentThreadId && scrollMarker && (layoutPostAffected || staleMembershipChanged || menuRelevant)) {
++      scheduleRailRebuild();
++    }
++    if (navigationChanged) {
++      invalidateNavigationLists();
++      refreshNavigation(true, null, false, quoteCache);
++    }
++    if (faviconChanged) refreshYouFavicon();
++
+   }
+ 
+-  function trackOwnPost(post) {
+-    const postId = post.id.split('_')[1];
++  function getPostId(post) {
++    if (!post || post.nodeType !== Node.ELEMENT_NODE) return null;
+ 
+-    if (post.querySelector('span.own_post')) {
+-      if (!ownPostIds.has(postId)) {
+-        ownPostIds.add(postId);
+-        scheduleRailRebuild();
++    const canonical = post.id?.match(/^(?:reply|op)_(\d+)$/);
++    if (canonical) return canonical[1];
++
++    const hover = post.id?.match(/^post-hover-(\d+)$/);
++    if (hover) return hover[1];
++
++    const inlineId = post.closest('.inline-quote-container')?.getAttribute('data-inlined-id');
++    const inlineMatch = inlineId?.match(/^(\d+)$/);
++    if (inlineMatch) return inlineMatch[1];
++
++    const dataId = normalizePostId(post.getAttribute('data-post-id'));
++    if (dataId) return dataId;
++
++    const anchorId = post.querySelector('.intro a.post_no[id^="post_no_"]')?.id.match(/^post_no_(\d+)$/);
++    if (anchorId) return anchorId[1];
++
++    const postNoText = post.querySelector('.intro a.post_no')?.textContent?.match(/(\d+)\s*$/);
++    return postNoText ? postNoText[1] : null;
++  }
++
++  function getPostIdentity(post) {
++    const id = getPostId(post);
++    const board = post?.getAttribute('data-board') ||
++      post?.closest('[data-board]')?.getAttribute('data-board') ||
++      currentBoard ||
++      document.querySelector('input[name="board"]')?.value ||
++      null;
++    return id && board ? { board, id } : null;
++  }
++
++  function getQuoteLinks(post) {
++    const body = Array.from(post?.children || []).find(child => child.classList?.contains('body'));
++    if (!body) return [];
++    return Array.from(body.querySelectorAll('a:not([rel="nofollow"]):not(.hash-link)'))
++      .filter(link => link.closest('.post.op, .post.reply') === post);
++  }
++
++  function isSourcePost(post, identity) {
++    return !!identity &&
++      post.isConnected &&
++      identity.board === currentBoard &&
++      /^(?:reply|op)_\d+$/.test(post.id || '') &&
++      !post.classList.contains('inline-cloned-post') &&
++      !post.closest('.inline-cloned-post, .inline-quote-container, .post-hover') &&
++      !post.closest('.thread[data-cached="yes"], .thread[id^="thread_iqdummy_"], .thread[id^="thread_archdummy_"], .thread[id^="thread_archcache_"]');
++  }
++
++  function getQuoteTarget(link, sourceBoard) {
++    if (!link || link.getAttribute('rel') === 'nofollow') return null;
++
++    const text = (link.textContent || '').trim();
++    const textMatch = text.match(/^>>>\s*\/([a-zA-Z0-9_-]+)\/(\d+)\b|^>>\s*(?:\/([a-zA-Z0-9_-]+)\/)?(\d+)\b/);
++    if (!textMatch) return null;
++
++    let board = textMatch[1] || textMatch[3] || null;
++    const id = textMatch[2] || textMatch[4];
++    if (!board) {
++      try {
++        const url = new URL(link.getAttribute('href') || link.href, location.href);
++        const pathMatch = url.pathname.match(/^\/([a-zA-Z0-9_-]+)\/(?:res\/\d+|post\/\d+|thread\/\d+)/);
++        if (pathMatch) board = pathMatch[1];
++      } catch (e) {}
++    }
++
++    return { board: board || sourceBoard, id };
++  }
++
++  function getOwnershipQuotes(post, identity) {
++    return getQuoteLinks(post).map(link => {
++      const target = getQuoteTarget(link, identity?.board);
++      return { link, board: normalizeOwnershipBoard(target?.board), id: normalizePostId(target?.id) };
++    });
++  }
++
++  function hasOwnedQuote(post, ownPostsByBoard, sourceIdentity = getPostIdentity(post), excludeSelf = false, quotes = null) {
++    if (!sourceIdentity) return false;
++    for (const target of quotes || getOwnershipQuotes(post, sourceIdentity)) {
++      if (!target?.board) continue;
++      if (excludeSelf && target.board === sourceIdentity.board && target.id === sourceIdentity.id) continue;
++      if (ownPostsByBoard.get(target.board)?.has(target.id)) return true;
++    }
++
++    return false;
++  }
++
++  function getQuoteYouTags(link) {
++    const tags = [];
++    let node = link?.nextSibling;
++
++    while (node) {
++      if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
++        node = node.nextSibling;
++        continue;
++      }
++      if (node.nodeType === Node.ELEMENT_NODE && node.matches('a.hash-link')) {
++        node = node.nextSibling;
++        continue;
++      }
++      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'SMALL' && node.textContent.trim() === '(You)') {
++        tags.push(node);
++        node = node.nextSibling;
++        continue;
++      }
++      break;
++    }
++
++    return tags;
++  }
++
++  function updateQuoteLabel(link, shouldOwn) {
++    const tags = getQuoteYouTags(link);
++    const inlineLabels = Array.from(link.children).filter(isQuoteYouSpan);
++
++    if (!shouldOwn) {
++      for (const label of inlineLabels) label.remove();
++      for (const tag of tags) tag.remove();
++      return;
++    }
++
++    if (appendQuotes) {
++      let inlineLabel = inlineLabels[0] || null;
++      if (!inlineLabel) {
++        inlineLabel = document.createElement('span');
++        inlineLabel.textContent = ' (You)';
++        link.appendChild(inlineLabel);
++      }
++      for (const duplicate of inlineLabels) {
++        if (duplicate !== inlineLabel) duplicate.remove();
++      }
++      const hiddenSmall = tags[0] || null;
++      if (hiddenSmall) {
++        hiddenSmall.style.setProperty('display', 'none', 'important');
++      }
++      for (const duplicate of tags) {
++        if (duplicate !== hiddenSmall) duplicate.remove();
++      }
++      return;
++    }
++
++    for (const label of inlineLabels) label.remove();
++    let smallLabel = tags[0] || null;
++    if (!smallLabel) {
++      smallLabel = document.createElement('small');
++      smallLabel.textContent = '(You)';
++      link.after(smallLabel);
++    }
++    for (const duplicate of tags) {
++      if (duplicate !== smallLabel) duplicate.remove();
++    }
++  }
++
++  function renderOwnLabel(post, shouldOwn, identity = getPostIdentity(post)) {
++    const intro = Array.from(post?.children || []).find(child => child.classList?.contains('intro')) || null;
++    const labels = intro ? Array.from(intro.querySelectorAll('span.own_post'))
++      .filter(label => label.closest('.post.op, .post.reply') === post) : [];
++    const thread = post.classList.contains('op') ? post.closest('.thread') : null;
++    const realOpThread = thread && identity && thread.id === `thread_${identity.id}`;
++
++    if (!shouldOwn) {
++      for (const label of labels) label.remove();
++      post.classList.remove('you');
++      if (realOpThread) thread.classList.remove('you');
++      return;
++    }
++
++    post.classList.add('you');
++    if (realOpThread) thread.classList.add('you');
++    let label = labels[0] || null;
++    if (!label) {
++      const name = intro?.querySelector('span.name');
++      if (!name) return;
++      label = document.createElement('span');
++      label.className = 'own_post';
++      label.textContent = '(You)';
++      name.appendChild(document.createTextNode(' '));
++      name.appendChild(label);
++    }
++    for (const duplicate of labels) {
++      if (duplicate !== label) duplicate.remove();
++    }
++  }
++
++  function renderOwnership(post, ownPostsByBoard, identity = getPostIdentity(post), changedKey = null, quotes = null) {
++    if (!identity) return { identity: null, own: false, quoting: false };
++
++    const ownedBoard = normalizeOwnershipBoard(identity.board);
++    const ownedId = normalizePostId(identity.id);
++    const ownKey = ownedBoard && ownedId ? makeOwnershipKey(ownedBoard, ownedId) : null;
++    const ownChanged = !changedKey || ownKey === changedKey;
++
++    const own = !!ownedBoard && !!ownedId && !!ownPostsByBoard.get(ownedBoard)?.has(ownedId);
++    if (ownChanged) renderOwnLabel(post, own, identity);
++
++    let quoting = false;
++    for (const target of quotes || getOwnershipQuotes(post, identity)) {
++      const { link, board: targetBoard, id: targetId } = target;
++      const targetKey = targetBoard && targetId ? makeOwnershipKey(targetBoard, targetId) : null;
++      const targetChanged = !changedKey || targetKey === changedKey;
++      const targetOwned = !!targetBoard && !!targetId && !!ownPostsByBoard.get(targetBoard)?.has(targetId);
++      if (targetOwned) quoting = true;
++      if (targetChanged) updateQuoteLabel(link, targetOwned);
++    }
++
++    post.classList.toggle('quoting-you', highlightPosts && quoting);
++    return { identity, own, quoting };
++  }
++
++  function reconcileOwnershipContent(root, options = {}) {
++    if (!root) return;
++    const posts = new Set();
++
++    if (root.matches?.('.post.op, .post.reply')) posts.add(root);
++    const parentPost = root.closest?.('.post.op, .post.reply');
++    if (parentPost) posts.add(parentPost);
++    root.querySelectorAll?.('.post.op, .post.reply').forEach(post => posts.add(post));
++
++    if (posts.size) reconcileOwnership(Array.from(posts), options);
++  }
++
++  function updateOwnership(post, ownPostsByBoard, notifyNewReply = false, changedKey = null, quotes = null) {
++    const previousIdentity = getPostIdentity(post);
++    const sourcePost = isSourcePost(post, previousIdentity);
++    const wasYou = sourcePost && youPostIds.has(previousIdentity.id);
++    const wasOwn = sourcePost && ownPostIds.has(previousIdentity.id);
++    const state = renderOwnership(post, ownPostsByBoard, previousIdentity, changedKey, quotes);
++    if (!sourcePost || !state.identity) return false;
++
++    if (state.own) ownPostIds.add(state.identity.id);
++    else ownPostIds.delete(state.identity.id);
++    if (state.quoting) youPostIds.add(state.identity.id);
++    else youPostIds.delete(state.identity.id);
++
++    if (notifyNewReply && postsInitialized && !wasYou && state.quoting) {
++      showYouNotification(post);
++    }
++
++    return wasYou !== state.quoting || wasOwn !== state.own;
++  }
++
++  function refreshOwnershipMenu(ownPostsByBoard) {
++    const item = document.querySelector('.post-menu #ts-mark-you');
++    if (!item) return;
++    const identity = ownershipMenuIdentities.get(item);
++    const board = normalizeOwnershipBoard(identity?.board);
++    const id = normalizePostId(identity?.id);
++    const checkbox = item.querySelector('input[type="checkbox"]');
++    if (!board || !id || !checkbox) return;
++
++    const owned = !!board && !!ownPostsByBoard.get(board)?.has(id);
++    checkbox.checked = owned;
++  }
++
++  function refreshYouFavicon() {
++    if (!enableFaviconChanges) return;
++
++    const unreadIds = rememberLastRead ? unreadSet : sessionUnreadPostIds;
++
++    if (!unreadIds.size) {
++      if (requestedFaviconState !== 'none' || alertState !== 'none') revertFavicon();
++      return;
++    }
++
++    let hasYouUnread = false;
++    if (notifyNewYou) {
++      for (const id of unreadIds) {
++        if (youPostIds.has(id)) {
++          hasYouUnread = true;
++          break;
++        }
+       }
+-      if (highlightPosts) post.classList.add('you');
+     }
++
++    if (hasYouUnread) updateFavicon('red');
++    else if (requestedFaviconState === 'red' || alertState === 'red') {
++      if (notifyNewPost) updateFavicon('white');
++      else revertFavicon();
++    } else if ((requestedFaviconState === 'white' || alertState === 'white') && !notifyNewPost) {
++      revertFavicon();
++    }
++  }
++
++  function reconcileOwnership(posts = null, options = {}) {
++    const fullRefresh = !posts;
++    const oldYouIds = fullRefresh ? new Set(youPostIds) : null;
++    const oldOwnIds = fullRefresh ? new Set(ownPostIds) : null;
++    const ownPostsByBoard = options.ownPostsByBoard || readOwnPosts();
++    const targetPosts = fullRefresh
++      ? Array.from(document.querySelectorAll('.post.op, .post.reply'))
++      : Array.from(new Set(Array.isArray(posts) ? posts : [posts])).filter(Boolean);
++    const hasSourcePosts = !fullRefresh && targetPosts.some(post =>
++      post?.matches?.('.post.op, .post.reply') && isSourcePost(post, getPostIdentity(post))
++    );
++
++    if (hasSourcePosts && !options.refreshNavigation) invalidateNavigationLists();
++
++    if (fullRefresh) {
++      youPostIds.clear();
++      ownPostIds.clear();
++    }
++
++    let anyChange = false;
++    for (const post of targetPosts) {
++      if (!post?.matches?.('.post.op, .post.reply')) continue;
++      if (options.markInitialPosts) ownershipInitialPosts.add(post);
++      anyChange = updateOwnership(post, ownPostsByBoard, !!options.notifyNewReply) || anyChange;
++    }
++    refreshOwnershipMenu(ownPostsByBoard);
++
++    if (fullRefresh) {
++      anyChange = oldYouIds.size !== youPostIds.size ||
++        oldOwnIds.size !== ownPostIds.size ||
++        [...oldYouIds].some(id => !youPostIds.has(id)) ||
++        [...oldOwnIds].some(id => !ownPostIds.has(id));
++    }
++
++    if (currentThreadId && (anyChange || options.forceRail)) scheduleRailRebuild();
++    if (options.refreshFavicon) refreshYouFavicon();
++
++    if (options.refreshNavigation) {
++      invalidateNavigationLists();
++      refreshNavigation(true);
++    }
++    return { ownPostsByBoard, anyChange };
++  }
++
++  function setPostOwned(board, postId, shouldOwn) {
++    const normalizedBoard = normalizeOwnershipBoard(board);
++    const id = normalizePostId(postId);
++    if (!normalizedBoard || !id) return false;
++
++    const ownPostsByBoard = readOwnPosts();
++    const ids = ownPostsByBoard.get(normalizedBoard) || new Set();
++    const wasOwn = ids.has(id);
++    if (wasOwn === shouldOwn) return false;
++    const previousOwnPostsByBoard = new Map(ownershipSnapshot || ownPostsByBoard);
++    const previousIds = new Set(previousOwnPostsByBoard.get(normalizedBoard) || []);
++    if (wasOwn) previousIds.add(id);
++    else previousIds.delete(id);
++    if (previousIds.size) previousOwnPostsByBoard.set(normalizedBoard, previousIds);
++    else previousOwnPostsByBoard.delete(normalizedBoard);
++
++    if (shouldOwn) ids.add(id);
++    else ids.delete(id);
++    ownPostsByBoard.set(normalizedBoard, ids);
++
++    const stored = {};
++    for (const [storedBoard, storedIds] of ownPostsByBoard) {
++      stored[storedBoard] = Array.from(storedIds);
++    }
++    localStorage.setItem(OWN_POSTS_STORAGE_KEY, JSON.stringify(stored));
++    updateOwnershipSnapshot(normalizedBoard, id, shouldOwn);
++    reconcileOwnershipChange(normalizedBoard, id, previousOwnPostsByBoard, ownPostsByBoard);
++    return true;
++  }
++
++  function initializeOwnershipMenu() {
++    if (typeof Menu === 'undefined' || typeof Menu.onclick !== 'function' || typeof Menu.add_item !== 'function') return;
++    Menu.onclick((event, menu) => {
++      const postButton = event.target instanceof Element ? event.target : null;
++      const post = postButton?.closest('.post.op, .post.reply');
++      const identity = getPostIdentity(post);
++      const item = menu.find('#ts-mark-you');
++      if (!identity || !item.length) return;
++      const itemIdentity = {
++        board: normalizeOwnershipBoard(identity.board),
++        id: normalizePostId(identity.id)
++      };
++      if (!itemIdentity.board || !itemIdentity.id) return;
++
++      const owned = !!readOwnPosts().get(itemIdentity.board)?.has(itemIdentity.id);
++      const checkbox = document.createElement('input');
++      checkbox.type = 'checkbox';
++      checkbox.checked = owned;
++      checkbox.setAttribute('aria-label', 'You');
++      checkbox.style.cssText = 'margin: 0 5px 0 0; vertical-align: middle;';
++
++      const label = document.createElement('label');
++      label.style.cssText = 'display: flex; align-items: center; cursor: pointer;';
++      label.appendChild(checkbox);
++      label.appendChild(document.createTextNode('You'));
++
++      item.empty()
++        .append(label)
++        .on('click.tsOwnership', clickEvent => {
++          clickEvent.preventDefault();
++          const next = !readOwnPosts().get(itemIdentity.board)?.has(itemIdentity.id);
++          checkbox.checked = next;
++          setPostOwned(itemIdentity.board, itemIdentity.id, next);
++        });
++      ownershipMenuIdentities.set(item[0], itemIdentity);
++
++      const copyTextItem = menu.find('#copy-text');
++      if (copyTextItem.length) item.insertAfter(copyTextItem);
++    });
++
++    Menu.add_item('ts-mark-you', 'You');
++  }
++
++  const ownershipNavigation = {
++    mobile: { meIds: [], youIds: [], meIndex: -1, youIndex: -1, meTarget: null, youTarget: null },
++    desktop: { meIds: [], youIds: [], meIndex: -1, youIndex: -1, meTarget: null, youTarget: null }
++  };
++  let ownershipNavigationListsCache = null;
++
++  function invalidateNavigationLists() {
++    ownershipNavigationListsCache = null;
++  }
++
++  function getNavigationLists(quoteCache = null) {
++    if (ownershipNavigationListsCache) return ownershipNavigationListsCache;
++
++    const ownPostsByBoard = readOwnPosts();
++    const ownedIds = ownPostsByBoard.get(currentBoard) || new Set();
++    const posts = Array.from(document.querySelectorAll('.post.op[id^="op_"], .post.reply[id^="reply_"]'))
++      .filter(post => isSourcePost(post, getPostIdentity(post)));
++    const meIds = [];
++    const youIds = [];
++
++    for (const post of posts) {
++      const identity = getPostIdentity(post);
++      if (!identity || identity.board !== currentBoard) continue;
++      if (ownedIds.has(identity.id)) meIds.push(identity.id);
++      if (identity.id !== null && hasOwnedQuote(post, ownPostsByBoard, identity, true, quoteCache?.get(post))) {
++        youIds.push(identity.id);
++      }
++    }
++
++    ownershipNavigationListsCache = { meIds, youIds };
++    return ownershipNavigationListsCache;
++  }
++
++  function getNavigationPost(id) {
++    const posts = document.querySelectorAll(`.post#reply_${id}, .post#op_${id}`);
++    return Array.from(posts).find(post => isSourcePost(post, getPostIdentity(post))) || null;
++  }
++
++  function setNavigationTarget(mode, type, id, scroll = false) {
++    const state = ownershipNavigation[mode];
++    const targetKey = `${type}Target`;
++    const otherTarget = state[type === 'me' ? 'youTarget' : 'meTarget'];
++    const previous = state[targetKey];
++
++    if (previous && previous !== id && previous !== otherTarget) {
++      getNavigationPost(previous)?.classList.remove('jump-target');
++    }
++
++    state[targetKey] = id || null;
++    if (!id) return;
++
++    const post = getNavigationPost(id);
++    if (!post) return;
++    post.classList.add('jump-target');
++    if (scroll) post.scrollIntoView({ behavior: 'smooth', block: 'center' });
++  }
++
++  function setNavigationStatus(mode) {
++    const state = ownershipNavigation[mode];
++    const meStatus = document.getElementById(mode === 'mobile' ? 'mbYouMeStatus' : 'mbDFMeStatus');
++    const youStatus = document.getElementById(mode === 'mobile' ? 'mbYouStatus' : 'mbDFYouStatus');
++    const format = (index, ids) => {
++      if (!ids.length) return '0';
++      if (mode === 'desktop' && index < 0) return String(ids.length);
++      return `${Math.max(0, index) + 1}/${ids.length}`;
++    };
++
++    if (meStatus) meStatus.textContent = format(state.meIndex, state.meIds);
++    if (youStatus) youStatus.textContent = format(state.youIndex, state.youIds);
++  }
++
++  function refreshNavigation(preserveTargets = true, onlyMode = null, justOpened = false, quoteCache = null) {
++    if (!ownershipNavInstalled.mobile && !ownershipNavInstalled.desktop) return;
++    const modes = onlyMode ? [onlyMode] : ['mobile', 'desktop'].filter(mode => ownershipNavInstalled[mode]);
++    const activeModes = modes.filter(mode => {
++      const root = document.getElementById(mode === 'mobile' ? 'mobileYouDrawer' : 'mbDesktopFloat');
++      return !!root;
++    });
++    if (!activeModes.length) return;
++
++    const lists = getNavigationLists(quoteCache);
++
++    for (const mode of activeModes) {
++      const root = document.getElementById(mode === 'mobile' ? 'mobileYouDrawer' : 'mbDesktopFloat');
++      const isOpen = root.classList.contains('open');
++      const state = ownershipNavigation[mode];
++      const oldMeIndex = state.meIndex;
++      const oldYouIndex = state.youIndex;
++      let meTarget = preserveTargets ? state.meTarget : null;
++      let youTarget = preserveTargets ? state.youTarget : null;
++
++      if (justOpened) {
++        const active = Array.from(document.querySelectorAll('.jump-target'))
++          .filter(post => isSourcePost(post, getPostIdentity(post)))
++          .map(post => getPostId(post))
++          .find(id => id && (lists.meIds.includes(id) || lists.youIds.includes(id))) || null;
++        if (mode === 'mobile') {
++          state.meIndex = lists.meIds.length ? 0 : -1;
++          state.youIndex = lists.youIds.length ? 0 : -1;
++          meTarget = active && lists.meIds.includes(active) ? active : null;
++          youTarget = active && lists.youIds.includes(active) ? active : null;
++        } else {
++          state.meIndex = -1;
++          state.youIndex = -1;
++          meTarget = active && lists.meIds.includes(active) ? active : null;
++          youTarget = active && lists.youIds.includes(active) ? active : null;
++        }
++      } else if (preserveTargets) {
++        const reconcileTarget = (target, oldIndex, ids) => {
++          if (!ids.length) return { index: -1, target: null };
++          if (target && ids.includes(target)) return { index: ids.indexOf(target), target };
++          if (target) {
++            const index = Math.min(Math.max(oldIndex, 0), ids.length - 1);
++            return { index, target: ids[index] };
++          }
++          return {
++            index: oldIndex < 0 ? -1 : Math.min(oldIndex, ids.length - 1),
++            target: null
++          };
++        };
++        const me = reconcileTarget(meTarget, oldMeIndex, lists.meIds);
++        const you = reconcileTarget(youTarget, oldYouIndex, lists.youIds);
++        state.meIndex = me.index;
++        state.youIndex = you.index;
++        meTarget = me.target;
++        youTarget = you.target;
++      } else if (!isOpen) {
++        state.meIndex = -1;
++        state.youIndex = -1;
++      }
++
++      state.meIds = lists.meIds;
++      state.youIds = lists.youIds;
++
++      if (meTarget !== state.meTarget) setNavigationTarget(mode, 'me', meTarget, false);
++      else state.meTarget = meTarget;
++      if (youTarget !== state.youTarget) setNavigationTarget(mode, 'you', youTarget, false);
++      else state.youTarget = youTarget;
++
++      setNavigationStatus(mode);
++    }
++  }
++
++  function handleNavigationClick(event) {
++    const target = event.target instanceof Element ? event.target : null;
++    if (!target) return;
++
++    const desktopClear = target.closest('#mbDFClearHL');
++    if (desktopClear) {
++      event.preventDefault();
++      event.stopImmediatePropagation();
++      const state = ownershipNavigation.desktop;
++      setNavigationTarget('desktop', 'me', null, false);
++      setNavigationTarget('desktop', 'you', null, false);
++      state.meIndex = -1;
++      state.youIndex = -1;
++      setNavigationStatus('desktop');
++      return;
++    }
++
++    const button = target.closest(
++      '#mbYouMePrev, #mbYouMeNext, #mbYouPrev, #mbYouNext, #mbDFMePrev, #mbDFMeNext, #mbDFYouPrev, #mbDFYouNext'
++    );
++    if (!button) return;
++
++    event.preventDefault();
++    event.stopImmediatePropagation();
++
++    const mode = button.id.startsWith('mbDF') ? 'desktop' : 'mobile';
++    refreshNavigation(true, mode);
++    const state = ownershipNavigation[mode];
++    const type = button.id.includes('Me') ? 'me' : 'you';
++    const ids = state[type === 'me' ? 'meIds' : 'youIds'];
++    const indexKey = `${type}Index`;
++    if (!ids.length) {
++      state[indexKey] = -1;
++      setNavigationTarget(mode, type, null, false);
++      setNavigationStatus(mode);
++      return;
++    }
++
++    const isNext = button.id.endsWith('Next');
++    let index = state[indexKey];
++    if (index < 0) index = 0;
++    else index = isNext ? (index + 1) % ids.length : (index - 1 + ids.length) % ids.length;
++    state[indexKey] = index;
++    setNavigationTarget(mode, type, ids[index], true);
++    setNavigationStatus(mode);
++  }
++
++  function handleNavigationOpen(event) {
++    const target = event.target instanceof Element ? event.target : null;
++    if (!target) return;
++
++    if (target.closest('#mbYou')) {
++      requestAnimationFrame(() => {
++        const drawer = document.getElementById('mobileYouDrawer');
++        refreshNavigation(false, 'mobile', !!drawer?.classList.contains('open'));
++      });
++    } else if (target.closest('#mbDesktopQuickReplyBtn')) {
++      requestAnimationFrame(() => {
++        const float = document.getElementById('mbDesktopFloat');
++        refreshNavigation(false, 'desktop', !!float?.classList.contains('open'));
++      });
++    } else if (target.closest('#mbDesktopClose')) {
++      const state = ownershipNavigation.desktop;
++      state.meIndex = -1;
++      state.youIndex = -1;
++    }
++  }
++
++  function installNavigation() {
++    const root = document.documentElement;
++    const floatingLayout = root.classList.contains('desktop-floating-mode');
++    const mobileExpected = root.matches('html.mobile-style-new') && !floatingLayout;
++    const desktopExpected = floatingLayout;
++    const hasNavigationPanel = document.getElementById('mobileYouDrawer') ||
++      document.getElementById('mbDesktopFloat') ||
++      document.getElementById('mbYou') ||
++      document.getElementById('mbDesktopQuickReplyBtn');
++    if (!mobileExpected && !desktopExpected && !hasNavigationPanel) return;
++
++    const installOpener = (selector, shouldWait = false) => {
++      const attach = button => {
++        button.addEventListener('click', handleNavigationOpen);
++      };
++      const button = document.querySelector(selector);
++      if (button) attach(button);
++      else if (shouldWait) waitForElement(selector, attach, 5000);
++    };
++
++    const installPanel = (mode, selector) => {
++      const attach = panel => {
++        ownershipNavInstalled[mode] = true;
++        panel.addEventListener('click', handleNavigationClick, true);
++        if (mode === 'desktop') {
++          const close = panel.querySelector('#mbDesktopClose');
++          if (close) installOpener('#mbDesktopClose');
++        }
++        refreshNavigation(false, mode);
++      };
++      const panel = document.querySelector(selector);
++      if (panel) attach(panel);
++      else if (mode === 'mobile' ? mobileExpected : desktopExpected) waitForElement(selector, attach, 5000);
++    };
++
++    installPanel('mobile', '#mobileYouDrawer');
++    installPanel('desktop', '#mbDesktopFloat');
++    installOpener('#mbYou', mobileExpected);
++    installOpener('#mbDesktopQuickReplyBtn', desktopExpected);
++  }
++
++  function initializeOwnership() {
++    const initial = reconcileOwnership(null, { forceRail: true, markInitialPosts: true });
++    ownershipSnapshot = new Map(Array.from(initial.ownPostsByBoard, ([board, ids]) => [board, new Set(ids)]));
++    $(initializeOwnershipMenu);
++    installNavigation();
+   }
+ 
+   function showYouNotification(post) {
+@@ -3996,7 +5605,18 @@
+     const cap = intro?.querySelector('.capcode')?.textContent?.trim() || '';
+     const postId = post.id.split('_')[1];
+     const title = [name, trip, cap, 'No.' + postId, 'replied to you'].filter(Boolean).join(' ');
+-    const body = (post.querySelector('.body')?.textContent || '').trim().slice(0, 200);
++    const bodyContent = post.querySelector('.body')?.cloneNode(true);
++    if (appendQuotes && bodyContent) {
++      const sourceBoard = getPostIdentity(post)?.board;
++      const links = bodyContent.querySelectorAll('a');
++      for (let i = 0; i < links.length; i++) {
++        const link = links[i];
++        if (!getQuoteTarget(link, sourceBoard) || !Array.from(link.children).some(isQuoteYouSpan)) continue;
++        const tags = getQuoteYouTags(link);
++        for (let j = 0; j < tags.length; j++) tags[j].remove();
++      }
++    }
++    const body = (bodyContent?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+     const notif = new Notification(title, { body, icon: FAVICON_URL });
+     notif.onclick = () => { window.focus(); post.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+     notif.onshow = () => setTimeout(() => notif.close(), 7000);
+@@ -4230,7 +5850,7 @@
+       if (drawnIds.has(id)) continue;
+       drawnIds.add(id);
+ 
+-      const postEl = document.getElementById(`reply_${id}`);
++      const postEl = getNavigationPost(id);
+       if (!postEl) continue;
+ 
+       const rect = postEl.getBoundingClientRect();
+@@ -4276,7 +5896,7 @@
+   }
+ 
+   function scrollToPost(targetId, highlight = true) {
+-    const el = document.getElementById(`reply_${targetId}`) || document.getElementById(`op_${targetId}`);
++    const el = getNavigationPost(targetId);
+     if (!el) return;
+ 
+     if (highlight) {
+@@ -4989,6 +6609,21 @@
+       setTimeout(syncWatchLabel, 0);
+     });
+ 
++    if (rememberLastRead) {
++      const lastReadEntry = document.createElement('a');
++      lastReadEntry.href = 'javascript:void(0)';
++      lastReadEntry.style.display = 'block';
++      lastReadEntry.style.cursor = 'pointer';
++      lastReadEntry.textContent = 'Scroll to last read post';
++      menu.appendChild(lastReadEntry);
++
++      lastReadEntry.addEventListener('click', e => {
++        e.preventDefault();
++        e.stopPropagation();
++        if (lastReadPostId) scrollToPost(lastReadPostId);
++      });
++    }
++
+     let syncThreading = null;
+ 
+     if (optionThreading) {
+@@ -5428,6 +7063,21 @@
+     return link;
+   }
+ 
++  function syncArchiveOwnership(posts) {
++    const sourcePosts = [];
++    const copyPosts = [];
++    for (const post of posts) {
++      if (!post?.isConnected || !post.matches?.('.post.op, .post.reply')) continue;
++      if (isSourcePost(post, getPostIdentity(post))) sourcePosts.push(post);
++      else copyPosts.push(post);
++    }
++
++    if (sourcePosts.length) {
++      reconcileOwnership(sourcePosts, { refreshNavigation: true, refreshFavicon: true });
++    }
++    if (copyPosts.length) reconcileOwnership(copyPosts);
++  }
++
+   function loadArchiveQuote(link, board, postId) {
+     const archiveApiUrl = `https://archive.holotower.org/${board}/post/${postId}`;
+ 
+@@ -5467,6 +7117,7 @@
+       }
+ 
+       const finalUrl = `https://archive.holotower.org/${board}/thread/${threadNum}#p${postId}`;
++      const affectedPosts = new Set();
+ 
+       for (let i = 0; i < allDeadLinks.length; i++) {
+         const dl = allDeadLinks[i];
+@@ -5476,6 +7127,8 @@
+         dl.dataset.archiveState = 'archive';
+         dl.classList.remove('archive-dead');
+         dl.classList.add('archive-live');
++        const parentPost = dl.closest('.post.op, .post.reply');
++        if (parentPost) affectedPosts.add(parentPost);
+ 
+         const hashLink = dl.nextElementSibling;
+         if (hashLink && hashLink.classList.contains('hash-link') && hashLink.dataset.postId === String(postId)) {
+@@ -5526,6 +7179,8 @@
+           if (typeof initHover === 'function') initHover.call(cleanDl);
+         }
+       }
++
++      syncArchiveOwnership(affectedPosts);
+     }).catch(() => {
+       const allLoadingLinks = document.querySelectorAll(`a.archive-quote[data-post-id="${postId}"][data-archive-state="loading"]`);
+ 
+@@ -5867,6 +7522,7 @@
+       const qMatch = (bodyLinks[i].textContent || '').trim().match(/^>>(\d+)$/);
+       if (qMatch) fetchArchive(bodyLinks[i]);
+     }
++    reconcileOwnershipContent(post);
+ 
+     return true;
+   }
+@@ -6054,6 +7710,7 @@
+               const firstReply = threadWrapper.querySelector('.post.reply');
+               if (firstReply) firstReply.before(fetchedPost);
+               else threadWrapper.appendChild(fetchedPost);
++              reconcileOwnershipContent(fetchedPost, { refreshNavigation: true, refreshFavicon: true });
+             }
+           }
+         });
+@@ -6062,6 +7719,7 @@
+           threadEl.setAttribute('data-cached', 'yes');
+           threadEl.setAttribute('data-board', board);
+           host.insertBefore(threadEl, host.firstChild);
++          reconcileOwnershipContent(threadEl);
+         }
+         const realPost = document.querySelector('[data-board="' + board + '"] div.post#reply_' + postId);
+         const dummyPost = document.querySelector('#' + wrapperId + ' #reply_' + postId);
+@@ -6357,7 +8015,17 @@
+       const postHtml = await fetchPostHtml(linkElement.href);
+       if (postHtml) {
+         const parsed = parseAndFindPost(postHtml, postId);
+-        if (parsed) targetPostElement = parsed;
++        if (parsed) {
++          try {
++            const fetchedBoard = new URL(linkElement.href, location.href).pathname.match(/^\/([a-zA-Z0-9_-]+)\//)?.[1];
++            if (fetchedBoard) {
++              parsed.dataset.board = fetchedBoard;
++              boardValue = fetchedBoard;
++            }
++          } catch (e) {}
++          reconcileOwnershipContent(parsed);
++          targetPostElement = parsed;
++        }
+       }
+     }
+     $link.removeAttr(LOADING_DATA_ATTR);
+@@ -6376,7 +8044,8 @@
+ 
+       const $container = $('<div>')
+         .addClass(INLINE_CONTAINER_CLASS)
+-        .attr(INLINED_ID_ATTR, postId);
++        .attr(INLINED_ID_ATTR, postId)
++        .attr('data-board', boardValue || currentBoard || '');
+ 
+       const $mentionedSpan = $link.closest('span.mentioned.unimportant, span.clone-mentioned.unimportant');
+ 
+@@ -6577,10 +8246,11 @@
+             bindLinkPreviews(fileLinks, true);
+           }
+         }
+-        if (linkEmbed) {
++        if (linkEmbed || resizeMedia) {
+           $(cloned).find('.embed-button[data-embedurl]').each(function() {
+             const url = this.getAttribute('data-embedurl');
+-            if (url) this.addEventListener('click', onEmbedClick);
++            if (!url || (!linkEmbed && !(resizeMedia && isYouTubeUrl(url)))) return;
++            this.addEventListener('click', onEmbedClick);
+           });
+         }
+         if (quoteResurrect) {
+@@ -6727,6 +8397,268 @@
+     });
+   }
+ 
++  function initializeMediaResize() {
++    if (!resizeMedia) return;
++
++    const selector = 'img.full-image, img.photo-img.expanded, video[controls], .media-embed > img';
++    const cornerSize = 20;
++    let activeResize = null;
++    let cursorMedia = null;
++    let originalCursor = null;
++    let resizeClickBlock = null;
++    let resizeFrame = null;
++    let pendingResizePoint = null;
++    const originalMediaSizing = new WeakMap();
++
++    function isYouTubeIframe(iframe) {
++      return iframe instanceof HTMLIFrameElement && isYouTubeUrl(iframe.src);
++    }
++
++    function isVisibleElement(element) {
++      const style = getComputedStyle(element);
++      return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
++    }
++
++    function isResizableMedia(media) {
++      if (!(media instanceof Element)) return false;
++      if (media instanceof HTMLIFrameElement) return isYouTubeIframe(media) && isVisibleElement(media);
++      return media.matches(selector) && isVisibleElement(media);
++    }
++
++    function restoreCursor() {
++      if (!cursorMedia) return;
++      if (originalCursor.value) cursorMedia.style.setProperty('cursor', originalCursor.value, originalCursor.priority);
++      else cursorMedia.style.removeProperty('cursor');
++      cursorMedia = null;
++      originalCursor = null;
++    }
++
++    function setResizeCursor(media) {
++      if (cursorMedia === media) return;
++      restoreCursor();
++      cursorMedia = media;
++      originalCursor = {
++        value: media.style.getPropertyValue('cursor'),
++        priority: media.style.getPropertyPriority('cursor')
++      };
++      media.style.setProperty('cursor', 'se-resize', 'important');
++    }
++
++    function saveMediaSize(media) {
++      if (originalMediaSizing.has(media)) return;
++      const properties = ['width', 'height', 'max-width', 'max-height'];
++      const sizing = {};
++      for (const property of properties) {
++        sizing[property] = {
++          value: media.style.getPropertyValue(property),
++          priority: media.style.getPropertyPriority(property)
++        };
++      }
++      originalMediaSizing.set(media, sizing);
++    }
++
++    function restoreMediaSize(media) {
++      const sizing = originalMediaSizing.get(media);
++      if (!sizing) return;
++      for (const [property, original] of Object.entries(sizing)) {
++        if (original.value) media.style.setProperty(property, original.value, original.priority);
++        else media.style.removeProperty(property);
++      }
++      originalMediaSizing.delete(media);
++    }
++
++    function getResizeMedia(target) {
++      return target instanceof Element ? target.closest(selector) : null;
++    }
++
++    function getResizeTarget(eventTarget) {
++      if (!(eventTarget instanceof Element)) return null;
++      const iframe = eventTarget.matches('.ts-resize-media-youtube')
++        ? eventTarget.querySelector(':scope > iframe.ts-resize-media-youtube-frame') : null;
++      if (iframe) return { media: iframe, captureTarget: eventTarget, isIframe: true };
++      const video = eventTarget.matches(':is(div, span)') ? eventTarget.querySelector(':scope > video[controls]') : null;
++      if (video) return { media: video, captureTarget: eventTarget, isIframe: false };
++      const media = getResizeMedia(eventTarget);
++      return media ? { media, captureTarget: media, isIframe: false } : null;
++    }
++
++    function isResizeCorner(event, media) {
++      if (!isResizableMedia(media)) return false;
++      const rect = media.getBoundingClientRect();
++      const offset = media instanceof HTMLIFrameElement || media.matches('video[controls]') ? 16 : 0;
++      return event.clientX >= rect.right + offset - cornerSize && event.clientX <= rect.right + offset &&
++             event.clientY >= rect.bottom + offset - cornerSize && event.clientY <= rect.bottom + offset;
++    }
++
++    function updateResizeCursor(event) {
++      if (activeResize) return;
++      const resizeTarget = getResizeTarget(event.target);
++      if (resizeTarget?.isIframe) {
++        restoreCursor();
++        return;
++      }
++      const media = resizeTarget?.media;
++      if (media && isResizeCorner(event, media)) setResizeCursor(media);
++      else restoreCursor();
++    }
++
++    document.addEventListener('click', (event) => {
++      const target = event.target instanceof Element ? event.target : null;
++      if (!target) return;
++
++      if (resizeClickBlock && performance.now() <= resizeClickBlock.expires) {
++        const targetMedia = getResizeMedia(target);
++        if (targetMedia === resizeClickBlock.media || target === resizeClickBlock.host || resizeClickBlock.host?.contains(target)) {
++          event.preventDefault();
++          event.stopImmediatePropagation();
++          resizeClickBlock = null;
++          return;
++        }
++      }
++    }, true);
++
++    function applyResize() {
++      resizeFrame = null;
++      const point = pendingResizePoint;
++      pendingResizePoint = null;
++      if (!activeResize || !point) return;
++      const { media, startWidth, startHeight } = activeResize;
++      if (!media.isConnected || !activeResize.captureTarget.isConnected) {
++        cancelResize();
++        return;
++      }
++      const dx = point.clientX - activeResize.startX;
++      const dy = point.clientY - activeResize.startY;
++      if (!activeResize.moved && Math.hypot(dx, dy) < 3) return;
++      if (!activeResize.moved) {
++        activeResize.moved = true;
++        saveMediaSize(media);
++        media.style.setProperty('max-width', 'none');
++        media.style.setProperty('max-height', 'none');
++        if (!activeResize.isIframe) media.style.setProperty('height', 'auto', 'important');
++      }
++
++      const scaleDelta = Math.abs(dx / startWidth) >= Math.abs(dy / startHeight)
++        ? dx / startWidth : dy / startHeight;
++      const minScale = Math.max(32 / startWidth, 32 / startHeight);
++      const maxScale = Math.min(8192 / startWidth, 8192 / startHeight);
++      const scale = Math.max(minScale, Math.min(maxScale, 1 + scaleDelta));
++      const width = Math.round(startWidth * scale);
++      const height = Math.round(startHeight * scale);
++      if (activeResize.width !== width) {
++        media.style.setProperty('width', width + 'px', 'important');
++        activeResize.width = width;
++      }
++      if (activeResize.isIframe && activeResize.height !== height) {
++        media.style.setProperty('height', height + 'px', 'important');
++        activeResize.height = height;
++      }
++    }
++
++    document.addEventListener('pointermove', (event) => {
++      if (activeResize && (!activeResize.captureTarget.isConnected || !activeResize.media.isConnected)) {
++        cancelResize();
++        return;
++      }
++      if (!activeResize) {
++        updateResizeCursor(event);
++        return;
++      }
++      if (event.pointerId !== activeResize.pointerId) return;
++      pendingResizePoint = { clientX: event.clientX, clientY: event.clientY };
++      if (resizeFrame === null) resizeFrame = requestAnimationFrame(applyResize);
++      event.preventDefault();
++    }, true);
++
++    document.addEventListener('pointerdown', (event) => {
++      if (event.button !== 0 || event.isPrimary === false) return;
++      const resizeTarget = getResizeTarget(event.target);
++      if (!resizeTarget || !isResizeCorner(event, resizeTarget.media)) return;
++      const { media, captureTarget, isIframe } = resizeTarget;
++      const rect = media.getBoundingClientRect();
++      if (rect.width <= 0 || rect.height <= 0) return;
++
++      event.preventDefault();
++      event.stopPropagation();
++      if (!isIframe) setResizeCursor(media);
++      activeResize = {
++        media,
++        host: media.parentElement,
++        captureTarget,
++        pointerId: event.pointerId,
++        startX: event.clientX,
++        startY: event.clientY,
++        startWidth: rect.width,
++        startHeight: rect.height,
++        isIframe,
++        moved: false
++      };
++      captureTarget.setPointerCapture?.(event.pointerId);
++    }, true);
++
++    function finishResize(event) {
++      if (!activeResize || event.pointerId !== activeResize.pointerId) return;
++      if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
++      resizeFrame = null;
++      if (event.type === 'pointerup') {
++        pendingResizePoint = { clientX: event.clientX, clientY: event.clientY };
++        applyResize();
++      }
++      pendingResizePoint = null;
++      if (!activeResize) return;
++      const finished = activeResize;
++      activeResize = null;
++      if (finished.captureTarget.hasPointerCapture?.(event.pointerId)) finished.captureTarget.releasePointerCapture(event.pointerId);
++      if (finished.moved && event.type === 'pointerup') {
++        resizeClickBlock = { media: finished.media, host: finished.host, expires: performance.now() + 250 };
++        setTimeout(() => {
++          if (resizeClickBlock?.media === finished.media && resizeClickBlock.expires <= performance.now()) resizeClickBlock = null;
++        }, 260);
++      }
++      if (event.type === 'pointercancel') restoreCursor();
++      else updateResizeCursor(event);
++    }
++
++    function cancelResize() {
++      if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
++      resizeFrame = null;
++      pendingResizePoint = null;
++      const interruptedResize = activeResize;
++      activeResize = null;
++      resizeClickBlock = null;
++      if (interruptedResize?.captureTarget.isConnected &&
++          interruptedResize.captureTarget.hasPointerCapture?.(interruptedResize.pointerId)) {
++        try {
++          interruptedResize.captureTarget.releasePointerCapture(interruptedResize.pointerId);
++        } catch (e) {}
++      }
++      restoreCursor();
++    }
++
++    document.addEventListener('pointerup', finishResize, true);
++    document.addEventListener('pointercancel', finishResize, true);
++    document.addEventListener('lostpointercapture', (event) => {
++      if (!activeResize || activeResize.captureTarget !== event.target ||
++          activeResize.pointerId !== event.pointerId) return;
++      cancelResize();
++    }, true);
++    document.addEventListener('pointerout', (event) => {
++      if (activeResize || !cursorMedia) return;
++      const related = event.relatedTarget;
++      if ((event.target === cursorMedia || cursorMedia.contains(event.target)) &&
++          !(related === cursorMedia || cursorMedia.contains(related))) restoreCursor();
++    }, true);
++    document.addEventListener('click', (event) => {
++      if (event.target instanceof Element && event.target.matches('img.photo-img') && !event.target.matches('.expanded')) {
++        restoreMediaSize(event.target);
++      }
++      if (cursorMedia && !isResizableMedia(cursorMedia)) restoreCursor();
++    });
++    window.addEventListener('blur', () => {
++      cancelResize();
++    });
++  }
++
+   const SITE_VOLUME_KEY = 'videovolume';
+   const VOLUME_FALLBACK = 1.0;
+ 
+@@ -7376,6 +9308,21 @@
+     }
+   }
+ 
++  function processResurrectedQuotes(post, quotes) {
++    let ownershipRelevant = false;
++    for (let i = 0; i < quotes.length; i++) {
++      const quote = quotes[i];
++      const result = fetchArchive(quote);
++      if (result !== quote && result?.matches('a:not([rel="nofollow"]):not(.hash-link)')) {
++        ownershipRelevant = true;
++      }
++    }
++
++    if (ownershipRelevant) {
++      reconcileOwnership([post], { refreshNavigation: true, refreshFavicon: true });
++    }
++  }
++
+   function processPost(post) {
+     const postId = post.id.split('_')[1];
+     const body = post.querySelector('.body') || null;
+@@ -7385,8 +9332,11 @@
+     const fileImg = fileLink ? fileLink.querySelector('img.post-image') : null;
+     const unimportant = post.querySelector('.fileinfo .unimportant') || null;
+ 
+-    trackYouPost(post, smallTags);
+-    trackOwnPost(post);
++    if (ownershipInitialPosts.has(post)) {
++      ownershipInitialPosts.delete(post);
++    } else {
++      reconcileOwnership([post], { notifyNewReply: true });
++    }
+ 
+     if (optionThreading && toggleThread) {
+       newThreadPosts.add(postId);
+@@ -7427,7 +9377,7 @@
+       thumbSwap(post, fileLink, fileImg);
+     }
+ 
+-    if (linkEmbed || linkIcon || linkTitle) {
++    if (linkEmbed || linkIcon || linkTitle || resizeMedia) {
+       processLinks(bodyLinks);
+     }
+ 
+@@ -7437,10 +9387,7 @@
+ 
+     if (quoteResurrect) {
+       const quotes = post.querySelectorAll('div.body span.quote');
+-
+-      for (let i = 0; i < quotes.length; i++) {
+-        fetchArchive(quotes[i]);
+-      }
++      processResurrectedQuotes(post, quotes);
+     }
+ 
+     if (rememberLastRead) {
+@@ -7482,6 +9429,7 @@
+   }
+ 
+   function initializePosts() {
++    initializeOwnership();
+     siteImageHover = localStorage.getItem('imageHover') === 'true';
+     detectStandaloneDuplicates();
+ 
+@@ -7609,9 +9557,7 @@
+         }
+ 
+         const opQuotes = opPost.querySelectorAll('div.body span.quote');
+-        for (let i = 0; i < opQuotes.length; i++) {
+-          fetchArchive(opQuotes[i]);
+-        }
++        processResurrectedQuotes(opPost, opQuotes);
+       }
+ 
+       if (hashNavigation) {
+@@ -7702,7 +9648,7 @@
+           linkPreview ||
+           thumbnailSwap ||
+           showSpoilerMedia ||
+-          linkEmbed || linkIcon || linkTitle ||
++          linkEmbed || linkIcon || linkTitle || resizeMedia ||
+           quoteResurrect ||
+           rememberLastRead ||
+           inlineQuoting ||
+@@ -8169,7 +10115,7 @@
+           if (isThreadArchived || updaterDisabled) {
+             if (isThreadArchived) {
+               isThreadArchived = false;
+-              setFavicon(FAVICON_URL);
++              restoreFavicon();
+             }
+             updaterDisabled = false;
+           }
+@@ -8561,15 +10507,9 @@
+     const updatePostIds = new Set();
+     let seenRed = false;
+     let seenWhite = false;
+-    let ownPostIds = new Set();
+-    if (enableFaviconChanges && notifyNewYou && alertState !== 'red') {
+-      try {
+-        const board = document.querySelector('input[name="board"]')?.value;
+-        const ownPosts = JSON.parse(localStorage.own_posts || '{}');
+-        ownPostIds = board && ownPosts[board] ? new Set(ownPosts[board]) : new Set();
+-      } catch (e) {
+-
+-      }
++    let ownPostsByBoard = new Map();
++    if (enableFaviconChanges && notifyNewYou && requestedFaviconState !== 'red') {
++      ownPostsByBoard = readOwnPosts();
+     }
+ 
+     let lastInsertedNode = null;
+@@ -8583,18 +10523,13 @@
+       if (Number(postId) > Number(lastSeenPostId)) {
+         lastSeenPostId = postId;
+         newPostsInThisUpdate++;
++        if (!rememberLastRead) sessionUnreadPostIds.add(postId);
+         if (!hasUnreadLine) addUnreadLine();
+ 
+         if (enableFaviconChanges) {
+-          if (notifyNewYou && alertState !== 'red') {
+-            const bodyLinks = post.querySelectorAll('div.body a:not([rel="nofollow"])');
+-            for (let j = 0; j < bodyLinks.length; j++) {
+-              const match = bodyLinks[j].textContent.match(/^>>(\d+)$/);
+-              if (match && ownPostIds.has(match[1])) {
+-                seenRed = true;
+-                break;
+-              }
+-            }
++          if (notifyNewYou && requestedFaviconState !== 'red') {
++            const identity = getPostIdentity(post);
++            if (hasOwnedQuote(post, ownPostsByBoard, identity)) seenRed = true;
+           }
+ 
+           if (!seenRed && notifyNewPost) {
+@@ -8754,7 +10689,7 @@
+ 
+     if (seenRed) {
+       updateFavicon('red');
+-    } else if (seenWhite && alertState !== 'red') {
++    } else if (seenWhite && requestedFaviconState !== 'red') {
+       updateFavicon('white');
+     }
+ 
+@@ -8889,7 +10824,7 @@
+           if (isThreadArchived || updaterDisabled) {
+             if (isThreadArchived) {
+               isThreadArchived = false;
+-              setFavicon(FAVICON_URL);
++              restoreFavicon();
+             }
+             updaterDisabled = false;
+           }
+@@ -9036,8 +10971,7 @@
+   }
+ 
+   function randomizeFilename(formData) {
+-    const textbox = document.querySelector('input[name="filename"]');
+-    let inputName = sanitizeFilename(textbox?.value || '');
++    let inputName = sanitizeFilename(formData.get('filename') || '');
+ 
+     const entries = Array.from(formData.entries());
+     const toRename = [];
+@@ -9113,9 +11047,11 @@
+         const ext = parts.length > 1 ? parts.pop() : '';
+         originalFilenameBase = sanitizeFilename(parts.join('.'));
+         filenameInput.maxLength = 255 - (ext.length > 0 ? ext.length + 1 : 0);
++        if (outboxRestoringFile) return;
+ 
++        const randfnInput = target.form?.querySelector('input[name="randfn"]') || input;
+         const soundpost = originalFilenameBase.includes('[sound=');
+-        if (input.checked && !soundpost) {
++        if (randfnInput.checked && !soundpost) {
+           const timestamp = '' + (Date.now() - Math.floor(Math.random() * 365 * DAY));
+           syncFilename(timestamp);
+         } else {
+@@ -9175,14 +11111,17 @@
+               originalFilenameBase = sanitizeFilename(parts.join('.'));
+               filenameInput.maxLength = 255 - (ext.length > 0 ? ext.length + 1 : 0);
+ 
+-              const soundpost = originalFilenameBase.includes('[sound=');
+-              const clipboardImage = randomizeClipboard && isClipboardFile(file);
+-
+-              if (!soundpost && (input.checked || clipboardImage)) {
+-                const timestamp = '' + (Date.now() - Math.floor(Math.random() * 365 * DAY));
+-                syncFilename(timestamp);
+-              } else {
+-                syncFilename(originalFilenameBase);
++              if (!outboxRestoringFile) {
++                const randfnInput = node.closest('form')?.querySelector('input[name="randfn"]') || input;
++                const soundpost = originalFilenameBase.includes('[sound=');
++                const clipboardImage = randomizeClipboard && isClipboardFile(file);
++
++                if (!soundpost && (randfnInput.checked || clipboardImage)) {
++                  const timestamp = '' + (Date.now() - Math.floor(Math.random() * 365 * DAY));
++                  syncFilename(timestamp);
++                } else {
++                  syncFilename(originalFilenameBase);
++                }
+               }
+             }
+           }
+@@ -9204,6 +11143,11 @@
+   let mobileInput = false;
+   let mobileURLBtn = false;
+ 
++  let outboxRestoringFile = false;
++  let outboxClosing = false;
++  let outboxCiteOpening = false;
++  let outboxRescueFields = false;
++
+   function checkMobile() {
+     const mobileHtml = document.documentElement.matches('html.mobile-style, html.mobile-style-new');
+     const forceMobileTheme = localStorage.getItem('forceMobileTheme') === 'on';
+@@ -9345,6 +11289,1073 @@
+     mobileInput = true;
+   }
+ 
++  const outboxStore = { posts: [], activeIndex: -1 };
++  const outboxObjectUrls = new WeakMap();
++  const outboxVideoThumbnails = new WeakMap();
++  let outboxLocked = false;
++  let outboxNextPostId = 1;
++  let outboxDragSession = null;
++  let outboxRenderPending = false;
++
++  function getOutboxPanel() {
++    const mobileForm = document.getElementById('mbReplyForm');
++    if (mobileForm && (document.documentElement.matches('html.mobile-style, html.mobile-style-new') || checkMobile())) {
++      return { type: 'mobile', form: mobileForm };
++    }
++    const qr = document.getElementById('quick-reply');
++    return { type: 'desktop', form: qr || document.querySelector('form[name="post"]') };
++  }
++
++  function getOutboxFieldRoot(panel) {
++    const form = panel && panel.form;
++    if (!form) return null;
++    return panel.type === 'mobile' ? form.closest('#mbDesktopFloat') || form : form;
++  }
++
++  function readDraftFields(panel) {
++    const form = panel.form;
++    if (!form) return null;
++    const fieldRoot = getOutboxFieldRoot(panel);
++
++    const field = (sel) => {
++      const el = fieldRoot.querySelector(sel);
++      return el ? el.value : '';
++    };
++
++    let spoiler = false;
++    const spoilerChk = form.querySelector('input[name="spoiler"]');
++    if (spoilerChk) spoiler = spoilerChk.checked;
++    const spoilerBtn = panel.type === 'mobile' ? fieldRoot.querySelector('#mbSpoilerBtn') : null;
++    if (spoilerBtn) spoiler = spoilerBtn.getAttribute('aria-pressed') === 'true';
++
++    let randfn = false;
++    const randfnChk = form.querySelector('input[name="randfn"]');
++    if (randfnChk) {
++      randfn = randfnChk.checked;
++    } else {
++      const mbRandBtn = panel.type === 'mobile' ? fieldRoot.querySelector('#mbRandomizerBtn') : null;
++      if (mbRandBtn) randfn = mbRandBtn.getAttribute('aria-pressed') === 'true';
++    }
++
++    const file = readDraftFile(panel);
++    return ensurePostId({
++      body: field('textarea[name="body"]'),
++      name: field('input[name="name"]'),
++      email: field('input[name="email"], input[name="options"], select[name="email"], select[name="options"]'),
++      subject: field('input[name="subject"]'),
++      embed: field('input[name="embed"]'),
++      password: field('#mbPassword, input[name="password"]'),
++      spoiler,
++      randfn,
++      filename: field('input[name="filename"]'),
++      file
++    }, outboxStore.activeIndex >= 0 ? outboxStore.posts[outboxStore.activeIndex] : null);
++  }
++
++  function ensurePostId(post, previous) {
++    if (!post._outboxId) post._outboxId = previous && previous._outboxId ? previous._outboxId : 'outbox-' + outboxNextPostId++;
++    return post;
++  }
++
++  function readDraftFile(panel) {
++    const form = panel.form;
++    if (!form) return null;
++
++    if (panel.type === 'mobile') {
++      const mb = document.getElementById('mbFileInput');
++      if (mb && mb.files && mb.files.length) return mb.files[0];
++    }
++
++    const thumb = document.querySelector('.file-thumbs .tmb-container');
++    if (thumb) {
++      const f = $(thumb).data('file-ref');
++      if (f) return f;
++    }
++
++    const fileInput = form.querySelector('input[type="file"]');
++    if (fileInput && fileInput.files && fileInput.files.length) return fileInput.files[0];
++    return null;
++  }
++
++  function releaseDraftFile(file) {
++    if (!file || !outboxObjectUrls.has(file) || outboxStore.posts.some(post => post.file === file)) return;
++    const thumbnail = outboxVideoThumbnails.get(file);
++    if (thumbnail && thumbnail.status === 'pending') {
++      thumbnail.status = 'cancelled';
++      thumbnail.cleanup();
++    }
++    outboxVideoThumbnails.delete(file);
++    URL.revokeObjectURL(outboxObjectUrls.get(file));
++    outboxObjectUrls.delete(file);
++  }
++
++  function getOutboxFileUrl(file) {
++    let url = outboxObjectUrls.get(file);
++    if (!url) {
++      try {
++        url = URL.createObjectURL(file);
++        outboxObjectUrls.set(file, url);
++      } catch (e) {}
++    }
++    return url || '';
++  }
++
++  function updateOutboxVideoThumbnail(file, thumbnailUrl) {
++    if (!outboxStore.posts.some(post => post.file === file)) return;
++    const backgroundImage = thumbnailUrl ? 'url("' + thumbnailUrl + '")' : '';
++    for (const list of document.querySelectorAll('#outbox-list, #mb-outbox-list')) {
++      for (const item of list.querySelectorAll('.outbox-item')) {
++        const post = outboxStore.posts.find(entry => entry._outboxId === item.dataset.postId);
++        if (post?.file === file) item.style.backgroundImage = backgroundImage;
++      }
++    }
++  }
++
++  function getOutboxVideoThumbnail(file) {
++    const cached = outboxVideoThumbnails.get(file);
++    if (cached) return cached.status === 'ready' ? cached.url : '';
++
++    const sourceUrl = getOutboxFileUrl(file);
++    if (!sourceUrl) {
++      outboxVideoThumbnails.set(file, { status: 'failed', url: '' });
++      return '';
++    }
++
++    const entry = { status: 'pending', url: '', cleanup: null };
++    const video = document.createElement('video');
++    video.muted = true;
++    video.playsInline = true;
++    video.preload = 'auto';
++    let timer = 0;
++    let done = false;
++
++    const cleanup = () => {
++      clearTimeout(timer);
++      video.removeEventListener('loadedmetadata', seekFrame);
++      video.removeEventListener('loadeddata', captureFrame);
++      video.removeEventListener('seeked', captureFrame);
++      video.removeEventListener('error', fail);
++      video.pause();
++      video.removeAttribute('src');
++      video.load();
++    };
++
++    const finish = (thumbnailUrl) => {
++      if (done) return;
++      done = true;
++      entry.status = thumbnailUrl ? 'ready' : 'failed';
++      entry.url = thumbnailUrl || '';
++      cleanup();
++      if (thumbnailUrl) updateOutboxVideoThumbnail(file, thumbnailUrl);
++    };
++
++    const fail = () => finish('');
++
++    const captureFrame = () => {
++      if (done || video.readyState < 2 || !video.videoWidth || !video.videoHeight || video.seeking) return;
++      try {
++        const scale = Math.min(1, 320 / Math.max(video.videoWidth, video.videoHeight));
++        const canvas = document.createElement('canvas');
++        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
++        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
++        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
++        finish(canvas.toDataURL('image/jpeg', 0.8));
++      } catch (e) {
++        fail();
++      }
++    };
++
++    const seekFrame = () => {
++      if (video.duration > 0.1) {
++        try {
++          video.currentTime = Math.min(0.1, video.duration / 2);
++          return;
++        } catch (e) {}
++      }
++      captureFrame();
++    };
++
++    entry.cleanup = cleanup;
++    outboxVideoThumbnails.set(file, entry);
++    video.addEventListener('loadedmetadata', seekFrame);
++    video.addEventListener('loadeddata', captureFrame);
++    video.addEventListener('seeked', captureFrame);
++    video.addEventListener('error', fail);
++    timer = setTimeout(fail, 5000);
++    video.src = sourceUrl;
++    video.load();
++    return '';
++  }
++
++  function isOutboxVideo(file) {
++    return /^video\//i.test(file.type || '') || /\.(?:mp4|webm)$/i.test(file.name || '');
++  }
++
++  function setDraftFile(post, file) {
++    if (post.file === file) return false;
++    const previous = post.file;
++    post.file = file;
++    releaseDraftFile(previous);
++    return true;
++  }
++
++  function captureDraftId(file, context) {
++    if (!postOutbox) return null;
++
++    const source = context && context.nodeType === 1 ? context : null;
++    const sourceForm = source && (source.tagName === 'FORM' ? source : source.form || source.closest('form'));
++    const activePanel = getOutboxPanel();
++    if (sourceForm && sourceForm !== activePanel.form) return null;
++
++    const post = outboxStore.posts[outboxStore.activeIndex];
++    if (!post) return null;
++    if (sourceForm && sourceForm === activePanel.form) {
++      if (file !== undefined && setDraftFile(post, file)) renderDraftList();
++      return post._outboxId;
++    }
++    return post.file === file ? post._outboxId : null;
++  }
++
++  function attachDraftFile(file, form, postId) {
++    if (postId) {
++      let post = outboxStore.posts.find(post => post._outboxId === postId);
++      if (!post) return false;
++      const active = outboxStore.posts[outboxStore.activeIndex] === post;
++      if (active) {
++        saveActiveDraft();
++        post = outboxStore.posts[outboxStore.activeIndex];
++      }
++      setDraftFile(post, file);
++      const base = sanitizeFilename(file.name.replace(/\.[^.]+$/, ''));
++      post.filename = post.randfn && !base.includes('[sound=')
++        ? String(Date.now() - Math.floor(Math.random() * 365 * DAY)) : base;
++      if (active) {
++        const panel = getOutboxPanel();
++        if (panel.form) writeDraftFields(panel, post);
++      }
++      renderDraftList();
++      return true;
++    }
++    if (!form?.isConnected) return false;
++    const panel = { type: form.id === 'mbReplyForm' ? 'mobile' : 'desktop', form };
++    clearDraftFile(panel);
++    return addFileToContainer(form, file);
++  }
++
++  function syncDraftFile() {
++    if (!postOutbox || outboxRestoringFile || outboxClosing || outboxStore.activeIndex < 0) return;
++    const panel = getOutboxPanel();
++    if (!panel.form) return;
++    const file = readDraftFile(panel);
++    const post = outboxStore.posts[outboxStore.activeIndex];
++    if (post && setDraftFile(post, file)) renderDraftList();
++  }
++
++  function writeDraftFields(panel, post, skipBody) {
++    const form = panel.form;
++    if (!form) return;
++    const fieldRoot = getOutboxFieldRoot(panel);
++
++    const set = (sel, val) => {
++      const el = fieldRoot.querySelector(sel);
++      if (el) el.value = val || '';
++    };
++
++    if (!skipBody) set('textarea[name="body"]', post.body);
++    set('input[name="name"]', post.name);
++    set('input[name="email"], input[name="options"], select[name="email"], select[name="options"]', post.email);
++    set('input[name="subject"]', post.subject);
++    set('input[name="embed"]', post.embed);
++    set('#mbPassword, input[name="password"]', post.password);
++
++    const spoilerChk = form.querySelector('input[name="spoiler"]');
++    if (spoilerChk) spoilerChk.checked = !!post.spoiler;
++
++    const spoilerBtn = panel.type === 'mobile' ? fieldRoot.querySelector('#mbSpoilerBtn') : null;
++    if (spoilerBtn && spoilerBtn.getAttribute('aria-pressed') !== String(!!post.spoiler)) {
++      spoilerBtn.click();
++    }
++
++    outboxRestoringFile = true;
++    try {
++      writeDraftFile(panel, post.file);
++      set('input[name="filename"]', post.filename);
++      const randfnChk = form.querySelector('input[name="randfn"]');
++      if (randfnChk) {
++        randfnChk.checked = !!post.randfn;
++      } else {
++        const mbRandBtn = panel.type === 'mobile' ? fieldRoot.querySelector('#mbRandomizerBtn') : null;
++        if (mbRandBtn && mbRandBtn.getAttribute('aria-pressed') !== String(!!post.randfn)) {
++          mbRandBtn.setAttribute('aria-pressed', String(!!post.randfn));
++          mbRandBtn.classList.toggle('active', !!post.randfn);
++        }
++      }
++    } finally {
++      setTimeout(() => { outboxRestoringFile = false; }, 0);
++    }
++  }
++
++  function clearDraftFile(panel) {
++    const form = panel.form;
++    if (!form) return;
++
++    document.querySelectorAll('.file-thumbs .tmb-container .remove-btn').forEach((btn) => btn.click());
++
++    const fileInput = form.querySelector('input[type="file"]');
++    if (fileInput) fileInput.value = '';
++
++    const mb = document.getElementById('mbFileInput');
++    if (mb) mb.value = '';
++
++    const clearBtn = document.getElementById('mbClearFiles');
++    if (clearBtn) {
++      clearBtn.click();
++    } else {
++      const status = document.getElementById('mbFileStatus');
++      if (status) { status.textContent = ''; status.style.color = ''; }
++      const preview = document.getElementById('mbFilePreview');
++      if (preview) preview.innerHTML = '';
++    }
++
++    syncDraftFile();
++  }
++
++  function writeDraftFile(panel, file) {
++    const form = panel.form;
++    if (!form) return;
++
++    clearDraftFile(panel);
++    if (!file) return;
++
++    addFileToContainer(form, file);
++  }
++
++  function syncConvertedFile(original, converted, sourcePostId) {
++    if (!sourcePostId || outboxStore.activeIndex < 0 || outboxStore.activeIndex >= outboxStore.posts.length) return false;
++    const activePost = outboxStore.posts[outboxStore.activeIndex];
++    if (!activePost || activePost._outboxId !== sourcePostId) return false;
++
++    const panel = getOutboxPanel();
++    if (!panel.form || readDraftFile(panel) !== original) return false;
++
++    const wasRestoringFile = outboxRestoringFile;
++    outboxRestoringFile = true;
++    try {
++      writeDraftFile(panel, converted);
++    } finally {
++      if (!wasRestoringFile) {
++        setTimeout(() => { outboxRestoringFile = false; }, 0);
++      }
++    }
++    return true;
++  }
++
++  function saveDraft() {
++    if (!postOutbox || outboxLocked) return;
++
++    const panel = getOutboxPanel();
++    if (panel.type === 'desktop' && panel.form && !panel.form.querySelector('#outbox-row')) {
++      addOutboxPanel(panel.form);
++    }
++    if (!panel.form) return;
++
++    const post = readDraftFields(panel);
++    if (!post) return;
++
++    const hasActive = outboxStore.activeIndex >= 0;
++    const empty = !post.body && !post.name && !post.email && !post.subject && !post.embed && !post.file;
++
++    if (hasActive) {
++      if (!empty) {
++        setDraftFile(outboxStore.posts[outboxStore.activeIndex], post.file);
++        outboxStore.posts[outboxStore.activeIndex] = post;
++      }
++    } else {
++      outboxStore.posts.push(post);
++    }
++
++    const latest = outboxStore.posts[outboxStore.posts.length - 1] || { name: '', email: '', randfn: false, filename: '' };
++    const blank = {
++      name: latest.name,
++      email: latest.email,
++      body: '', subject: '', embed: '', password: latest.password || localStorage.password || '',
++      spoiler: latest.spoiler || false, randfn: latest.randfn || false,
++      filename: '',
++      file: null
++    };
++
++    outboxStore.posts.push(ensurePostId(blank));
++    outboxStore.activeIndex = outboxStore.posts.length - 1;
++    document.body.classList.add('outbox-has-posts');
++    writeDraftFields(panel, blank);
++    renderDraftList();
++  }
++
++  function loadDraft(index) {
++    if (outboxLocked) return;
++    const panel = getOutboxPanel();
++    if (!panel.form) return;
++    if (index < 0 || index >= outboxStore.posts.length) return;
++
++    if (outboxStore.activeIndex >= 0) saveActiveDraft();
++    outboxStore.activeIndex = index;
++    writeDraftFields(panel, outboxStore.posts[index]);
++    renderDraftList();
++  }
++
++  function removeOutboxDraft(index, afterActiveRestore) {
++    const removed = outboxStore.posts.splice(index, 1)[0];
++    releaseDraftFile(removed?.file);
++
++    if (outboxStore.activeIndex === index) {
++      if (outboxStore.posts.length > 0) {
++        outboxStore.activeIndex = Math.min(index, outboxStore.posts.length - 1);
++        const panel = getOutboxPanel();
++        if (afterActiveRestore) {
++          if (panel.form) {
++            writeDraftFields(panel, outboxStore.posts[outboxStore.activeIndex]);
++            afterActiveRestore(panel);
++          }
++        } else {
++          writeDraftFields(panel, outboxStore.posts[outboxStore.activeIndex]);
++        }
++      } else {
++        outboxStore.activeIndex = -1;
++      }
++    } else if (outboxStore.activeIndex > index) {
++      outboxStore.activeIndex--;
++    }
++
++    if (!outboxStore.posts.length) document.body.classList.remove('outbox-has-posts');
++    renderDraftList();
++  }
++
++  function reorderDrafts(fromId, toId) {
++    const from = outboxStore.posts.findIndex((post) => post._outboxId === fromId);
++    const to = outboxStore.posts.findIndex((post) => post._outboxId === toId);
++    if (from < 0 || from >= outboxStore.posts.length || to < 0 || to >= outboxStore.posts.length) return;
++    if (from === to) return;
++
++    const active = outboxStore.posts[outboxStore.activeIndex];
++    const [moved] = outboxStore.posts.splice(from, 1);
++    outboxStore.posts.splice(to, 0, moved);
++
++    if (active) outboxStore.activeIndex = outboxStore.posts.indexOf(active);
++    renderDraftList();
++  }
++
++  function saveActiveDraft() {
++    const panel = getOutboxPanel();
++    if (!panel.form) return;
++    if (outboxStore.activeIndex < 0 || outboxStore.activeIndex >= outboxStore.posts.length) return;
++
++    const post = readDraftFields(panel);
++    if (post) {
++      setDraftFile(outboxStore.posts[outboxStore.activeIndex], post.file);
++      outboxStore.posts[outboxStore.activeIndex] = post;
++    }
++  }
++
++  function saveDraftField(e) {
++    if (outboxStore.activeIndex < 0 || outboxStore.activeIndex >= outboxStore.posts.length) return;
++    const target = e.target;
++    if (!target || target.nodeType !== 1) return;
++    const panel = getOutboxPanel();
++    const fieldRoot = getOutboxFieldRoot(panel);
++    if (!panel.form || !panel.form.querySelector('#outbox-row, #mb-outbox-container') || !fieldRoot?.contains(target)) return;
++
++    const post = outboxStore.posts[outboxStore.activeIndex];
++    const spoilerButton = e.type === 'click' && panel.type === 'mobile' && target.closest ? target.closest('#mbSpoilerBtn') : null;
++    if (spoilerButton && fieldRoot.querySelector('#mbSpoilerBtn') !== spoilerButton) return;
++    const field = spoilerButton ? 'spoiler' : target.name === 'options' ? 'email' : target.name;
++    const isCheckbox = target.type === 'checkbox';
++    if (e.type === 'change' && !isCheckbox) return;
++    if (e.type === 'input' && isCheckbox) return;
++    if (e.type === 'click' && !spoilerButton) return;
++
++    const checkboxField = field === 'spoiler' || field === 'randfn';
++    if (!['body', 'name', 'email', 'subject', 'embed', 'password', 'filename', 'spoiler', 'randfn'].includes(field)) return;
++
++    const value = spoilerButton
++      ? spoilerButton.getAttribute('aria-pressed') === 'true'
++      : checkboxField ? target.checked : target.value;
++
++    post[field] = value;
++    updateDraftPreview(post, field);
++  }
++
++  function lockOutbox() {
++    outboxLocked = true;
++    document.body.classList.add('outbox-locked');
++  }
++
++  function unlockOutbox() {
++    outboxLocked = false;
++    document.body.classList.remove('outbox-locked');
++  }
++
++  function replaceConvertedFile(original, converted, sourcePostId) {
++    if (!postOutbox || original === converted) return;
++
++    const post = outboxStore.posts.find(post => post._outboxId === sourcePostId && post.file === original);
++    if (post && setDraftFile(post, converted)) renderDraftList();
++  }
++
++  function updateDraftPreview(post, field) {
++    if (field !== 'body' && field !== 'spoiler') return;
++    if (outboxDragSession) {
++      outboxRenderPending = true;
++      return;
++    }
++
++    const postId = ensurePostId(post)._outboxId;
++    const preview = field === 'body'
++      ? String(post.body || '').replace(/\s+/g, ' ').slice(0, 30)
++      : null;
++
++    for (const list of document.querySelectorAll('#outbox-list, #mb-outbox-list')) {
++      const item = Array.from(list.children).find(child => child.dataset?.postId === postId);
++      if (!item) continue;
++
++      if (field === 'body') {
++        const comment = item.querySelector('.outbox-comment');
++        if (comment && comment.textContent !== preview) comment.textContent = preview;
++      } else {
++        item.classList.toggle('outbox-spoiler', !!post.spoiler);
++      }
++    }
++  }
++
++  function renderDraftList() {
++    for (let i = 0; i < outboxStore.posts.length; i++) {
++      ensurePostId(outboxStore.posts[i]);
++    }
++    if (outboxDragSession) {
++      outboxRenderPending = true;
++      return;
++    }
++    const lists = document.querySelectorAll('#outbox-list, #mb-outbox-list');
++    if (!lists.length) return;
++
++    for (const list of lists) {
++      const existing = new Map(Array.from(list.children).filter((item) => item.classList.contains('outbox-item')).map((item) => [item.dataset.postId, item]));
++      const desired = outboxStore.posts.map((post, i) => {
++        let item = existing.get(post._outboxId);
++        if (!item) {
++          item = document.createElement('div');
++          item.className = 'outbox-item';
++          const comment = document.createElement('span');
++          comment.className = 'outbox-comment';
++          const remove = document.createElement('span');
++          remove.className = 'outbox-remove';
++          remove.textContent = '✕';
++          remove.title = 'Remove';
++          item.append(comment, remove);
++        } else {
++          existing.delete(post._outboxId);
++        }
++        item.dataset.postId = post._outboxId;
++        item.classList.toggle('outbox-selected', i === outboxStore.activeIndex);
++        item.classList.toggle('outbox-spoiler', !!post.spoiler);
++        item.draggable = true;
++
++        if (post.file) {
++          const thumbnailUrl = isOutboxVideo(post.file)
++            ? getOutboxVideoThumbnail(post.file)
++            : getOutboxFileUrl(post.file);
++          const backgroundImage = thumbnailUrl ? 'url("' + thumbnailUrl + '")' : '';
++          if (item.style.backgroundImage !== backgroundImage) item.style.backgroundImage = backgroundImage;
++        } else {
++          if (item.style.backgroundImage) item.style.backgroundImage = '';
++        }
++
++        const comment = item.querySelector('.outbox-comment');
++        const preview = (post.body || '').replace(/\s+/g, ' ').slice(0, 30);
++        if (comment.textContent !== preview) comment.textContent = preview;
++        return item;
++      });
++
++      existing.forEach((item) => item.remove());
++      for (let i = 0; i < desired.length; i++) {
++        const item = desired[i];
++        const current = list.children[i];
++        if (current !== item) list.insertBefore(item, current || null);
++      }
++      while (list.children.length > desired.length) list.lastElementChild.remove();
++    }
++    outboxRenderPending = false;
++  }
++
++  function clearDragTarget(session, item) {
++    if (!session || (item && session.targetItem !== item)) return;
++    if (session.targetItem) session.targetItem.classList.remove('outbox-over');
++    session.targetItem = null;
++  }
++
++  function setDragTarget(item) {
++    const session = outboxDragSession;
++    if (!session || session.ending) return;
++    if (!item || !item.isConnected || item.closest('#outbox-list, #mb-outbox-list') !== session.list || item.dataset.postId === session.fromId) {
++      clearDragTarget(session);
++      return;
++    }
++
++    if (session.targetItem === item) return;
++    clearDragTarget(session);
++    session.targetItem = item;
++    item.classList.add('outbox-over');
++  }
++
++  function clearDragState(session) {
++    if (!session) return;
++    if (session.list) session.list.classList.remove('outbox-drag-active');
++    if (session.sourceItem) session.sourceItem.classList.remove('outbox-drag');
++    document.querySelectorAll('.outbox-item.outbox-drag').forEach((el) => el.classList.remove('outbox-drag'));
++    clearDragTarget(session);
++  }
++
++  function releaseDragSession(session) {
++    if (outboxDragSession !== session || session.ending || session.released) return;
++    session.released = true;
++    clearDragState(session);
++  }
++
++  function finishDragSession(session, allowEnding = false) {
++    if (outboxDragSession !== session || (session.ending && !allowEnding)) return;
++    session.ending = true;
++    clearDragState(session);
++    if (outboxDragSession !== session || !session.ending) return;
++    if (session.observer) session.observer.disconnect();
++    outboxDragSession = null;
++    if (session.toId) reorderDrafts(session.fromId, session.toId);
++    if (outboxRenderPending) renderDraftList();
++  }
++
++  function cancelDragSession(session, allowEnding = false) {
++    if (outboxDragSession !== session) return;
++    session.toId = null;
++    finishDragSession(session, allowEnding);
++  }
++
++  function observeDragSession(session) {
++    if (typeof MutationObserver === 'undefined' || !document.body) return;
++    session.observer = new MutationObserver(() => {
++      if (outboxDragSession !== session) return;
++      if (!session.ending && (!session.list.isConnected || !session.sourceItem.isConnected || session.sourceItem.closest('#outbox-list, #mb-outbox-list') !== session.list)) {
++        cancelDragSession(session);
++        return;
++      }
++      if (session.dropItem && (!session.dropItem.isConnected || session.dropItem.closest('#outbox-list, #mb-outbox-list') !== session.list)) {
++        session.dropItem = null;
++        session.toId = null;
++      }
++      if (session.targetItem && (!session.targetItem.isConnected || session.targetItem.closest('#outbox-list, #mb-outbox-list') !== session.list)) clearDragTarget(session);
++    });
++    session.observer.observe(document.body, { childList: true, subtree: true });
++  }
++
++  function bindOutboxEvents() {
++    document.addEventListener('click', (e) => {
++      const target = e.target;
++      if (!target.closest) return;
++
++      if (target.closest('#outbox-button, #mbDFOutboxBtn')) {
++        e.preventDefault();
++        saveDraft();
++        return;
++      }
++
++      if (target.closest('#mbClearFiles')) {
++        if (outboxStore.activeIndex >= 0) syncDraftFile();
++        return;
++      }
++
++      if (target.closest('#mbSpoilerBtn')) {
++        saveDraftField(e);
++        return;
++      }
++
++      const item = target.closest('.outbox-item');
++      if (item) {
++        const index = outboxStore.posts.findIndex((entry) => entry._outboxId === item.dataset.postId);
++        if (index < 0) return;
++        if (target.classList.contains('outbox-remove')) {
++          if (outboxLocked && index === outboxStore.activeIndex) return;
++          removeOutboxDraft(index);
++        } else {
++          loadDraft(index);
++        }
++      }
++    });
++
++    document.addEventListener('dragstart', (e) => {
++      const item = e.target && e.target.closest ? e.target.closest('.outbox-item') : null;
++      if (!item) return;
++      if (outboxDragSession) cancelDragSession(outboxDragSession, true);
++      const list = item.closest('#outbox-list, #mb-outbox-list');
++      const post = outboxStore.posts.find((entry) => entry._outboxId === item.dataset.postId);
++      if (!list || !post) return;
++      outboxDragSession = { fromId: post._outboxId, toId: null, list, sourceItem: item, targetItem: null, dropItem: null, ending: false, released: false };
++      list.classList.add('outbox-drag-active');
++      item.classList.add('outbox-drag');
++      const session = outboxDragSession;
++      observeDragSession(session);
++      if (e.dataTransfer) {
++        e.dataTransfer.effectAllowed = 'move';
++        e.dataTransfer.setData('text/plain', '');
++      }
++    });
++
++    document.addEventListener('dragover', (e) => {
++      const item = e.target && e.target.closest ? e.target.closest('.outbox-item') : null;
++      if (!outboxDragSession || outboxDragSession.ending || outboxDragSession.released) return;
++      if (!item || item.closest('#outbox-list, #mb-outbox-list') !== outboxDragSession.list) {
++        clearDragTarget(outboxDragSession);
++        return;
++      }
++      e.preventDefault();
++      setDragTarget(item);
++    });
++
++    document.addEventListener('dragleave', (e) => {
++      const item = e.target && e.target.closest ? e.target.closest('.outbox-item') : null;
++      if (!item || !outboxDragSession || outboxDragSession.ending || outboxDragSession.released || item.closest('#outbox-list, #mb-outbox-list') !== outboxDragSession.list) return;
++      const related = e.relatedTarget;
++      if (related && item.contains(related)) return;
++      clearDragTarget(outboxDragSession, item);
++    });
++
++    document.addEventListener('drop', (e) => {
++      const session = outboxDragSession;
++      if (!session || session.ending || session.released) return;
++      const item = e.target && e.target.closest ? e.target.closest('.outbox-item') : null;
++      if (item && item.closest('#outbox-list, #mb-outbox-list') === session.list && item.dataset.postId !== session.fromId) {
++        const target = outboxStore.posts.find((post) => post._outboxId === item.dataset.postId);
++        if (target) {
++          e.preventDefault();
++          session.toId = target._outboxId;
++          session.dropItem = item;
++        }
++      }
++      releaseDragSession(session);
++    });
++
++    document.addEventListener('dragend', () => {
++      const session = outboxDragSession;
++      if (!session) return;
++      releaseDragSession(session);
++      setTimeout(() => finishDragSession(session), 0);
++    });
++
++    document.addEventListener('keydown', (e) => {
++      if (e.key === 'Escape' && outboxDragSession) cancelDragSession(outboxDragSession);
++    });
++
++    window.addEventListener('blur', () => {
++      if (outboxDragSession) cancelDragSession(outboxDragSession);
++    });
++
++    document.addEventListener('visibilitychange', () => {
++      if (document.hidden && outboxDragSession) cancelDragSession(outboxDragSession);
++    });
++  }
++
++  function addOutboxPanel(qr) {
++    if (!qr || qr.querySelector('#outbox-row')) return;
++
++    const uploadSettings = qr.querySelector('#upload_settings');
++    if (!uploadSettings) return;
++
++    const td = uploadSettings.querySelector('td');
++    if (td && !td.querySelector('#outbox-button')) {
++      const btn = document.createElement('a');
++      btn.id = 'outbox-button';
++      btn.href = 'javascript:;';
++      btn.title = 'Outbox';
++      btn.setAttribute('aria-label', 'Outbox');
++      btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i>';
++      td.appendChild(btn);
++    }
++
++    const row = document.createElement('tr');
++    row.id = 'outbox-row';
++    row.innerHTML = '<td colspan="2"><div id="outbox-container"><div id="outbox-list"></div></div></td>';
++    uploadSettings.parentNode.insertBefore(row, uploadSettings);
++  }
++
++  function initializeOutboxDesktop() {
++    if (!postOutbox) return;
++
++    const injectSource = () => {
++      const qr = document.getElementById('quick-reply');
++      if (qr) {
++        addOutboxPanel(qr);
++        return;
++      }
++      const mainForm = document.querySelector('form[name="post"]');
++      if (!mainForm || mainForm.querySelector('#outbox-row')) return;
++      const uploadSettings = mainForm.querySelector('#upload_settings');
++      if (!uploadSettings) return;
++      addOutboxPanel(mainForm);
++    };
++
++    injectSource();
++
++    const onQuickReply = () => {
++      const qr = document.getElementById('quick-reply');
++      const isCiteOpen = outboxCiteOpening;
++      outboxCiteOpening = false;
++      if (qr && qr.querySelector('#outbox-row') && outboxClosing === false) return;
++      outboxClosing = false;
++      injectSource();
++      if (outboxStore.activeIndex >= 0 && outboxStore.activeIndex < outboxStore.posts.length) {
++        const panel = getOutboxPanel();
++        if (panel.form) {
++          writeDraftFields(panel, outboxStore.posts[outboxStore.activeIndex], isCiteOpen);
++        }
++      }
++      renderDraftList();
++    };
++
++    document.addEventListener('click', (e) => {
++      if (!e.target.closest) return;
++
++      if (e.target.closest('#quick-reply .close-btn')) {
++        if (outboxStore.activeIndex >= 0) saveActiveDraft();
++        outboxClosing = true;
++        if (outboxStore.activeIndex >= 0 && outboxStore.activeIndex < outboxStore.posts.length) {
++          setTimeout(() => {
++            if (outboxStore.activeIndex < 0 || outboxStore.activeIndex >= outboxStore.posts.length) return;
++            const panel = getOutboxPanel();
++            if (panel.form) writeDraftFields(panel, outboxStore.posts[outboxStore.activeIndex]);
++          }, 0);
++        }
++        return;
++      }
++
++      if (e.target.closest('.quick-reply-btn')) {
++        waitForElement('#quick-reply', onQuickReply);
++        return;
++      }
++
++      const postLink = e.target.closest('a.post_no');
++      if (postLink && /^citeReply\(\d+\)$/.test(postLink.getAttribute('onclick') || '')) {
++        outboxCiteOpening = !document.getElementById('quick-reply');
++        waitForElement('#quick-reply', onQuickReply);
++        return;
++      }
++    }, true);
++  }
++
++  function initializeOutboxMobile() {
++    if (!postOutbox) return;
++    if (!checkMobile() && !document.getElementById('mbReplyForm')) return;
++
++    waitForElement('#mbReplyForm', (mbForm) => {
++      if (mbForm.querySelector('#mb-outbox-container')) return;
++
++      const embedInput = mbForm.querySelector('input[name="embed"]');
++      const textarea = mbForm.querySelector('textarea[name="body"]');
++      const container = document.createElement('div');
++      container.id = 'mb-outbox-container';
++      container.innerHTML = '<div id="mb-outbox-list"></div>';
++      if (textarea) {
++        textarea.insertAdjacentElement('afterend', container);
++      } else if (embedInput) {
++        embedInput.insertAdjacentElement('beforebegin', container);
++      }
++
++      const dfClearHL = document.getElementById('mbDFClearHL');
++      const hlClear = dfClearHL && dfClearHL.parentElement;
++      if (hlClear && hlClear.classList.contains('hl-clear') && !hlClear.querySelector('#mbDFOutboxBtn')) {
++        const btn = document.createElement('button');
++        btn.type = 'button';
++        btn.id = 'mbDFOutboxBtn';
++        btn.className = 'outline';
++        btn.style.flex = '0 1 0%';
++        btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i>';
++        btn.title = 'Outbox';
++        btn.setAttribute('aria-label', 'Outbox');
++        hlClear.appendChild(btn);
++      }
++
++      renderDraftList();
++    });
++  }
++
++  function initializeOutbox() {
++    if (!postOutbox) return;
++    bindOutboxEvents();
++    initializeOutboxDesktop();
++    initializeOutboxMobile();
++    watchOutboxPosting();
++    document.addEventListener('input', saveDraftField, true);
++    document.addEventListener('change', saveDraftField, true);
++  }
++
++  function removePostedDraft(postId) {
++    const index = postId
++      ? outboxStore.posts.findIndex((post) => post._outboxId === postId)
++      : outboxStore.activeIndex;
++    if (index < 0 || index >= outboxStore.posts.length) return;
++
++    removeOutboxDraft(index, (panel) => {
++      if (panel.type === 'desktop' && !outboxRescueFields) {
++        outboxRescueFields = true;
++        $(document).one('new_post', () => {
++          setTimeout(() => {
++            outboxRescueFields = false;
++            if (outboxStore.activeIndex >= 0 && outboxStore.activeIndex < outboxStore.posts.length) {
++              const p = getOutboxPanel();
++              if (p.form) writeDraftFields(p, outboxStore.posts[outboxStore.activeIndex]);
++            }
++          }, 0);
++        });
++      }
++    });
++  }
++
++  function watchOutboxPosting() {
++    let mobileAttempt = null;
++    let desktopErrorObserver = null;
++
++    function stopMobileAttempt(render = true) {
++      if (!mobileAttempt) return;
++      mobileAttempt.observer.disconnect();
++      mobileAttempt = null;
++      if (!outboxLocked) return;
++      unlockOutbox();
++      if (render) renderDraftList();
++    }
++
++    function hasMobileError(modal, mutations, wasInserted) {
++      if (!modal || !modal.classList.contains('open')) return false;
++      if (wasInserted) return true;
++      const text = modal.querySelector('#mbErrorMessage')?.textContent || '';
++      if (text !== mobileAttempt.errorText) return true;
++      return mutations.some((mutation) => mutation.type === 'attributes'
++        && mutation.target === modal && mutation.attributeName === 'class'
++        && !(mutation.oldValue || '').split(/\s+/).includes('open'));
++    }
++
++    function startMobileAttempt(form) {
++      if (mobileAttempt || !outboxStore.posts.length) return;
++      const button = form.querySelector('#mbSend');
++      if (!button) return;
++      const modal = document.getElementById('mbErrorModal');
++      mobileAttempt = {
++        form,
++        button,
++        postId: outboxStore.posts[outboxStore.activeIndex]?._outboxId,
++        wasDisabledAtSubmit: button.disabled,
++        sawDisabled: false,
++        staleOpenModal: !!modal?.classList.contains('open'),
++        modal,
++        errorText: modal?.querySelector('#mbErrorMessage')?.textContent || '',
++        observer: null
++      };
++      lockOutbox();
++      const attempt = mobileAttempt;
++      attempt.observer = new MutationObserver((mutations) => {
++        if (mobileAttempt !== attempt) return;
++        const currentModal = document.getElementById('mbErrorModal');
++        const insertedModal = currentModal !== attempt.modal || mutations.some((mutation) => mutation.type === 'childList'
++          && Array.from(mutation.addedNodes).some((node) => node.nodeType === 1
++            && (node.id === 'mbErrorModal' || node.querySelector?.('#mbErrorModal'))));
++        if (currentModal && currentModal !== attempt.modal) {
++          attempt.modal = currentModal;
++          attempt.observer.observe(currentModal, {
++            attributes: true,
++            attributeOldValue: true,
++            attributeFilter: ['class']
++          });
++        }
++        if (hasMobileError(currentModal, mutations, insertedModal)) {
++          stopMobileAttempt();
++          return;
++        }
++        const observedDisabled = mutations.some((mutation) => mutation.type === 'attributes'
++          && mutation.target === attempt.button && mutation.attributeName === 'disabled'
++          && mutation.oldValue !== null);
++        if (!attempt.wasDisabledAtSubmit && (attempt.button.disabled || observedDisabled)) {
++          attempt.sawDisabled = true;
++        }
++        if (!attempt.form.isConnected) {
++          stopMobileAttempt();
++          return;
++        }
++        if (attempt.sawDisabled && !attempt.button.disabled) {
++          if (attempt.staleOpenModal && attempt.modal?.isConnected
++            && attempt.modal.classList.contains('open')) {
++            stopMobileAttempt();
++            return;
++          }
++          const submittedPostId = attempt.postId;
++          stopMobileAttempt(!submittedPostId);
++          if (submittedPostId) removePostedDraft(submittedPostId);
++          return;
++        }
++      });
++      attempt.observer.observe(document.body, {
++        childList: true,
++        subtree: true
++      });
++      attempt.observer.observe(button, {
++        attributes: true,
++        attributeOldValue: true,
++        attributeFilter: ['disabled']
++      });
++      if (modal) {
++        attempt.observer.observe(modal, {
++          attributes: true,
++          attributeOldValue: true,
++          attributeFilter: ['class']
++        });
++      }
++      setTimeout(() => {
++        if (mobileAttempt !== attempt) return;
++        if (!attempt.wasDisabledAtSubmit && attempt.button.disabled) attempt.sawDisabled = true;
++        else if (!attempt.sawDisabled) stopMobileAttempt();
++      }, 0);
++    }
++
++    document.addEventListener('submit', (e) => {
++      const form = e.target;
++      if (!form || form.nodeType !== 1) return;
++      if (!form.querySelector('#outbox-row, #mb-outbox-container')) return;
++      if (form.id === 'mbReplyForm') startMobileAttempt(form);
++      else {
++        if (mobileAttempt) return;
++        if (!outboxStore.posts.length) return;
++        lockOutbox();
++        if (!desktopErrorObserver) {
++          desktopErrorObserver = new MutationObserver((mutations) => {
++            const found = mutations.some((mutation) => mutation.type === 'childList'
++              && Array.from(mutation.addedNodes).some((node) => node.nodeType === 1
++                && (node.id === 'alert_handler'
++                  ? node.querySelector('button.alert_button:not([id])')
++                  : node.querySelector?.('#alert_handler button.alert_button:not([id])'))));
++            if (!found) return;
++            desktopErrorObserver.disconnect();
++            desktopErrorObserver = null;
++            unlockOutbox();
++            renderDraftList();
++          });
++          desktopErrorObserver.observe(document.body, { childList: true, subtree: true });
++        }
++      }
++    }, true);
++
++    $(document).on('ajax_after_post', (e, post_response) => {
++      if (!outboxLocked || mobileAttempt) return;
++      desktopErrorObserver?.disconnect();
++      desktopErrorObserver = null;
++      unlockOutbox();
++      if (post_response && !post_response.error) removePostedDraft();
++      else renderDraftList();
++    });
++  }
++
+   function initializeURLUpload() {
+     if (!urlUpload) return;
+     const MAX_FILE_SIZE = 10 * 1024 * 1024;
+@@ -9525,7 +12536,7 @@
+           const data = await fetchJsonViaGM(
+             `https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D${ytMatch[1]}&format=json`
+           );
+-          if (data && data.title) ytTitle = data.title;
++          ytTitle = getOembedTitle(data);
+         } catch (e) {}
+       }
+ 
+@@ -9846,21 +12857,16 @@
+       showUrlAlert(async (url) => {
+         if (!url) return;
+ 
+-        const dropzoneWrap = document.querySelector('.dropzone-wrap');
+-        if (dropzoneWrap) {
+-          const removeBtn = dropzoneWrap.querySelector('.remove-btn');
+-          if (removeBtn) removeBtn.click();
+-        }
+-
++        const uploadPostId = captureDraftId(undefined, container);
+         btn.disabled = true;
+         const oldText = btn.textContent;
+         btn.textContent = 'Fetching…';
+ 
+         try {
+           let file = await fetchFile(url);
+-          file = await checkImageConversion(file);
++          file = await checkImageConversion(file, container);
+ 
+-          if (!addFileToContainer(container, file)) {
++          if (!attachDraftFile(file, container, uploadPostId)) {
+             alert('Could not add file to uploader.');
+           }
+         } catch (e) {
+@@ -10496,6 +13502,10 @@
+       return;
+     }
+ 
++    const form = oekakiAttachForm?.isConnected
++      ? oekakiAttachForm : document.querySelector('form[name="post"]:not(#quick-reply)');
++    const uploadPostId = captureDraftId(undefined, form);
++
+     let file = null;
+     try {
+       const commaIndex = dataUrl.indexOf(',');
+@@ -10507,26 +13517,13 @@
+       const bytes = new Uint8Array(binary.length);
+       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+       file = new File([bytes], 'oekaki.' + ext, { type: mime });
+-      file = await checkImageConversion(file);
++      file = await checkImageConversion(file, form);
+     } catch (e) {
+       showMessageNotification('Could not convert the oekaki drawing');
+       return;
+     }
+ 
+-    let form = oekakiAttachForm;
+-    if (!form || !form.isConnected) {
+-      form = document.querySelector('form[name="post"]:not(#quick-reply)');
+-    }
+-
+-    const dropzoneWrap = document.querySelector('.dropzone-wrap');
+-    if (dropzoneWrap) {
+-      const removeBtn = dropzoneWrap.querySelector('.remove-btn');
+-      if (removeBtn) removeBtn.click();
+-    }
+-    const mobileClear = form && form.querySelector('#mbClearFiles');
+-    if (mobileClear) mobileClear.click();
+-
+-    if (!form || !addFileToContainer(form, file)) {
++    if (!attachDraftFile(file, form, uploadPostId)) {
+       showMessageNotification('Could not add the oekaki image to the uploader');
+       return;
+     }
+@@ -10545,13 +13542,14 @@
+     if (!mainForm.querySelector('.ts-oekaki-toggle')) {
+       const uploadTd = mainForm.querySelector('#upload_settings td') || mainForm.querySelector('#upload td');
+       if (uploadTd) {
+-        const btn = document.createElement('button');
+-        btn.type = 'button';
+-        btn.className = 'outline ts-oekaki-toggle';
+-        btn.title = 'Oekaki';
+-        btn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+-        btn.style.cssText = 'float:right;margin-left:2px;margin-right:2px;padding:0 2px;';
+-        uploadTd.appendChild(btn);
++        const link = document.createElement('a');
++        link.href = 'javascript:;';
++        link.className = 'ts-oekaki-toggle';
++        link.title = 'Oekaki';
++        link.setAttribute('role', 'button');
++        link.setAttribute('aria-label', 'Oekaki');
++        link.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
++        uploadTd.appendChild(link);
+       }
+     }
+ 
+@@ -11226,6 +14224,12 @@
+           }
+           return;
+         }
++
++        if (postOutbox && matchKeybind(ev, kbPostOutbox)) {
++          ev.preventDefault();
++          saveDraft();
++          return;
++        }
+       });
+     });
+   }
+@@ -11240,6 +14244,7 @@
+         label: "Posting",
+         settings: [
+           { key: "enableQuickReply", label: "Quick Reply", description: "Enable keybind to toggle the quick reply panel" },
++          { key: "postOutbox", label: "Post Outbox", description: "Store and swap posts in the reply panel" },
+           { key: "filenameChanger", label: "Filename Changer", description: "Enable filename changer and randomizer" },
+           { key: "urlUpload", label: "URL Upload", description: "Add button to upload files via URL" },
+           { key: "enableOekaki", label: "Oekaki", description: "Add button to create and edit images via wPaint" }
+@@ -11264,6 +14269,7 @@
+         settings: [
+           { key: "videoHoverCursor", label: "Video Hover Position", description: "Native video hovers follow the cursor" },
+           { key: "videoScrollVol", label: "Video Hover Scroll Volume", description: "Adjust hover video volume with the scroll wheel" },
++          { key: "resizeMedia", label: "Resize Media", description: "Resize post media and supported embeds" },
+           { key: "linkTitle", label: "Link Title", description: "Replace supported links with their actual titles" },
+           { key: "linkIcon", label: "Link Icon", description: "Add icons next to supported links" },
+           { key: "linkEmbed", label: "Link Embedding", description: "Add embed buttons to supported links" },
+@@ -11340,7 +14346,8 @@
+       { key: "youBorderStyle", label: "Border Style", parentKey: "highlightPosts", type: "select", options: ["solid","dashed","dotted","double","groove","ridge"] },
+       { key: "kbQuickReply", label: "", parentKey: "enableQuickReply", type: "keybind", size: "6" },
+       { key: "catboxProxy", label: "", parentKey: "rerouteCatbox", type: "select", options: ["pixstash", "fatbox"], optionLabels: { pixstash: "Pixstash", fatbox: "Fatbox" } },
+-      { key: "formatFilenames", label: "Format Filenames", description: "Rename media filenames of supported links", parentKey: "urlUpload", after: "kbURL" }
++      { key: "formatFilenames", label: "Format Filenames", description: "Rename media filenames of supported links", parentKey: "urlUpload", after: "kbURL" },
++      { key: "kbPostOutbox", label: "", parentKey: "postOutbox", type: "keybind", size: "6" }
+     ];
+ 
+     const defaultSettings = {
+@@ -11419,6 +14426,9 @@
+       hashNavigation: false,
+       enableOekaki: true,
+       formatFilenames: true,
++      resizeMedia: true,
++      postOutbox: true,
++      kbPostOutbox: { ctrl: false, alt: true, shift: false, key: "n" },
+     };
+ 
+     let threadSettings = {};
+@@ -11468,7 +14478,7 @@
+           : "";
+ 
+         let style = "";
+-        if (key === "urlUpload" || key === "optionThreading" || key === "enableKbOwn" || key === "enableKbYou" || key === "enableTowerTunes" || key === "highlightPosts" || key === "enableQuickReply" || key === "rerouteCatbox") {
++        if (key === "urlUpload" || key === "optionThreading" || key === "enableKbOwn" || key === "enableKbYou" || key === "enableTowerTunes" || key === "highlightPosts" || key === "enableQuickReply" || key === "rerouteCatbox" || key === "postOutbox") {
+           style = "display:inline-block;";
+         }
+ 
+@@ -11504,7 +14514,7 @@
+ 
+       let style = "margin-left: 1.5em;";
+       if (key === "translateAuto" || key === "notifyNewPost" || key === "notifyNewYou") style += " display:inline-block;";
+-      if (key === "translateFrom" || key === "notifyPostColor" || key === "notifyYouColor" || key === "kbThreadToggle" || key === "kbURL" || key === "kbOwnDown" || key === "kbOwnUp" || key === "kbYouDown" || key === "kbYouUp" || key === "kbTowerTunes" || key === "kbQuickReply" || key === "catboxProxy") style += " display:inline-block; margin-left:0.5em;";
++      if (key === "translateFrom" || key === "notifyPostColor" || key === "notifyYouColor" || key === "kbThreadToggle" || key === "kbURL" || key === "kbOwnDown" || key === "kbOwnUp" || key === "kbYouDown" || key === "kbYouUp" || key === "kbTowerTunes" || key === "kbQuickReply" || key === "catboxProxy" || key === "kbPostOutbox") style += " display:inline-block; margin-left:0.5em;";
+ 
+       const container = $(`
+          <div id="${key}-container" style="${style}">
+@@ -11862,6 +14872,8 @@
+ 
+   function onReady() {
+     const path = window.location.pathname;
++    const boardPageMatch = path.match(/^\/([^/]+)(?:\/(?:index|catalog)\.html|\/\d+\.html|\/?)$/);
++    if (boardPageMatch) currentBoard = boardPageMatch[1];
+     const mobileNewTheme = localStorage.getItem('forceMobileTheme') === 'on' && localStorage.getItem('mobileStyle') === 'new';
+ 
+     if (mobileNewTheme) {
+@@ -11897,6 +14909,7 @@
+       requestAnimationFrame(() => {
+         requestAnimationFrame(() => {
+           initializeHeaderBar();
++          initializeMediaResize();
+           initializePosts();
+           hoverQuoteReplies();
+           threadMonitoring();
+@@ -11904,6 +14917,7 @@
+           initializeImageConverter();
+           initializeRandomizerToggle();
+           initializeMobileRandomizer();
++          initializeOutbox();
+           initializeURLUpload();
+           initializeOekaki();
+           initializeKeybinds();
+@@ -11922,8 +14936,11 @@
+           if (redirect404(archiveUrl)) return;
+         }
+       }
++      initializeMediaResize();
++      initializeOutbox();
+       initializeKeybinds(true);
+       initializeOekaki();
++      if (currentBoard) initializeOwnership();
+     }
+ 
+     const catalogMatch = path.match(/^\/([^/]+)\/catalog\.html$/);

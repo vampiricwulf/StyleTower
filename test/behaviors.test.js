@@ -255,9 +255,8 @@ test("watch thread on reply: submitting adds the thread to the site's watcher", 
     assert.equal(watch.hlgg.slugs["100"], "/hlgg/res/100.html");
 });
 
-test("post menu: Toggle You marks and unmarks a post in the site's own_posts store", async () => {
+test("post menu: no Toggle You item (Holotower TS 2.8 ships the (You) checkbox); Delete submenu still added", async () => {
     const w = await load();
-    const { $SS } = w.__ST;
     const d = w.document;
     const btn = d.createElement("a");
     btn.className = "post-btn post-btn-open";
@@ -267,21 +266,9 @@ test("post menu: Toggle You marks and unmarks a post in the site's own_posts sto
     menu.innerHTML = '<ul><li class="post-item">Hide post</li></ul>';
     d.body.appendChild(menu);
     await sleep(30);
-    const item = menu.querySelector("[data-cmd='toggle-you']");
-    assert.ok(item, "Toggle You added to the menu");
-    assert.equal(item.textContent, "Toggle You");
+    assert.equal(menu.querySelector("[data-cmd='toggle-you']"), null, "no Toggle You item");
+    assert.ok(!Array.from(menu.querySelectorAll("li")).some(li => /toggle you|✓ you/i.test(li.textContent)), "no You toggle text");
     assert.ok(menu.querySelector("[data-cmd='delete-post']"), "Delete submenu added");
-    item.click();
-    assert.deepEqual(JSON.parse(w.localStorage.getItem("own_posts")), { hlgg: ["101"] });
-    const post = d.getElementById("reply_101");
-    assert.ok(post.classList.contains("you"));
-    assert.equal(post.querySelector(".intro span.own_post").textContent, "(You)");
-    assert.equal(item.textContent, "✓ You");
-    item.click();
-    assert.equal(w.localStorage.getItem("own_posts"), "{}");
-    assert.ok(!post.classList.contains("you"));
-    assert.equal(post.querySelector(".intro span.own_post"), null);
-    assert.equal($SS.getOwnPosts("hlgg").length, 0);
 });
 
 test("header mirroring: TS's hide-on-scroll flips do not drop the page's top padding", async () => {

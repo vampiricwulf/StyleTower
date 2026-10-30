@@ -769,9 +769,7 @@
                 guard("options", $SS.options.init);
 
                 document.addEventListener("click", function (e) {
-                    var li = e.target.closest("[data-cmd='toggle-you']");
-                    if (li) $SS.toggleYou(li);
-                    li = e.target.closest("[data-cmd='delete-post']");
+                    var li = e.target.closest("[data-cmd='delete-post']");
                     if (li) $SS.deletePost(li, false);
                     li = e.target.closest("[data-cmd='delete-file']");
                     if (li) $SS.deletePost(li, true);
@@ -889,7 +887,6 @@
                             }
                             var pm = node.matches && node.matches(".post-menu") ? node : node.querySelector ? node.querySelector(".post-menu") : null;
                             if (pm) {
-                                $SS.insertToggleYou(pm);
                                 $SS.insertDeletePost(pm);
                             }
                         }
@@ -2091,10 +2088,6 @@
             if (pathname[1] !== "res") return null;
             return (pathname[2] || "").replace(/(?:\+\d+)?\.html$/, "") || null;
         },
-        getOwnPosts: function (board) {
-            var posts = $SS.localJSON.get("own_posts") || {};
-            return posts[board] || [];
-        },
         watchThread: function () {
             if (!$SS.conf["Watch Thread on Reply"] || !$SS.location.reply) return;
             try {
@@ -2330,59 +2323,6 @@
             var post = btn && btn.closest(".post");
             if (!post || !post.id) return null;
             return post.id.replace(/^(?:reply_|op_)/, "") || null;
-        },
-        insertToggleYou: function (menu) {
-            menu = menu || document.querySelector(".post-menu");
-            if (!menu || menu.querySelector("[data-cmd='toggle-you']")) return;
-            var ul = menu.querySelector("ul");
-            if (!ul) return;
-            var postId = $SS.getOpenMenuPostId();
-            if (!postId) return;
-            var li = document.createElement("li");
-            li.className = "post-item";
-            li.setAttribute("data-cmd", "toggle-you");
-            li.setAttribute("data-id", postId);
-            li.textContent = $SS.getOwnPosts($SS.location.board).indexOf(postId) !== -1 ? "✓ You" : "Toggle You";
-            ul.appendChild(li);
-        },
-        toggleYou: function (li) {
-            var postId = li.getAttribute("data-id");
-            if (!postId) return;
-            try {
-                var board = $SS.location.board;
-                if (!board) return;
-                var posts = $SS.localJSON.get("own_posts") || {};
-                posts[board] = posts[board] || [];
-                var el = document.getElementById("reply_" + postId) || document.getElementById("op_" + postId);
-                var idx = posts[board].indexOf(postId);
-                if (idx !== -1) {
-                    posts[board].splice(idx, 1);
-                    li.textContent = "Toggle You";
-                    if (el) {
-                        el.classList.remove("yourPost");
-                        el.classList.remove("you");
-                        var mark = el.querySelector(".intro span.own_post");
-                        if (mark) mark.remove();
-                    }
-                } else {
-                    posts[board].push(postId);
-                    li.textContent = "✓ You";
-                    if (el) {
-                        el.classList.add("yourPost");
-                        el.classList.add("you");
-                        var name = el.querySelector(".intro span.name");
-                        if (name && !el.querySelector(".intro span.own_post")) {
-                            var span = document.createElement("span");
-                            span.className = "own_post";
-                            span.textContent = "(You)";
-                            name.parentNode.insertBefore(span, name.nextSibling);
-                            name.parentNode.insertBefore(document.createTextNode(" "), span);
-                        }
-                    }
-                }
-                if (posts[board].length === 0) delete posts[board];
-                $SS.localJSON.set("own_posts", posts);
-            } catch (e) {}
         },
         insertDeletePost: function (menu) {
             menu = menu || document.querySelector(".post-menu");
